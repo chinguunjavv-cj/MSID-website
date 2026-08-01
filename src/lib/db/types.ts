@@ -95,6 +95,7 @@ export interface EventRow {
   early_bird_deadline: string | null;
   capacity: number | null;
   external_url: string;
+  video_url: string;
   is_featured: number;
   created_at: string;
   updated_at: string;
@@ -215,6 +216,7 @@ export interface NewsPost {
   cover_image: string;
   cover_alt_mn: string;
   cover_alt_en: string;
+  video_url: string;
   published_at: string | null;
   created_at: string;
   updated_at: string;

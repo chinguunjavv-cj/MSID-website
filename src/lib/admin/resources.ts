@@ -132,6 +132,17 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "cover_image", label: { mn: "Нүүр зураг", en: "Cover image" }, kind: "image", section: SECTION_MEDIA },
       { name: "cover_alt", label: { mn: "Зургийн тайлбар", en: "Image alt text" }, kind: "text", bilingual: true, section: SECTION_MEDIA },
       { name: "external_url", label: { mn: "Гадаад холбоос", en: "External URL" }, kind: "text", section: SECTION_MEDIA },
+      {
+        name: "video_url",
+        label: { mn: "Бичлэгийн холбоос", en: "Video link" },
+        kind: "text",
+        section: SECTION_MEDIA,
+        placeholder: "https://www.youtube.com/watch?v=…",
+        hint: {
+          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг буулгана уу. Бичлэг хуудсанд шууд тусна.",
+          en: "Paste a YouTube, Vimeo or Facebook video link. It is embedded directly in the page.",
+        },
+      },
     ],
   },
 
@@ -235,6 +246,17 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "body", label: { mn: "Агуулга", en: "Body" }, kind: "textarea", bilingual: true, section: SECTION_CONTENT },
       { name: "cover_image", label: { mn: "Нүүр зураг", en: "Cover image" }, kind: "image", section: SECTION_MEDIA },
       { name: "cover_alt", label: { mn: "Зургийн тайлбар", en: "Image alt text" }, kind: "text", bilingual: true, section: SECTION_MEDIA },
+      {
+        name: "video_url",
+        label: { mn: "Бичлэгийн холбоос", en: "Video link" },
+        kind: "text",
+        section: SECTION_MEDIA,
+        placeholder: "https://www.youtube.com/watch?v=…",
+        hint: {
+          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг буулгана уу. Бичлэг хуудсанд шууд тусна.",
+          en: "Paste a YouTube, Vimeo or Facebook video link. It is embedded directly in the page.",
+        },
+      },
     ],
   },
 

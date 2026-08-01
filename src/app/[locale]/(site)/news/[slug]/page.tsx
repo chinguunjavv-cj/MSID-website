@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNewsBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/format";
 import { PageHeader, Prose, TranslationNotice } from "@/components/ui/Primitives";
+import { VideoEmbed } from "@/components/site/VideoEmbed";
 
 export async function generateMetadata({
   params,
@@ -68,6 +69,7 @@ export default async function NewsPostPage({
           <TranslationNotice locale={locale} />
         )}
         <Prose body={tr(post, "body", locale)} />
+        {post.video_url && <VideoEmbed url={post.video_url} locale={locale} />}
       </div>
     </>
   );

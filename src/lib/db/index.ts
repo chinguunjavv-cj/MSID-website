@@ -51,6 +51,65 @@ PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 `;
 
+/**
+ * Ordered, additive migrations applied after the base schema.
+ *
+ * `schema.ts` is all `CREATE TABLE IF NOT EXISTS`, which does nothing to a table that
+ * already exists — so a new column on a live database has to arrive as an `ALTER TABLE`
+ * here. Append only; never edit or reorder an entry that has shipped, because applied
+ * ids are recorded and skipped.
+ */
+const MIGRATIONS: { id: string; sql: string }[] = [
+  {
+    id: "2026-08-01-video-url",
+    sql: `
+      ALTER TABLE events ADD COLUMN video_url TEXT NOT NULL DEFAULT '';
+      ALTER TABLE news_posts ADD COLUMN video_url TEXT NOT NULL DEFAULT '';
+    `,
+  },
+];
+
+async function applyMigrations(client: Client): Promise<void> {
+  await client.execute(
+    `CREATE TABLE IF NOT EXISTS _migrations (
+       id TEXT PRIMARY KEY,
+       applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+     )`,
+  );
+
+  const applied = new Set(
+    (await client.execute("SELECT id FROM _migrations")).rows.map((row) =>
+      String(row.id),
+    ),
+  );
+
+  for (const migration of MIGRATIONS) {
+    if (applied.has(migration.id)) continue;
+    try {
+      await client.executeMultiple(migration.sql);
+      await client.execute({
+        sql: "INSERT INTO _migrations (id) VALUES (?)",
+        args: [migration.id],
+      });
+      console.log(`Applied migration ${migration.id}`);
+    } catch (error) {
+      /*
+        A column that already exists means a previous run applied the change but did not
+        record it — recoverable, so record it and move on. Anything else is a real
+        failure and must not be hidden.
+      */
+      if (/duplicate column name/i.test((error as Error).message ?? "")) {
+        await client.execute({
+          sql: "INSERT OR IGNORE INTO _migrations (id) VALUES (?)",
+          args: [migration.id],
+        });
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 async function connect(): Promise<Client> {
   const config = connectionConfig();
   const isLocalFile = config.url.startsWith("file:");
@@ -70,6 +129,7 @@ async function connect(): Promise<Client> {
   // `CREATE TABLE IF NOT EXISTS` throughout, so this is safe on every cold start and
   // means a freshly created Turso database comes up working.
   await client.executeMultiple(SCHEMA);
+  await applyMigrations(client);
 
   /*
     Seed on first connection.

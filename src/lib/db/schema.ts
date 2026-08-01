@@ -7,7 +7,8 @@
  * present. Inlined, the schema always ships with the code.
  *
  * It is applied on first connection and is written with `CREATE TABLE IF NOT EXISTS`,
- * so re-running it is safe. Additive changes go in the MIGRATIONS list in ./index.ts.
+ * so re-running it is safe. It will not alter a table that already exists, so a change
+ * to a live database must be appended to MIGRATIONS in ./index.ts instead.
  *
  * DDL only — no PRAGMA statements. `journal_mode` and friends describe how a local
  * SQLite file is written, which a hosted libSQL server rejects outright; leaving them
@@ -107,6 +108,7 @@ CREATE TABLE IF NOT EXISTS events (
   early_bird_deadline   TEXT,
   capacity              INTEGER,
   external_url          TEXT NOT NULL DEFAULT '',
+  video_url             TEXT NOT NULL DEFAULT '',
   is_featured           INTEGER NOT NULL DEFAULT 0,
   created_at            TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
@@ -270,6 +272,7 @@ CREATE TABLE IF NOT EXISTS news_posts (
   cover_image  TEXT NOT NULL DEFAULT '',
   cover_alt_mn TEXT NOT NULL DEFAULT '',
   cover_alt_en TEXT NOT NULL DEFAULT '',
+  video_url    TEXT NOT NULL DEFAULT '',
   published_at TEXT,
   created_at   TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))

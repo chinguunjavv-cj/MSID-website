@@ -142,7 +142,7 @@ export default async function ResourceListPage({
       ) : (
         <div className="mt-8 border-t border-ink-200 py-14">
           <p className="font-semibold text-ink-800">
-            {mn ? "Бичлэг алга." : "Nothing here yet."}
+            {mn ? "Контент алга." : "Nothing here yet."}
           </p>
           {!resource.fixed && (
             <Link

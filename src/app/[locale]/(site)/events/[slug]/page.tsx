@@ -25,6 +25,7 @@ import {
   StatusPill,
   TranslationNotice,
 } from "@/components/ui/Primitives";
+import { VideoEmbed } from "@/components/site/VideoEmbed";
 
 export async function generateMetadata({
   params,
@@ -132,6 +133,14 @@ export default async function EventPage({
             )}
 
             <Prose body={tr(event, "body", locale)} />
+
+            {event.video_url && (
+              <VideoEmbed
+                url={event.video_url}
+                locale={locale}
+                label={locale === "mn" ? "Арга хэмжээний бичлэг" : "Event recording"}
+              />
+            )}
 
             {sessions.length > 0 && (
               <section className="mt-14">
