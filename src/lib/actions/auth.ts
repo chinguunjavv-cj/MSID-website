@@ -53,9 +53,25 @@ export async function signInAction(
     return { errors: [t.auth.accountPending] };
   }
 
-  pruneSessions();
+  await pruneSessions();
   const userAgent = (await headers()).get("user-agent") ?? "";
-  await createSession(user.id, userAgent);
+
+  /*
+    Issuing the session is the first thing that reads SESSION_SECRET — anonymous page
+    loads never do, because `currentUser()` returns early when there is no cookie. A
+    missing or too-short secret therefore shows up only here, and only after a correct
+    password, as a blank 500 on an otherwise healthy site. Name it instead.
+  */
+  try {
+    await createSession(user.id, userAgent);
+  } catch (error) {
+    if ((error as Error).message?.includes("SESSION_SECRET")) {
+      console.error("Sign-in failed: SESSION_SECRET is not configured correctly.");
+      return { errors: [t.auth.serverMisconfigured] };
+    }
+    throw error;
+  }
+
   await run("UPDATE users SET last_login_at = datetime('now') WHERE id = ?", user.id);
 
   const isStaff = user.role === "admin" || user.role === "editor";

@@ -299,6 +299,8 @@ const mn = {
     passwordTooShort: "Нууц үг доод тал нь 10 тэмдэгт байх ёстой.",
     passwordMismatch: "Нууц үг таарахгүй байна.",
     memberArea: "Гишүүний хэсэг",
+    serverMisconfigured:
+      "Серверийн тохиргоо дутуу байгаа тул нэвтрэх боломжгүй байна. Системийн администратортай холбогдоно уу.",
   },
   portal: {
     title: "Гишүүний хэсэг",
@@ -623,6 +625,8 @@ const en: Dictionary = {
     passwordTooShort: "Password must be at least 10 characters.",
     passwordMismatch: "Passwords do not match.",
     memberArea: "Member area",
+    serverMisconfigured:
+      "Sign-in is unavailable because the server is not fully configured. Please contact the site administrator.",
   },
   portal: {
     title: "Member area",
