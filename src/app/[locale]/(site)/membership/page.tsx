@@ -26,8 +26,8 @@ export default async function MembershipPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const intro = getPage("membership.intro");
-  const benefits = getPage("membership.benefits");
+  const intro = await getPage("membership.intro");
+  const benefits = await getPage("membership.benefits");
 
   const types: (keyof typeof t.membership.type)[] = [
     "full",

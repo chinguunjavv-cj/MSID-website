@@ -46,16 +46,16 @@ export default async function RegistrationPage({
   const { locale, reference } = await params;
   if (!isLocale(locale)) notFound();
 
-  const registration = getRegistrationByReference(reference);
+  const registration = await getRegistrationByReference(reference);
   if (!registration) notFound();
 
-  const event = getEventById(registration.event_id);
+  const event = await getEventById(registration.event_id);
   const t = getDictionary(locale);
-  const settings = getSettings();
+  const settings = await getSettings();
   const paid = registration.payment_status === "paid";
 
   const qpayPayload = registration.payment_ref
-    ? get<{ raw_payload: string }>(
+    ? await get<{ raw_payload: string }>(
         `SELECT raw_payload FROM payments
          WHERE registration_id = ? AND provider = 'qpay' AND provider_invoice_id = ?
          ORDER BY created_at DESC LIMIT 1`,

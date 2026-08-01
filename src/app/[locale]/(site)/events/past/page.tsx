@@ -29,12 +29,12 @@ export default async function PastEventsPage({
   if (!isLocale(locale)) notFound();
 
   const { page: pageParam } = await searchParams;
-  const total = countPastEvents();
+  const total = await countPastEvents();
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
 
   const t = getDictionary(locale);
-  const events = listPastEvents(PER_PAGE, (page - 1) * PER_PAGE);
+  const events = await listPastEvents(PER_PAGE, (page - 1) * PER_PAGE);
 
   return (
     <>

@@ -23,7 +23,7 @@ export default async function AdminMembersPage({
   const filters = await searchParams;
   const mn = locale === "mn";
   const t = getDictionary(locale);
-  const members = listMembers({ status: filters.status, query: filters.q });
+  const members = await listMembers({ status: filters.status, query: filters.q });
 
   const pending = members.filter((member) => member.membership_status === "pending").length;
 

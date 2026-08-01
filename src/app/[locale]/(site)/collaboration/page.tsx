@@ -26,8 +26,8 @@ export default async function CollaborationPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("collaboration.intro");
-  const partners = listPartners();
+  const page = await getPage("collaboration.intro");
+  const partners = await listPartners();
 
   return (
     <>

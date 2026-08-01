@@ -26,8 +26,8 @@ export default async function ContactPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("about.contact");
-  const settings = getSettings();
+  const page = await getPage("about.contact");
+  const settings = await getSettings();
 
   const address =
     locale === "mn" ? settings.contact_address_mn : settings.contact_address_en;

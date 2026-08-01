@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams;
-  const registrations = listRegistrations({
+  const registrations = await listRegistrations({
     eventId: searchParams.get("event") ?? undefined,
     paymentStatus: searchParams.get("payment") ?? undefined,
     query: searchParams.get("q") ?? undefined,

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const registration = get<{
+  const registration = await get<{
     id: string;
     amount_mnt: number;
     payment_ref: string;
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!result.paid || result.amount < registration.amount_mnt) {
-    run(
+    await run(
       `UPDATE payments SET status = 'pending', raw_payload = ?, updated_at = datetime('now')
        WHERE registration_id = ? AND provider_invoice_id = ?`,
       JSON.stringify(result.raw),
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, paid: false });
   }
 
-  run(
+  await run(
     `UPDATE registrations
      SET payment_status = 'paid', paid_at = datetime('now'),
          attendance_status = 'confirmed', updated_at = datetime('now')
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     registration.id,
   );
 
-  run(
+  await run(
     `UPDATE payments SET status = 'paid', raw_payload = ?, updated_at = datetime('now')
      WHERE registration_id = ? AND provider_invoice_id = ?`,
     JSON.stringify(result.raw),
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
     registration.payment_ref,
   );
 
-  run(
+  await run(
     `INSERT INTO audit_log (id, action, entity, entity_id, meta)
      VALUES (?, 'payment.confirmed', 'registration', ?, ?)`,
     newId(),

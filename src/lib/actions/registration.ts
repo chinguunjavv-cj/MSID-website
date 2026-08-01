@@ -78,12 +78,12 @@ export async function registerForEventAction(
 
   const data = parsed.data;
 
-  const event = getEventBySlug(data.slug);
+  const event = await getEventBySlug(data.slug);
   if (!event) return { errors: [t.errors.notFoundLead] };
   if (registrationState(event) !== "open") return { errors: [t.registration.closed] };
 
   // One live registration per email per event.
-  const existing = get<{ id: string }>(
+  const existing = await get<{ id: string }>(
     `SELECT id FROM registrations
      WHERE event_id = ? AND email = ? COLLATE NOCASE AND attendance_status != 'cancelled'`,
     event.id,
@@ -96,7 +96,7 @@ export async function registerForEventAction(
     };
   }
 
-  const fee = data.feeId ? getEventFee(data.feeId) : undefined;
+  const fee = data.feeId ? await getEventFee(data.feeId) : undefined;
   if (data.feeId && (!fee || fee.event_id !== event.id)) {
     return { errors: [t.errors.formHasErrors], fieldErrors: { feeId: t.errors.fieldRequired } };
   }
@@ -107,13 +107,13 @@ export async function registerForEventAction(
   const isMember =
     user?.role === "member" &&
     Boolean(
-      get(
+      await get(
         "SELECT user_id FROM member_profiles WHERE user_id = ? AND membership_status = 'active'",
         user.id,
       ),
     );
 
-  const settings = getSettings();
+  const settings = await getSettings();
   const qpayAvailable = settings.qpay_enabled === "1" && qpayConfigured();
 
   let method: "bank_transfer" | "qpay" | "free" = "bank_transfer";
@@ -123,8 +123,8 @@ export async function registerForEventAction(
   const reference = referenceCode("MSID");
   const registrationId = newId();
 
-  transaction(() => {
-    run(
+  await transaction(async (tx) => {
+    await tx.run(
       `INSERT INTO registrations
          (id, reference, event_id, user_id, fee_id, full_name, email, phone,
           institution, position, country, is_member, amount_mnt, payment_method,
@@ -150,7 +150,7 @@ export async function registerForEventAction(
       locale,
     );
 
-    run(
+    await tx.run(
       `INSERT INTO audit_log (id, user_id, action, entity, entity_id, meta)
        VALUES (?, ?, 'registration.create', 'registration', ?, ?)`,
       newId(),
@@ -171,7 +171,7 @@ export async function registerForEventAction(
         payerEmail: data.email,
       });
 
-      run(
+      await run(
         `INSERT INTO payments
            (id, registration_id, provider, provider_invoice_id, amount_mnt, status, raw_payload)
          VALUES (?, ?, 'qpay', ?, ?, 'pending', ?)`,
@@ -182,14 +182,14 @@ export async function registerForEventAction(
         JSON.stringify(invoice),
       );
 
-      run(
+      await run(
         "UPDATE registrations SET payment_status = 'pending', payment_ref = ?, updated_at = datetime('now') WHERE id = ?",
         invoice.invoiceId,
         registrationId,
       );
     } catch (error) {
       console.error("QPay invoice creation failed", error);
-      run(
+      await run(
         "UPDATE registrations SET payment_method = 'bank_transfer', updated_at = datetime('now') WHERE id = ?",
         registrationId,
       );

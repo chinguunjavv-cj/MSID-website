@@ -24,7 +24,7 @@ export default async function EditResourcePage({
   const id = decodeURIComponent(rawId);
   const idColumn = resource.idColumn ?? "id";
 
-  const record = get<Record<string, unknown>>(
+  const record = await get<Record<string, unknown>>(
     `SELECT * FROM ${resource.table} WHERE ${idColumn} = ?`,
     id,
   );
@@ -89,13 +89,13 @@ export default async function EditResourcePage({
         <>
           <EventFees
             eventId={id}
-            fees={listEventFees(id)}
+            fees={await listEventFees(id)}
             locale={locale}
             labels={labels}
           />
           <EventProgramme
             eventId={id}
-            sessions={listEventSessions(id)}
+            sessions={await listEventSessions(id)}
             locale={locale}
             labels={labels}
           />

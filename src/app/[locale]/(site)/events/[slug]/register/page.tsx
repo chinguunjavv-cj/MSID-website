@@ -24,7 +24,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
   return {
     title: `${getDictionary(locale).events.register}${event ? ` · ${tr(event, "title", locale)}` : ""}`,
     robots: { index: false },
@@ -39,15 +39,15 @@ export default async function RegisterPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
   if (!event) notFound();
 
   const t = getDictionary(locale);
   const state = registrationState(event);
-  const settings = getSettings();
+  const settings = await getSettings();
 
   const user = await currentUser();
-  const member = user ? getMemberRecord(user.id) : undefined;
+  const member = user ? await getMemberRecord(user.id) : undefined;
   const isMember = member?.membership_status === "active";
 
   if (state !== "open") {
@@ -85,7 +85,7 @@ export default async function RegisterPage({
   );
 
   // Non-members are not offered the member tier; the server re-checks anyway.
-  const fees: FeeOption[] = listEventFees(event.id)
+  const fees: FeeOption[] = (await listEventFees(event.id))
     .filter((fee) => (fee.audience === "member" ? isMember : true))
     .map((fee) => {
       const amount =

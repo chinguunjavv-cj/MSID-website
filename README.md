@@ -52,7 +52,7 @@ npm run demo:clear
 |---|---|---|
 | Framework | Next.js 16, App Router, React 19 | Server components keep pages fast on hospital wifi; server actions mean forms work before JavaScript loads |
 | Styling | Tailwind CSS v4, OKLCH tokens | Design tokens live in `src/app/globals.css`; see [DESIGN.md](DESIGN.md) |
-| Database | **Node's built-in `node:sqlite`** | No ORM, no code generation, no native build step. The whole database is one file |
+| Database | **libSQL** (`@libsql/client`) | SQLite's dialect and schema, over HTTP. No ORM, no code generation, no native build step — and it runs both serverless and on a volume |
 | Auth | `node:crypto` scrypt + signed JWT cookie (`jose`) | No third-party crypto dependency to keep patched |
 | Validation | `zod` | Every form action validates on the server |
 
@@ -61,12 +61,15 @@ site has to be maintainable by whoever MSID works with in three years' time.
 
 ### Why not an ORM
 
-`data/msid.db` is a single SQLite file. Backup is `cp`, restore is `cp`, and any SQLite
-tool can open it. The schema is plain SQL in [`src/lib/db/schema.ts`](src/lib/db/schema.ts)
+The database is SQLite, whether it lives in `data/msid.db` or in Turso — same dialect,
+same schema, and any SQLite tool can open the file form. The schema is plain SQL in
+[`src/lib/db/schema.ts`](src/lib/db/schema.ts)
 with a comment on every non-obvious column, and row shapes are typed by hand in
 [`src/lib/db/types.ts`](src/lib/db/types.ts). Moving to PostgreSQL later means rewriting
 `src/lib/db/index.ts` and the query helpers — a contained change, because nothing above
-that layer knows what the database is.
+that layer knows what the database is. Everything there is async for the same reason: a
+hosted database call is a network round trip, and pages issue independent reads with
+`Promise.all` rather than one after another.
 
 ---
 
@@ -188,44 +191,65 @@ Roles: `admin` (everything, including creating users), `editor` (all content), `
 
 ## Deployment
 
-The app keeps its data in a SQLite file and its uploads on disk, so it needs a host that
-gives it a **persistent volume**.
+The app runs on **libSQL** — SQLite's dialect and schema, reached over HTTP. That one
+choice is what lets the same code run both on a serverless host with no disk and on a
+container with a volume.
 
-**Vercel will not work for this app.** Its filesystem is ephemeral and per-invocation, so
-the database resets constantly — every event, guideline and membership approval an
-administrator makes would disappear. Moving to Vercel later means switching the data
-layer to a hosted database such as Turso, which also means making every query `async`.
+| | Database | Uploads |
+|---|---|---|
+| **Vercel** | Turso (`TURSO_DATABASE_URL`) | Vercel Blob (`BLOB_READ_WRITE_TOKEN`) |
+| **Railway / Render / VPS** | local file on a volume (`MSID_DB_PATH`) | same volume (`MSID_UPLOAD_DIR`) |
+| **Local development** | `./data/msid.db` | `./public/uploads` |
 
-### Railway (or Render) — deploys from this repo
+Nothing selects this at build time — the app checks the environment at runtime, so the
+same commit deploys to either.
 
-A `Dockerfile` and `railway.json` are included; no local Docker needed.
+### Vercel
 
-1. **New Project → Deploy from GitHub repo →** `MSID-website`. Railway detects the
-   Dockerfile on its own.
-2. **Add a Volume**, mount path **`/data`**. This is the step that matters — without it
-   the database is wiped on every redeploy.
-3. **Variables:**
+1. **Add Turso** from the [Vercel Marketplace](https://vercel.com/marketplace/tursocloud),
+   or create one yourself and set `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`:
+   ```bash
+   turso db create msid
+   turso db show msid --url
+   turso db tokens create msid
+   ```
+2. **Add a Blob store** (Storage → Create → Blob). Vercel sets
+   `BLOB_READ_WRITE_TOKEN` for you. Without it, uploading a guideline PDF fails —
+   Vercel has no writable disk.
+3. **Set the remaining variables:**
 
    | Variable | Value |
    |---|---|
-   | `SESSION_SECRET` | output of `openssl rand -base64 48` |
-   | `MSID_SITE_URL` | the Railway URL, e.g. `https://msid-website-production.up.railway.app` — optional, Railway's own domain is detected if omitted |
-   | `ADMIN_EMAIL` | your email — the first administrator, created on first boot |
-   | `ADMIN_PASSWORD` | the password for it (change after signing in) |
-   | `MSID_SEED_DEMO` | `1` to bring the site up with sample content; omit for empty |
+   | `SESSION_SECRET` | `openssl rand -base64 48` |
+   | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | the first administrator |
+   | `MSID_SITE_URL` | optional — the `*.vercel.app` URL is detected on its own |
+   | `MSID_NOINDEX` | `0` once you launch on a real domain |
 
-   `MSID_DB_PATH` and `MSID_UPLOAD_DIR` are already set in the Dockerfile and point at
-   the volume. Leave them alone.
+4. **Seed the database once**, from your machine, pointing at Turso:
+   ```bash
+   TURSO_DATABASE_URL=… TURSO_AUTH_TOKEN=… npm run seed
+   TURSO_DATABASE_URL=… TURSO_AUTH_TOKEN=… npm run demo     # optional sample content
+   ```
+   The schema itself is applied automatically on first connection; `seed` adds MSID's
+   published facts and the first administrator.
+
+5. **Deploy.** Import the GitHub repo; no build configuration needed.
+
+### Railway / Render — no external services
+
+A `Dockerfile`, `railway.json` and an idempotent entrypoint are included. Leave
+`TURSO_DATABASE_URL` and `BLOB_READ_WRITE_TOKEN` unset and the app uses the volume for
+both database and uploads.
+
+1. **New Project → Deploy from GitHub repo →** `MSID-website`. The Dockerfile is detected.
+2. **Add a Volume**, mount path **`/data`**. Without it the database is wiped on every
+   redeploy.
+3. **Variables:** `SESSION_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and
+   `MSID_SEED_DEMO=1` to come up with sample content. `MSID_DB_PATH` and
+   `MSID_UPLOAD_DIR` are already set in the Dockerfile to point at the volume.
 4. **Generate a domain** under Settings → Networking. Railway publishes it as
-   `RAILWAY_PUBLIC_DOMAIN`, which the app picks up on its own, so no domain purchase
-   is needed for a client review.
-
-`scripts/docker-entrypoint.sh` runs on every boot. It applies the schema, tops up MSID's
-published facts, and creates the administrator only if that email has no account yet —
-all idempotent, so restarts and redeploys are safe.
-
-Render is the same shape: a Web Service from this repo, Docker runtime, a Disk mounted
-at `/data`, and the same variables.
+   `RAILWAY_PUBLIC_DOMAIN`, which the app reads on its own — no domain purchase needed
+   for a client review.
 
 ### Any VPS
 
@@ -244,12 +268,23 @@ npm start                      # port 3000; put nginx or Caddy in front for TLS
 | `MSID_NOINDEX` | `0` to allow search engines. Preview hosts are hidden automatically |
 | `QPAY_*` | Only once QPay credentials exist |
 
-Uploads are served by a route handler (`/uploads/[...path]`), not by static hosting, so
-they work from a volume outside the project directory. It serves only image and PDF
-types and refuses any path that resolves outside the upload directory.
+With the filesystem backend, uploads are served by a route handler
+(`/uploads/[...path]`) rather than static hosting, so they work from a volume outside
+the project. It serves only image and PDF types and refuses any path resolving outside
+the upload directory.
 
-**Backup is one file.** `sqlite3 msid.db ".backup backup.db"` (safe while running), plus
-the uploads directory.
+**Backup.** On Turso, use its managed backups. On a file database,
+`sqlite3 msid.db ".backup backup.db"` (safe while running) plus the uploads directory.
+
+### Search engine visibility
+
+Preview deployments hide themselves. Any `*.vercel.app`, `*.up.railway.app`,
+`*.onrender.com` or localhost origin serves `Disallow: /` and `noindex`, because a
+client-review instance carries sample content — invented guideline codes, a placeholder
+congress — that would be actively harmful indexed under a medical society's name.
+
+Set `MSID_SITE_URL` to the real domain and `MSID_NOINDEX=0` at launch. The admin
+dashboard warns on every visit while a deployment is hidden, so this cannot be forgotten.
 
 ### Administrator accounts
 
@@ -259,7 +294,8 @@ ADMIN_EMAIL=you@example.com ADMIN_NAME="Таны нэр" ADMIN_PASSWORD='…' np
 
 Creates an administrator, or promotes and resets the password of an existing account —
 so this is also the recovery path for a forgotten password. Credentials come from the
-environment rather than arguments, so they stay out of shell history.
+environment rather than arguments, so they stay out of shell history. Add
+`TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` to run it against production.
 
 ---
 

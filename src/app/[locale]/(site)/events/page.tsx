@@ -28,9 +28,11 @@ export default async function EventsPage({
   const t = getDictionary(locale);
   const p = (path: string) => localePath(locale, path);
 
-  const upcoming = listUpcomingEvents();
-  const recentPast = listPastEvents(5);
-  const news = listPublishedNews(5);
+  const [upcoming, recentPast, news] = await Promise.all([
+    listUpcomingEvents(),
+    listPastEvents(5),
+    listPublishedNews(5),
+  ]);
 
   return (
     <>

@@ -15,7 +15,7 @@ export default async function AdminSettingsPage({
   if (!isLocale(locale)) notFound();
 
   const mn = locale === "mn";
-  const settings = getSettings();
+  const settings = await getSettings();
 
   return (
     <div>

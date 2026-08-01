@@ -39,7 +39,7 @@ export default async function ResourceListPage({
   const mn = locale === "mn";
   const idColumn = resource.idColumn ?? "id";
 
-  const rows = all<Record<string, unknown>>(
+  const rows = await all<Record<string, unknown>>(
     `SELECT * FROM ${resource.table} ORDER BY ${resource.defaultOrder}`,
   );
 

@@ -1,78 +1,67 @@
-import { DatabaseSync } from "node:sqlite";
-import { mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { createClient, type Client, type InValue } from "@libsql/client";
 import { randomUUID } from "node:crypto";
 import { SCHEMA } from "./schema.ts";
 
 /**
- * Database access for the MSID site.
+ * Database access for the MSID site, over libSQL.
  *
- * Uses Node's built-in `node:sqlite` — no ORM, no code generation, no native build
- * step. The whole database is one file, which makes deployment and backup trivial:
- * copy `data/msid.db` and you have the site.
+ * libSQL *is* SQLite — same dialect, same schema — but reached over HTTP, which is what
+ * makes it work on a serverless host where there is no persistent disk to keep a file
+ * on. The same client talks to a local file in development, so `npm run dev` needs no
+ * account and no network.
  *
- * The schema lives in `schema.sql` and is applied on first touch. It is written with
- * `CREATE TABLE IF NOT EXISTS`, so re-running it is safe and additive migrations can be
- * appended to `MIGRATIONS` below.
+ * Every helper is async. That is not incidental: a serverless database call is a
+ * network round trip, and pretending otherwise is how you end up with a synchronous API
+ * that cannot be implemented.
+ *
+ * Connection is chosen by environment:
+ *   TURSO_DATABASE_URL + TURSO_AUTH_TOKEN  → hosted Turso (production)
+ *   MSID_DB_PATH or the default            → local file (development, Docker volume)
  */
 
-// `turbopackIgnore` keeps the build tracer from following this `process.cwd()` call
-// and pulling the whole project into the output. The path is a fixed literal, or
-// `MSID_DB_PATH` in production.
-const DB_PATH =
-  process.env.MSID_DB_PATH ??
-  join(/* turbopackIgnore: true */ process.cwd(), "data", "msid.db");
+type Param = InValue;
 
-/**
- * Ordered, idempotent migrations applied after the base schema. Add new entries to the
- * end; never edit or reorder an entry that has shipped. Each runs inside a transaction
- * and is recorded in `_migrations`.
- */
-const MIGRATIONS: { id: string; sql: string }[] = [];
-
-type GlobalWithDb = typeof globalThis & { __msidDb?: DatabaseSync };
-
-function open(): DatabaseSync {
-  mkdirSync(dirname(DB_PATH), { recursive: true });
-  const database = new DatabaseSync(DB_PATH);
-
-  database.exec(SCHEMA);
-  database.exec(
-    `CREATE TABLE IF NOT EXISTS _migrations (
-       id TEXT PRIMARY KEY,
-       applied_at TEXT NOT NULL DEFAULT (datetime('now'))
-     )`,
-  );
-
-  const seen = new Set(
-    (database.prepare("SELECT id FROM _migrations").all() as { id: string }[]).map(
-      (row) => row.id,
-    ),
-  );
-
-  for (const migration of MIGRATIONS) {
-    if (seen.has(migration.id)) continue;
-    database.exec("BEGIN");
-    try {
-      database.exec(migration.sql);
-      database.prepare("INSERT INTO _migrations (id) VALUES (?)").run(migration.id);
-      database.exec("COMMIT");
-    } catch (error) {
-      database.exec("ROLLBACK");
-      throw new Error(`Migration ${migration.id} failed: ${(error as Error).message}`);
-    }
+function connectionConfig(): { url: string; authToken?: string } {
+  const remote = process.env.TURSO_DATABASE_URL?.trim();
+  if (remote) {
+    return { url: remote, authToken: process.env.TURSO_AUTH_TOKEN?.trim() };
   }
 
-  return database;
+  const path = process.env.MSID_DB_PATH?.trim() || "./data/msid.db";
+  // `file:` URLs are relative to the process working directory.
+  return { url: path.startsWith("file:") ? path : `file:${path}` };
 }
 
 /**
- * One connection per process, cached on `globalThis` so Next.js hot reloading in
- * development does not open a new handle on every edit.
+ * One client and one schema application per process, cached on `globalThis` so Next.js
+ * hot reloading does not reconnect on every edit and a warm serverless instance does
+ * not re-run the schema on every request.
  */
-export function db(): DatabaseSync {
+type GlobalWithDb = typeof globalThis & { __msidDb?: Promise<Client> };
+
+async function connect(): Promise<Client> {
+  const config = connectionConfig();
+
+  if (config.url.startsWith("file:")) {
+    // The directory has to exist before SQLite will create the file in it.
+    const { mkdirSync } = await import("node:fs");
+    const { dirname } = await import("node:path");
+    const filePath = config.url.slice("file:".length);
+    mkdirSync(dirname(filePath), { recursive: true });
+  }
+
+  const client = createClient(config);
+
+  // `CREATE TABLE IF NOT EXISTS` throughout, so this is safe on every cold start and
+  // means a freshly created Turso database comes up working.
+  await client.executeMultiple(SCHEMA);
+
+  return client;
+}
+
+export function db(): Promise<Client> {
   const globalRef = globalThis as GlobalWithDb;
-  if (!globalRef.__msidDb) globalRef.__msidDb = open();
+  if (!globalRef.__msidDb) globalRef.__msidDb = connect();
   return globalRef.__msidDb;
 }
 
@@ -80,48 +69,76 @@ export function db(): DatabaseSync {
 /* Query helpers                                                               */
 /* -------------------------------------------------------------------------- */
 
-type Param = string | number | bigint | null | Uint8Array;
-
-/** SQLite returns null-prototype objects; copy them so React and JSON behave. */
+/** libSQL rows are array-like; copy to plain objects so React and JSON behave. */
 function plain<T>(row: unknown): T {
   return { ...(row as object) } as T;
 }
 
-export function all<T>(sql: string, ...params: Param[]): T[] {
-  return db()
-    .prepare(sql)
-    .all(...params)
-    .map((row) => plain<T>(row));
+export async function all<T>(sql: string, ...params: Param[]): Promise<T[]> {
+  const result = await (await db()).execute({ sql, args: params });
+  return result.rows.map((row) => plain<T>(row));
 }
 
-export function get<T>(sql: string, ...params: Param[]): T | undefined {
-  const row = db()
-    .prepare(sql)
-    .get(...params);
-  return row === undefined ? undefined : plain<T>(row);
+export async function get<T>(sql: string, ...params: Param[]): Promise<T | undefined> {
+  const result = await (await db()).execute({ sql, args: params });
+  return result.rows.length ? plain<T>(result.rows[0]) : undefined;
 }
 
-export function run(sql: string, ...params: Param[]) {
-  return db()
-    .prepare(sql)
-    .run(...params);
+export async function run(sql: string, ...params: Param[]) {
+  const result = await (await db()).execute({ sql, args: params });
+  return { changes: Number(result.rowsAffected ?? 0) };
 }
 
-export function count(sql: string, ...params: Param[]): number {
-  const row = get<{ n: number }>(sql, ...params);
+export async function count(sql: string, ...params: Param[]): Promise<number> {
+  const row = await get<{ n: number | bigint }>(sql, ...params);
   return Number(row?.n ?? 0);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Transactions                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The statement runner handed to a `transaction()` callback.
+ *
+ * Callbacks must use this rather than the module-level helpers — those take a fresh
+ * connection and would run *outside* the transaction, which is the kind of bug that
+ * only shows up when a rollback silently fails to undo half the work.
+ */
+export interface Tx {
+  all<T>(sql: string, ...params: Param[]): Promise<T[]>;
+  get<T>(sql: string, ...params: Param[]): Promise<T | undefined>;
+  run(sql: string, ...params: Param[]): Promise<{ changes: number }>;
+}
+
 /** Runs `fn` inside a transaction, rolling back if it throws. */
-export function transaction<T>(fn: () => T): T {
-  const database = db();
-  database.exec("BEGIN");
+export async function transaction<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  const client = await db();
+  const tx = await client.transaction("write");
+
+  const runner: Tx = {
+    async all<R>(sql: string, ...params: Param[]) {
+      const result = await tx.execute({ sql, args: params });
+      return result.rows.map((row) => plain<R>(row));
+    },
+    async get<R>(sql: string, ...params: Param[]) {
+      const result = await tx.execute({ sql, args: params });
+      return result.rows.length ? plain<R>(result.rows[0]) : undefined;
+    },
+    async run(sql: string, ...params: Param[]) {
+      const result = await tx.execute({ sql, args: params });
+      return { changes: Number(result.rowsAffected ?? 0) };
+    },
+  };
+
   try {
-    const result = fn();
-    database.exec("COMMIT");
-    return result;
+    const value = await fn(runner);
+    await tx.commit();
+    return value;
   } catch (error) {
-    database.exec("ROLLBACK");
+    await tx.rollback().catch(() => {
+      // Rollback failure must not mask the original error.
+    });
     throw error;
   }
 }
@@ -164,14 +181,24 @@ export function slugify(input: string): string {
     .slice(0, 80);
 }
 
-/** Appends `-2`, `-3`, … until the slug is free in `table`. */
-export function uniqueSlug(table: string, base: string, excludeId?: string): string {
+/**
+ * Appends `-2`, `-3`, … until the slug is free in `table`.
+ *
+ * Takes a `Tx` because it is only ever called while building a record inside a
+ * transaction, and the uniqueness check has to see that transaction's own writes.
+ */
+export async function uniqueSlug(
+  tx: Tx,
+  table: string,
+  base: string,
+  excludeId?: string,
+): Promise<string> {
   const root = slugify(base) || "item";
   let candidate = root;
   let n = 1;
   // Table name is caller-controlled and never user input.
   while (
-    get<{ id: string }>(
+    await tx.get<{ id: string }>(
       `SELECT id FROM ${table} WHERE slug = ? AND id IS NOT ?`,
       candidate,
       excludeId ?? null,

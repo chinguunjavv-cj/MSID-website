@@ -27,8 +27,8 @@ export default async function WelcomePage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("about.welcome");
-  const settings = getSettings();
+  const page = await getPage("about.welcome");
+  const settings = await getSettings();
 
   return (
     <>

@@ -15,7 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
-  const post = getNewsBySlug(slug);
+  const post = await getNewsBySlug(slug);
   if (!post) return {};
   return {
     title: tr(post, "title", locale),
@@ -31,7 +31,7 @@ export default async function NewsPostPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const post = getNewsBySlug(slug);
+  const post = await getNewsBySlug(slug);
   if (!post) notFound();
 
   const t = getDictionary(locale);

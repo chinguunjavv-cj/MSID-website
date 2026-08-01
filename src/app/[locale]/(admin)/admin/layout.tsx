@@ -32,7 +32,7 @@ export default async function AdminLayout({
   if (!user) redirect(localePath(locale, "/login"));
   if (!isStaff(user)) redirect(localePath(locale, "/portal"));
 
-  const stats = dashboardStats();
+  const stats = await dashboardStats();
   const badges: Record<string, number> = {
     members: stats.pendingMembers,
     registrations: stats.unpaidRegistrations,

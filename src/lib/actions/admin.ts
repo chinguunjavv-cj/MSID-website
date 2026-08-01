@@ -3,7 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { all, get, newId, run, setClause, transaction, uniqueSlug } from "@/lib/db";
+import {
+  all,
+  get,
+  newId,
+  run,
+  setClause,
+  transaction,
+  uniqueSlug,
+  type Tx,
+} from "@/lib/db";
 import { currentUser, isStaff, type SessionUser } from "@/lib/auth/session";
 import { hashPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { getResource, type FieldDef, type ResourceDef } from "@/lib/admin/resources";
@@ -26,8 +35,39 @@ async function requireAdmin(): Promise<SessionUser> {
   return user;
 }
 
-function audit(userId: string, action: string, entity: string, entityId: string, meta = "") {
-  run(
+/**
+ * Records an administrative action. Awaited everywhere — a floating promise here would
+ * mean the audit row races the redirect and is sometimes lost.
+ */
+async function audit(
+  userId: string,
+  action: string,
+  entity: string,
+  entityId: string,
+  meta = "",
+): Promise<void> {
+  await run(
+    `INSERT INTO audit_log (id, user_id, action, entity, entity_id, meta)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    newId(),
+    userId,
+    action,
+    entity,
+    entityId,
+    meta,
+  );
+}
+
+/** Same, but inside an open transaction so it commits or rolls back with the work. */
+async function auditTx(
+  tx: Tx,
+  userId: string,
+  action: string,
+  entity: string,
+  entityId: string,
+  meta = "",
+): Promise<void> {
+  await tx.run(
     `INSERT INTO audit_log (id, user_id, action, entity, entity_id, meta)
      VALUES (?, ?, ?, ?, ?, ?)`,
     newId(),
@@ -101,24 +141,25 @@ export async function saveResourceAction(
 
   let recordId = id;
 
-  transaction(() => {
+  await transaction(async (tx) => {
     if (resource.slugFrom) {
       const base = String(patch[`${resource.slugFrom}_mn`] ?? patch[resource.slugFrom] ?? "");
-      const existingSlug = id
-        ? get<{ slug: string }>(
+      const existing = id
+        ? await tx.get<{ slug: string }>(
             `SELECT slug FROM ${resource.table} WHERE ${idColumn} = ?`,
             id,
-          )?.slug
+          )
         : undefined;
       // Slugs stay stable once published so existing links do not break; only a new
       // record gets one generated.
-      patch.slug = existingSlug ?? uniqueSlug(resource.table, base, id || undefined);
+      patch.slug =
+        existing?.slug ?? (await uniqueSlug(tx, resource.table, base, id || undefined));
     }
 
     if (isNew) {
       recordId = newId();
       const columns = Object.keys(patch);
-      run(
+      await tx.run(
         `INSERT INTO ${resource.table} (${idColumn}, ${columns.join(", ")})
          VALUES (?, ${columns.map(() => "?").join(", ")})`,
         recordId,
@@ -127,14 +168,20 @@ export async function saveResourceAction(
     } else {
       const { sql, params } = setClause(patch);
       const hasUpdatedAt = resource.table !== "history_entries" && resource.table !== "board_members" && resource.table !== "partners";
-      run(
+      await tx.run(
         `UPDATE ${resource.table} SET ${sql}${hasUpdatedAt ? ", updated_at = datetime('now')" : ""} WHERE ${idColumn} = ?`,
         ...params,
         id,
       );
     }
 
-    audit(user.id, isNew ? `${resource.key}.create` : `${resource.key}.update`, resource.key, recordId);
+    await auditTx(
+      tx,
+      user.id,
+      isNew ? `${resource.key}.create` : `${resource.key}.update`,
+      resource.key,
+      recordId,
+    );
   });
 
   revalidatePath("/", "layout");
@@ -151,8 +198,8 @@ export async function deleteResourceAction(formData: FormData): Promise<void> {
   const id = String(formData.get("__id") ?? "");
   const idColumn = resource.idColumn ?? "id";
 
-  run(`DELETE FROM ${resource.table} WHERE ${idColumn} = ?`, id);
-  audit(user.id, `${resource.key}.delete`, resource.key, id);
+  await run(`DELETE FROM ${resource.table} WHERE ${idColumn} = ?`, id);
+  await audit(user.id, `${resource.key}.delete`, resource.key, id);
 
   revalidatePath("/", "layout");
   redirect(localePath(locale, `/admin/${resource.key}`));
@@ -197,9 +244,9 @@ export async function saveEventFeeAction(formData: FormData): Promise<void> {
 
   if (feeId) {
     const { sql, params } = setClause(values);
-    run(`UPDATE event_fees SET ${sql} WHERE id = ? AND event_id = ?`, ...params, feeId, eventId);
+    await run(`UPDATE event_fees SET ${sql} WHERE id = ? AND event_id = ?`, ...params, feeId, eventId);
   } else {
-    run(
+    await run(
       `INSERT INTO event_fees (id, event_id, label_mn, label_en, audience, amount_mnt, early_amount_mnt, sort)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
@@ -213,15 +260,15 @@ export async function saveEventFeeAction(formData: FormData): Promise<void> {
     );
   }
 
-  audit(user.id, "event.fee.save", "event", eventId);
+  await audit(user.id, "event.fee.save", "event", eventId);
   revalidatePath("/", "layout");
 }
 
 export async function deleteEventFeeAction(formData: FormData): Promise<void> {
   const user = await requireStaff();
   const feeId = String(formData.get("feeId") ?? "");
-  run("DELETE FROM event_fees WHERE id = ?", feeId);
-  audit(user.id, "event.fee.delete", "event_fee", feeId);
+  await run("DELETE FROM event_fees WHERE id = ?", feeId);
+  await audit(user.id, "event.fee.delete", "event_fee", feeId);
   revalidatePath("/", "layout");
 }
 
@@ -245,7 +292,7 @@ export async function saveEventSessionAction(formData: FormData): Promise<void> 
 
   if (sessionId) {
     const { sql, params } = setClause(values);
-    run(
+    await run(
       `UPDATE event_sessions SET ${sql} WHERE id = ? AND event_id = ?`,
       ...params,
       sessionId,
@@ -253,7 +300,7 @@ export async function saveEventSessionAction(formData: FormData): Promise<void> 
     );
   } else {
     const columns = Object.keys(values) as (keyof typeof values)[];
-    run(
+    await run(
       `INSERT INTO event_sessions (id, event_id, ${columns.join(", ")})
        VALUES (?, ?, ${columns.map(() => "?").join(", ")})`,
       newId(),
@@ -262,15 +309,15 @@ export async function saveEventSessionAction(formData: FormData): Promise<void> 
     );
   }
 
-  audit(user.id, "event.session.save", "event", eventId);
+  await audit(user.id, "event.session.save", "event", eventId);
   revalidatePath("/", "layout");
 }
 
 export async function deleteEventSessionAction(formData: FormData): Promise<void> {
   const user = await requireStaff();
   const sessionId = String(formData.get("sessionId") ?? "");
-  run("DELETE FROM event_sessions WHERE id = ?", sessionId);
-  audit(user.id, "event.session.delete", "event_session", sessionId);
+  await run("DELETE FROM event_sessions WHERE id = ?", sessionId);
+  await audit(user.id, "event.session.delete", "event_session", sessionId);
   revalidatePath("/", "layout");
 }
 
@@ -307,9 +354,11 @@ export async function updateRegistrationAction(formData: FormData): Promise<void
     const current =
       attendanceStatus.success
         ? attendanceStatus.data
-        : get<{ attendance_status: string }>(
-            "SELECT attendance_status FROM registrations WHERE id = ?",
-            id,
+        : (
+            await get<{ attendance_status: string }>(
+              "SELECT attendance_status FROM registrations WHERE id = ?",
+              id,
+            )
           )?.attendance_status;
     if (current === "registered") patch.attendance_status = "confirmed";
   }
@@ -320,12 +369,12 @@ export async function updateRegistrationAction(formData: FormData): Promise<void
   const { sql, params } = setClause(patch);
   if (!sql) return;
 
-  run(
+  await run(
     `UPDATE registrations SET ${sql}, updated_at = datetime('now') WHERE id = ?`,
     ...params,
     id,
   );
-  audit(user.id, "registration.update", "registration", id, JSON.stringify(patch));
+  await audit(user.id, "registration.update", "registration", id, JSON.stringify(patch));
   revalidatePath("/", "layout");
 }
 
@@ -357,10 +406,10 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
   const notes = formData.get("notes");
   if (notes !== null) patch.notes = String(notes).slice(0, 2000);
 
-  transaction(() => {
+  await transaction(async (tx) => {
     const { sql, params } = setClause(patch);
     if (sql) {
-      run(
+      await tx.run(
         `UPDATE member_profiles SET ${sql}, updated_at = datetime('now') WHERE user_id = ?`,
         ...params,
         userId,
@@ -371,20 +420,20 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
     if (status.success) {
       const accountStatus =
         status.data === "active" ? "active" : status.data === "rejected" ? "suspended" : "pending";
-      run(
+      await tx.run(
         "UPDATE users SET status = ?, updated_at = datetime('now') WHERE id = ?",
         accountStatus,
         userId,
       );
       if (status.data === "active") {
-        run(
+        await tx.run(
           "UPDATE member_profiles SET joined_on = COALESCE(joined_on, date('now')) WHERE user_id = ?",
           userId,
         );
       }
     }
 
-    audit(user.id, "member.update", "user", userId, JSON.stringify(patch));
+    await audit(user.id, "member.update", "user", userId, JSON.stringify(patch));
   });
 
   revalidatePath("/", "layout");
@@ -409,8 +458,8 @@ export async function saveSettingsAction(
   // Unticked checkboxes are absent from FormData entirely.
   if (!formData.has("qpay_enabled")) patch.qpay_enabled = "0";
 
-  setSettings(patch);
-  audit(user.id, "settings.update", "settings", "site");
+  await setSettings(patch);
+  await audit(user.id, "settings.update", "settings", "site");
   revalidatePath("/", "layout");
 
   return {
@@ -449,14 +498,14 @@ export async function createStaffAction(
       ],
     };
   }
-  if (get("SELECT id FROM users WHERE email = ?", email)) {
+  if (await get("SELECT id FROM users WHERE email = ?", email)) {
     return {
       errors: [locale === "mn" ? "Энэ и-мэйл бүртгэлтэй байна." : "That email is already registered."],
     };
   }
 
   const id = newId();
-  run(
+  await run(
     `INSERT INTO users (id, email, password_hash, role, status, name_mn, name_en)
      VALUES (?, ?, ?, ?, 'active', ?, ?)`,
     id,
@@ -466,7 +515,7 @@ export async function createStaffAction(
     name,
     name,
   );
-  audit(admin.id, "staff.create", "user", id, JSON.stringify({ role }));
+  await audit(admin.id, "staff.create", "user", id, JSON.stringify({ role }));
   revalidatePath("/", "layout");
 
   return { errors: [], ok: true };
@@ -480,15 +529,15 @@ export async function updateStaffRoleAction(formData: FormData): Promise<void> {
 
   // The last administrator cannot demote themselves out of the admin panel.
   if (userId === admin.id && role.data !== "admin") {
-    const others = get<{ n: number }>(
+    const others = await get<{ n: number }>(
       "SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND id != ?",
       admin.id,
     );
     if (!others || others.n === 0) return;
   }
 
-  run("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?", role.data, userId);
-  audit(admin.id, "staff.role", "user", userId, JSON.stringify({ role: role.data }));
+  await run("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?", role.data, userId);
+  await audit(admin.id, "staff.role", "user", userId, JSON.stringify({ role: role.data }));
   revalidatePath("/", "layout");
 }
 
@@ -497,7 +546,7 @@ export async function deleteStaffAction(formData: FormData): Promise<void> {
   const userId = String(formData.get("userId") ?? "");
   if (userId === admin.id) return;
 
-  run("DELETE FROM users WHERE id = ? AND role IN ('admin','editor')", userId);
-  audit(admin.id, "staff.delete", "user", userId);
+  await run("DELETE FROM users WHERE id = ? AND role IN ('admin','editor')", userId);
+  await audit(admin.id, "staff.delete", "user", userId);
   revalidatePath("/", "layout");
 }

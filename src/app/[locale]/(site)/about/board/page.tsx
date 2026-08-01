@@ -27,8 +27,8 @@ export default async function BoardPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("about.board");
-  const members = listBoardMembers();
+  const page = await getPage("about.board");
+  const members = await listBoardMembers();
   const hasPhotos = members.some((member) => member.photo);
 
   return (

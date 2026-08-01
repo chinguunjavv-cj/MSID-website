@@ -19,7 +19,7 @@ export default async function AdminUsersPage({
 
   const mn = locale === "mn";
   const me = await currentUser();
-  const staff = listStaffUsers();
+  const staff = await listStaffUsers();
   const isAdmin = me?.role === "admin";
 
   const roles = [

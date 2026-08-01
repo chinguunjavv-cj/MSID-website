@@ -36,11 +36,11 @@ export const PAGE_KEYS = [
 
 export type PageKey = (typeof PAGE_KEYS)[number];
 
-export function getPage(key: PageKey): Page | undefined {
+export async function getPage(key: PageKey): Promise<Page | undefined> {
   return get<Page>("SELECT * FROM pages WHERE key = ?", key);
 }
 
-export function listPages(): Page[] {
+export async function listPages(): Promise<Page[]> {
   return all<Page>("SELECT * FROM pages ORDER BY key");
 }
 
@@ -52,7 +52,7 @@ export function listPages(): Page[] {
  * Events that have not finished yet, soonest first. An event with no end date counts
  * as upcoming until its start date passes.
  */
-export function listUpcomingEvents(limit = 20): EventRow[] {
+export async function listUpcomingEvents(limit = 20): Promise<EventRow[]> {
   return all<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published'
@@ -64,7 +64,7 @@ export function listUpcomingEvents(limit = 20): EventRow[] {
   );
 }
 
-export function listPastEvents(limit = 50, offset = 0): EventRow[] {
+export async function listPastEvents(limit = 50, offset = 0): Promise<EventRow[]> {
   return all<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published'
@@ -77,7 +77,7 @@ export function listPastEvents(limit = 50, offset = 0): EventRow[] {
   );
 }
 
-export function countPastEvents(): number {
+export async function countPastEvents(): Promise<number> {
   return count(
     `SELECT COUNT(*) AS n FROM events
      WHERE status = 'published' AND COALESCE(ends_on, starts_on) < ?`,
@@ -85,35 +85,35 @@ export function countPastEvents(): number {
   );
 }
 
-export function getEventBySlug(slug: string, includeDrafts = false): EventRow | undefined {
+export async function getEventBySlug(slug: string, includeDrafts = false): Promise<EventRow | undefined> {
   return get<EventRow>(
     `SELECT * FROM events WHERE slug = ?${includeDrafts ? "" : " AND status = 'published'"}`,
     slug,
   );
 }
 
-export function getEventById(id: string): EventRow | undefined {
+export async function getEventById(id: string): Promise<EventRow | undefined> {
   return get<EventRow>("SELECT * FROM events WHERE id = ?", id);
 }
 
-export function listAllEvents(): EventRow[] {
+export async function listAllEvents(): Promise<EventRow[]> {
   return all<EventRow>(
     "SELECT * FROM events ORDER BY starts_on IS NULL, starts_on DESC, created_at DESC",
   );
 }
 
-export function listEventFees(eventId: string): EventFee[] {
+export async function listEventFees(eventId: string): Promise<EventFee[]> {
   return all<EventFee>(
     "SELECT * FROM event_fees WHERE event_id = ? ORDER BY sort, amount_mnt",
     eventId,
   );
 }
 
-export function getEventFee(id: string): EventFee | undefined {
+export async function getEventFee(id: string): Promise<EventFee | undefined> {
   return get<EventFee>("SELECT * FROM event_fees WHERE id = ?", id);
 }
 
-export function listEventSessions(eventId: string): EventSession[] {
+export async function listEventSessions(eventId: string): Promise<EventSession[]> {
   return all<EventSession>(
     "SELECT * FROM event_sessions WHERE event_id = ? ORDER BY day, sort, starts_at",
     eventId,
@@ -121,15 +121,16 @@ export function listEventSessions(eventId: string): EventSession[] {
 }
 
 /** The single event to feature on the home page: nearest upcoming, or the flagged one. */
-export function featuredEvent(): EventRow | undefined {
-  const flagged = get<EventRow>(
+export async function featuredEvent(): Promise<EventRow | undefined> {
+  const flagged = await get<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published' AND is_featured = 1
        AND COALESCE(ends_on, starts_on, '9999-12-31') >= ?
      ORDER BY starts_on LIMIT 1`,
     todayIso(),
   );
-  return flagged ?? listUpcomingEvents(1)[0];
+  if (flagged) return flagged;
+  return (await listUpcomingEvents(1))[0];
 }
 
 /**
@@ -147,7 +148,7 @@ export function registrationState(
   return "open";
 }
 
-export function countEventRegistrations(eventId: string): number {
+export async function countEventRegistrations(eventId: string): Promise<number> {
   return count(
     `SELECT COUNT(*) AS n FROM registrations
      WHERE event_id = ? AND attendance_status != 'cancelled'`,
@@ -159,18 +160,18 @@ export function countEventRegistrations(eventId: string): number {
 /* Registrations                                                               */
 /* -------------------------------------------------------------------------- */
 
-export function getRegistrationByReference(reference: string): Registration | undefined {
+export async function getRegistrationByReference(reference: string): Promise<Registration | undefined> {
   return get<Registration>("SELECT * FROM registrations WHERE reference = ?", reference);
 }
 
-export function getRegistrationById(id: string): Registration | undefined {
+export async function getRegistrationById(id: string): Promise<Registration | undefined> {
   return get<Registration>("SELECT * FROM registrations WHERE id = ?", id);
 }
 
-export function findRegistration(
+export async function findRegistration(
   eventId: string,
   email: string,
-): Registration | undefined {
+): Promise<Registration | undefined> {
   return get<Registration>(
     `SELECT * FROM registrations
      WHERE event_id = ? AND email = ? COLLATE NOCASE AND attendance_status != 'cancelled'`,
@@ -187,7 +188,7 @@ export type RegistrationWithEvent = Registration & {
   event_ends_on: string | null;
 };
 
-export function listRegistrationsForUser(userId: string): RegistrationWithEvent[] {
+export async function listRegistrationsForUser(userId: string): Promise<RegistrationWithEvent[]> {
   return all<RegistrationWithEvent>(
     `SELECT r.*, e.title_mn AS event_title_mn, e.title_en AS event_title_en,
             e.slug AS event_slug, e.starts_on AS event_starts_on, e.ends_on AS event_ends_on
@@ -199,11 +200,11 @@ export function listRegistrationsForUser(userId: string): RegistrationWithEvent[
   );
 }
 
-export function listRegistrations(filters: {
+export async function listRegistrations(filters: {
   eventId?: string;
   paymentStatus?: string;
   query?: string;
-}): RegistrationWithEvent[] {
+}): Promise<RegistrationWithEvent[]> {
   const where: string[] = [];
   const params: (string | number)[] = [];
 
@@ -238,7 +239,7 @@ export function listRegistrations(filters: {
 /* -------------------------------------------------------------------------- */
 
 /** In-force guidelines first, then superseded ones — the register reading order. */
-export function listPublishedGuidelines(): Guideline[] {
+export async function listPublishedGuidelines(): Promise<Guideline[]> {
   return all<Guideline>(
     `SELECT * FROM guidelines
      WHERE status IN ('published', 'superseded')
@@ -247,16 +248,16 @@ export function listPublishedGuidelines(): Guideline[] {
   );
 }
 
-export function listAllGuidelines(): Guideline[] {
+export async function listAllGuidelines(): Promise<Guideline[]> {
   return all<Guideline>(
     "SELECT * FROM guidelines ORDER BY effective_from DESC, created_at DESC",
   );
 }
 
-export function getGuidelineBySlug(
+export async function getGuidelineBySlug(
   slug: string,
   includeDrafts = false,
-): Guideline | undefined {
+): Promise<Guideline | undefined> {
   return get<Guideline>(
     `SELECT * FROM guidelines WHERE slug = ?${
       includeDrafts ? "" : " AND status IN ('published', 'superseded')"
@@ -265,12 +266,12 @@ export function getGuidelineBySlug(
   );
 }
 
-export function getGuidelineById(id: string): Guideline | undefined {
+export async function getGuidelineById(id: string): Promise<Guideline | undefined> {
   return get<Guideline>("SELECT * FROM guidelines WHERE id = ?", id);
 }
 
 /** The guideline that replaced this one, if any. */
-export function findSuccessor(guidelineId: string): Guideline | undefined {
+export async function findSuccessor(guidelineId: string): Promise<Guideline | undefined> {
   return get<Guideline>(
     "SELECT * FROM guidelines WHERE supersedes_id = ? AND status = 'published'",
     guidelineId,
@@ -281,7 +282,7 @@ export function findSuccessor(guidelineId: string): Guideline | undefined {
 /* Publications                                                                */
 /* -------------------------------------------------------------------------- */
 
-export function listPublishedPublications(limit = 100): Publication[] {
+export async function listPublishedPublications(limit = 100): Promise<Publication[]> {
   return all<Publication>(
     `SELECT * FROM publications WHERE status = 'published'
      ORDER BY published_on DESC, created_at DESC LIMIT ?`,
@@ -289,16 +290,16 @@ export function listPublishedPublications(limit = 100): Publication[] {
   );
 }
 
-export function listAllPublications(): Publication[] {
+export async function listAllPublications(): Promise<Publication[]> {
   return all<Publication>(
     "SELECT * FROM publications ORDER BY published_on DESC, created_at DESC",
   );
 }
 
-export function getPublicationBySlug(
+export async function getPublicationBySlug(
   slug: string,
   includeDrafts = false,
-): Publication | undefined {
+): Promise<Publication | undefined> {
   return get<Publication>(
     `SELECT * FROM publications WHERE slug = ?${
       includeDrafts ? "" : " AND status = 'published'"
@@ -307,7 +308,7 @@ export function getPublicationBySlug(
   );
 }
 
-export function getPublicationById(id: string): Publication | undefined {
+export async function getPublicationById(id: string): Promise<Publication | undefined> {
   return get<Publication>("SELECT * FROM publications WHERE id = ?", id);
 }
 
@@ -315,7 +316,7 @@ export function getPublicationById(id: string): Publication | undefined {
 /* News                                                                        */
 /* -------------------------------------------------------------------------- */
 
-export function listPublishedNews(limit = 20, offset = 0): NewsPost[] {
+export async function listPublishedNews(limit = 20, offset = 0): Promise<NewsPost[]> {
   return all<NewsPost>(
     `SELECT * FROM news_posts
      WHERE status = 'published' AND COALESCE(published_at, created_at) <= datetime('now')
@@ -326,13 +327,13 @@ export function listPublishedNews(limit = 20, offset = 0): NewsPost[] {
   );
 }
 
-export function listAllNews(): NewsPost[] {
+export async function listAllNews(): Promise<NewsPost[]> {
   return all<NewsPost>(
     "SELECT * FROM news_posts ORDER BY COALESCE(published_at, created_at) DESC",
   );
 }
 
-export function getNewsBySlug(slug: string, includeDrafts = false): NewsPost | undefined {
+export async function getNewsBySlug(slug: string, includeDrafts = false): Promise<NewsPost | undefined> {
   return get<NewsPost>(
     `SELECT * FROM news_posts WHERE slug = ?${
       includeDrafts ? "" : " AND status = 'published'"
@@ -341,7 +342,7 @@ export function getNewsBySlug(slug: string, includeDrafts = false): NewsPost | u
   );
 }
 
-export function getNewsById(id: string): NewsPost | undefined {
+export async function getNewsById(id: string): Promise<NewsPost | undefined> {
   return get<NewsPost>("SELECT * FROM news_posts WHERE id = ?", id);
 }
 
@@ -349,32 +350,32 @@ export function getNewsById(id: string): NewsPost | undefined {
 /* Board, history, partners                                                    */
 /* -------------------------------------------------------------------------- */
 
-export function listBoardMembers(currentOnly = true): BoardMember[] {
+export async function listBoardMembers(currentOnly = true): Promise<BoardMember[]> {
   return all<BoardMember>(
     `SELECT * FROM board_members ${currentOnly ? "WHERE is_current = 1" : ""}
      ORDER BY sort, name_mn`,
   );
 }
 
-export function getBoardMemberById(id: string): BoardMember | undefined {
+export async function getBoardMemberById(id: string): Promise<BoardMember | undefined> {
   return get<BoardMember>("SELECT * FROM board_members WHERE id = ?", id);
 }
 
-export function listHistoryEntries(): HistoryEntry[] {
+export async function listHistoryEntries(): Promise<HistoryEntry[]> {
   return all<HistoryEntry>(
     "SELECT * FROM history_entries ORDER BY year DESC, sort, happened_on DESC",
   );
 }
 
-export function getHistoryEntryById(id: string): HistoryEntry | undefined {
+export async function getHistoryEntryById(id: string): Promise<HistoryEntry | undefined> {
   return get<HistoryEntry>("SELECT * FROM history_entries WHERE id = ?", id);
 }
 
-export function listPartners(): Partner[] {
+export async function listPartners(): Promise<Partner[]> {
   return all<Partner>("SELECT * FROM partners ORDER BY sort, name_en");
 }
 
-export function getPartnerById(id: string): Partner | undefined {
+export async function getPartnerById(id: string): Promise<Partner | undefined> {
   return get<Partner>("SELECT * FROM partners WHERE id = ?", id);
 }
 
@@ -382,7 +383,7 @@ export function getPartnerById(id: string): Partner | undefined {
 /* Members                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export function getMemberRecord(userId: string): MemberRecord | undefined {
+export async function getMemberRecord(userId: string): Promise<MemberRecord | undefined> {
   return get<MemberRecord>(
     `SELECT u.*, m.member_no, m.degree, m.specialty_mn, m.specialty_en,
             m.institution_mn, m.institution_en, m.position_mn, m.position_en,
@@ -395,7 +396,7 @@ export function getMemberRecord(userId: string): MemberRecord | undefined {
   );
 }
 
-export function listMembers(filters: { status?: string; query?: string }): MemberRecord[] {
+export async function listMembers(filters: { status?: string; query?: string }): Promise<MemberRecord[]> {
   const where: string[] = ["u.role = 'member'"];
   const params: string[] = [];
 
@@ -423,7 +424,7 @@ export function listMembers(filters: { status?: string; query?: string }): Membe
   );
 }
 
-export function listStaffUsers(): MemberRecord[] {
+export async function listStaffUsers(): Promise<MemberRecord[]> {
   return all<MemberRecord>(
     `SELECT u.*, NULL AS member_no, '' AS degree, '' AS specialty_mn, '' AS specialty_en,
             '' AS institution_mn, '' AS institution_en, '' AS position_mn,
@@ -447,31 +448,43 @@ export interface DashboardStats {
   draftContent: number;
 }
 
-export function dashboardStats(): DashboardStats {
-  return {
-    activeMembers: count(
-      "SELECT COUNT(*) AS n FROM member_profiles WHERE membership_status = 'active'",
-    ),
-    pendingMembers: count(
-      "SELECT COUNT(*) AS n FROM member_profiles WHERE membership_status = 'pending'",
-    ),
-    upcomingEvents: count(
+export async function dashboardStats(): Promise<DashboardStats> {
+  // Six independent counts, issued together. Awaiting them one after another would be
+  // six sequential network round trips to a hosted database on every admin page load.
+  const [
+    activeMembers,
+    pendingMembers,
+    upcomingEvents,
+    unpaidRegistrations,
+    publishedGuidelines,
+    draftContent,
+  ] = await Promise.all([
+    count("SELECT COUNT(*) AS n FROM member_profiles WHERE membership_status = 'active'"),
+    count("SELECT COUNT(*) AS n FROM member_profiles WHERE membership_status = 'pending'"),
+    count(
       `SELECT COUNT(*) AS n FROM events WHERE status = 'published'
        AND COALESCE(ends_on, starts_on, '9999-12-31') >= ?`,
       todayIso(),
     ),
-    unpaidRegistrations: count(
+    count(
       `SELECT COUNT(*) AS n FROM registrations
        WHERE payment_status IN ('unpaid', 'pending') AND attendance_status != 'cancelled'`,
     ),
-    publishedGuidelines: count(
-      "SELECT COUNT(*) AS n FROM guidelines WHERE status = 'published'",
-    ),
-    draftContent: count(
+    count("SELECT COUNT(*) AS n FROM guidelines WHERE status = 'published'"),
+    count(
       `SELECT (SELECT COUNT(*) FROM events WHERE status = 'draft')
             + (SELECT COUNT(*) FROM guidelines WHERE status IN ('draft', 'review'))
             + (SELECT COUNT(*) FROM publications WHERE status = 'draft')
             + (SELECT COUNT(*) FROM news_posts WHERE status = 'draft') AS n`,
     ),
+  ]);
+
+  return {
+    activeMembers,
+    pendingMembers,
+    upcomingEvents,
+    unpaidRegistrations,
+    publishedGuidelines,
+    draftContent,
   };
 }

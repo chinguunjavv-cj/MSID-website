@@ -15,14 +15,14 @@ import { hashPassword } from "../src/lib/auth/password.ts";
 import { SETTING_DEFAULTS } from "../src/lib/settings-defaults.ts";
 
 // Touch the database so the schema is applied before anything else runs.
-db();
+await db();
 
 /* -------------------------------------------------------------------------- */
 /* Site settings                                                               */
 /* -------------------------------------------------------------------------- */
 
 for (const [key, value] of Object.entries(SETTING_DEFAULTS)) {
-  run(
+  await run(
     `INSERT INTO site_settings (key, value) VALUES (?, ?)
      ON CONFLICT(key) DO NOTHING`,
     key,
@@ -179,7 +179,7 @@ const PAGES: {
 ];
 
 for (const page of PAGES) {
-  run(
+  await run(
     `INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(key) DO NOTHING`,
     page.key,
@@ -194,8 +194,8 @@ for (const page of PAGES) {
 /* History — the one dated fact MSID has published                             */
 /* -------------------------------------------------------------------------- */
 
-if (!get("SELECT id FROM history_entries LIMIT 1")) {
-  run(
+if (!await get("SELECT id FROM history_entries LIMIT 1")) {
+  await run(
     `INSERT INTO history_entries (id, year, happened_on, title_mn, title_en, body_mn, body_en, sort)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     newId(),
@@ -259,8 +259,8 @@ const PARTNERS = [
 ];
 
 for (const partner of PARTNERS) {
-  if (get("SELECT id FROM partners WHERE acronym = ?", partner.acronym)) continue;
-  run(
+  if (await get("SELECT id FROM partners WHERE acronym = ?", partner.acronym)) continue;
+  await run(
     `INSERT INTO partners
        (id, name_mn, name_en, acronym, country_mn, country_en, url, logo,
         description_mn, description_en, kind, sort)
@@ -284,13 +284,13 @@ for (const partner of PARTNERS) {
 /* -------------------------------------------------------------------------- */
 
 const adminEmail = process.env.ADMIN_EMAIL ?? "admin@msid.mn";
-const existing = get<{ id: string }>("SELECT id FROM users WHERE email = ?", adminEmail);
+const existing = await get<{ id: string }>("SELECT id FROM users WHERE email = ?", adminEmail);
 
 if (existing) {
   console.log(`• Administrator ${adminEmail} already exists — left unchanged.`);
 } else {
   const password = process.env.ADMIN_PASSWORD ?? randomBytes(9).toString("base64url");
-  run(
+  await run(
     `INSERT INTO users (id, email, password_hash, role, status, name_mn, name_en)
      VALUES (?, ?, ?, 'admin', 'active', ?, ?)`,
     newId(),

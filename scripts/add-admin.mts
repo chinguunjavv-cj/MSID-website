@@ -14,7 +14,7 @@
 import { db, get, newId, run } from "../src/lib/db/index.ts";
 import { hashPassword, MIN_PASSWORD_LENGTH } from "../src/lib/auth/password.ts";
 
-db();
+await db();
 
 const email = (process.env.ADMIN_EMAIL ?? "").trim().toLowerCase();
 const name = (process.env.ADMIN_NAME ?? "").trim();
@@ -25,13 +25,13 @@ if (!email) {
   process.exit(1);
 }
 
-const existing = get<{ id: string; role: string }>(
+const existing = await get<{ id: string; role: string }>(
   "SELECT id, role FROM users WHERE email = ?",
   email,
 );
 
 if (existing) {
-  run(
+  await run(
     `UPDATE users SET role = 'admin', status = 'active',
        name_mn = COALESCE(NULLIF(?, ''), name_mn),
        name_en = COALESCE(NULLIF(?, ''), name_en),
@@ -47,13 +47,13 @@ if (existing) {
       console.error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       process.exit(1);
     }
-    run(
+    await run(
       "UPDATE users SET password_hash = ? WHERE id = ?",
       await hashPassword(password),
       existing.id,
     );
     // Any existing sessions are cut, so a password reset actually locks others out.
-    run("DELETE FROM sessions WHERE user_id = ?", existing.id);
+    await run("DELETE FROM sessions WHERE user_id = ?", existing.id);
     console.log(`Updated ${email}: role=admin, password reset.`);
   } else {
     console.log(`Updated ${email}: role=admin (password unchanged).`);
@@ -67,7 +67,7 @@ if (existing) {
   }
 
   const id = newId();
-  run(
+  await run(
     `INSERT INTO users (id, email, password_hash, role, status, name_mn, name_en)
      VALUES (?, ?, ?, 'admin', 'active', ?, ?)`,
     id,
@@ -76,7 +76,7 @@ if (existing) {
     name,
     name,
   );
-  run(
+  await run(
     `INSERT INTO audit_log (id, user_id, action, entity, entity_id, meta)
      VALUES (?, ?, 'staff.create', 'user', ?, '{"via":"add-admin script"}')`,
     newId(),

@@ -35,7 +35,7 @@ export async function signInAction(
 
   if (!email || !password) return { errors: [t.errors.formHasErrors] };
 
-  const user = get<{
+  const user = await get<{
     id: string;
     password_hash: string;
     status: string;
@@ -56,7 +56,7 @@ export async function signInAction(
   pruneSessions();
   const userAgent = (await headers()).get("user-agent") ?? "";
   await createSession(user.id, userAgent);
-  run("UPDATE users SET last_login_at = datetime('now') WHERE id = ?", user.id);
+  await run("UPDATE users SET last_login_at = datetime('now') WHERE id = ?", user.id);
 
   const isStaff = user.role === "admin" || user.role === "editor";
   redirect(localePath(locale, isStaff ? "/admin" : "/portal"));
@@ -129,7 +129,7 @@ export async function applyForMembershipAction(
     };
   }
 
-  if (get("SELECT id FROM users WHERE email = ?", data.email)) {
+  if (await get("SELECT id FROM users WHERE email = ?", data.email)) {
     return { errors: [t.auth.emailTaken], fieldErrors: { email: t.auth.emailTaken } };
   }
 
@@ -139,8 +139,8 @@ export async function applyForMembershipAction(
 
   // The applicant is created as `pending`: they cannot sign in until the executive
   // board approves the application in the admin.
-  transaction(() => {
-    run(
+  await transaction(async (tx) => {
+    await tx.run(
       `INSERT INTO users (id, email, password_hash, role, status, name_mn, name_en)
        VALUES (?, ?, ?, 'member', 'pending', ?, ?)`,
       userId,
@@ -150,7 +150,7 @@ export async function applyForMembershipAction(
       isMn ? "" : data.name,
     );
 
-    run(
+    await tx.run(
       `INSERT INTO member_profiles
          (user_id, degree, specialty_mn, specialty_en, institution_mn, institution_en,
           position_mn, position_en, phone, membership_type, membership_status)
@@ -167,7 +167,7 @@ export async function applyForMembershipAction(
       data.membershipType,
     );
 
-    run(
+    await tx.run(
       `INSERT INTO audit_log (id, user_id, action, entity, entity_id)
        VALUES (?, ?, 'membership.apply', 'user', ?)`,
       newId(),
@@ -222,14 +222,14 @@ export async function updateProfileAction(
   // Column names are chosen from a two-value literal, never taken from user input.
   const suffix = locale === "mn" ? "mn" : "en";
 
-  transaction(() => {
-    run(
+  await transaction(async (tx) => {
+    await tx.run(
       `UPDATE users SET name_${suffix} = ?, updated_at = datetime('now') WHERE id = ?`,
       data.name,
       user.id,
     );
 
-    run(
+    await tx.run(
       `INSERT INTO member_profiles (user_id, degree, phone, specialty_${suffix},
          institution_${suffix}, position_${suffix})
        VALUES (?, ?, ?, ?, ?, ?)
@@ -270,7 +270,7 @@ export async function changePasswordAction(
   const password = String(formData.get("password") ?? "");
   const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
 
-  const stored = get<{ password_hash: string }>(
+  const stored = await get<{ password_hash: string }>(
     "SELECT password_hash FROM users WHERE id = ?",
     user.id,
   );
@@ -281,14 +281,14 @@ export async function changePasswordAction(
   if (password.length < MIN_PASSWORD_LENGTH) return { errors: [t.auth.passwordTooShort] };
   if (password !== passwordConfirm) return { errors: [t.auth.passwordMismatch] };
 
-  run(
+  await run(
     "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
     await hashPassword(password),
     user.id,
   );
 
   // Every other session for this account is invalidated by the change.
-  run("DELETE FROM sessions WHERE user_id = ?", user.id);
+  await run("DELETE FROM sessions WHERE user_id = ?", user.id);
   await createSession(user.id);
 
   return { errors: [], ok: true };

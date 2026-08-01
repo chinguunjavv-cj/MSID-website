@@ -26,8 +26,8 @@ export default async function GuidelinesPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("guidelines.intro");
-  const guidelines = listPublishedGuidelines();
+  const page = await getPage("guidelines.intro");
+  const guidelines = await listPublishedGuidelines();
 
   const inForce = guidelines.filter((item) => item.status === "published");
   const superseded = guidelines.filter((item) => item.status === "superseded");

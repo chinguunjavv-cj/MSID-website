@@ -8,10 +8,10 @@ import { listPartners } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/format";
 
-export function Footer({ locale }: { locale: Locale }) {
+export async function Footer({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
-  const settings = getSettings();
-  const partners = listPartners();
+  const settings = await getSettings();
+  const partners = await listPartners();
   const p = (path: string) => localePath(locale, path);
   const year = new Date().getFullYear();
 

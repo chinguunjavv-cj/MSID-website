@@ -21,7 +21,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
-  const guideline = getGuidelineBySlug(slug);
+  const guideline = await getGuidelineBySlug(slug);
   if (!guideline) return {};
   return {
     title: tr(guideline, "title", locale),
@@ -37,14 +37,14 @@ export default async function GuidelinePage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const guideline = getGuidelineBySlug(slug);
+  const guideline = await getGuidelineBySlug(slug);
   if (!guideline) notFound();
 
   const t = getDictionary(locale);
   const status = guideline.status as keyof typeof t.guidelines.status;
-  const successor = findSuccessor(guideline.id);
+  const successor = await findSuccessor(guideline.id);
   const predecessor = guideline.supersedes_id
-    ? getGuidelineById(guideline.supersedes_id)
+    ? await getGuidelineById(guideline.supersedes_id)
     : undefined;
 
   const facts = [

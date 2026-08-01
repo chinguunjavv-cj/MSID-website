@@ -26,8 +26,8 @@ export default async function PublicationsPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("publications.intro");
-  const publications = listPublishedPublications();
+  const page = await getPage("publications.intro");
+  const publications = await listPublishedPublications();
 
   return (
     <>

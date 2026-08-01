@@ -32,16 +32,26 @@ export default async function HomePage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const settings = getSettings();
+  const settings = await getSettings();
   const p = (path: string) => localePath(locale, path);
 
-  const guidelines = listPublishedGuidelines().slice(0, 6);
-  const upcoming = listUpcomingEvents(4);
-  const featured = featuredEvent();
-  const news = listPublishedNews(4);
-  const partners = listPartners();
-  const aboutPage = getPage("home.about");
-  const benefits = getPage("membership.benefits");
+  /*
+    Issued together, not one after another. Against a hosted database each of these is
+    a network round trip, so awaiting them in sequence would make the home page seven
+    round trips deep for no reason — none of them depend on each other.
+  */
+  const [allGuidelines, upcoming, featured, news, partners, aboutPage, benefits] =
+    await Promise.all([
+      listPublishedGuidelines(),
+      listUpcomingEvents(4),
+      featuredEvent(),
+      listPublishedNews(4),
+      listPartners(),
+      getPage("home.about"),
+      getPage("membership.benefits"),
+    ]);
+
+  const guidelines = allGuidelines.slice(0, 6);
 
   const heroHeadline =
     (locale === "mn" ? settings.hero_headline_mn : settings.hero_headline_en) ||

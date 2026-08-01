@@ -14,7 +14,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
-  const publication = getPublicationBySlug(slug);
+  const publication = await getPublicationBySlug(slug);
   if (!publication) return {};
   return { title: tr(publication, "title", locale) };
 }
@@ -27,7 +27,7 @@ export default async function PublicationPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const publication = getPublicationBySlug(slug);
+  const publication = await getPublicationBySlug(slug);
   if (!publication) notFound();
 
   const t = getDictionary(locale);

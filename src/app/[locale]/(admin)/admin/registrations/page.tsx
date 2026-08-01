@@ -31,8 +31,8 @@ export default async function AdminRegistrationsPage({
   const mn = locale === "mn";
   const t = getDictionary(locale);
 
-  const events = listAllEvents();
-  const registrations = listRegistrations({
+  const events = await listAllEvents();
+  const registrations = await listRegistrations({
     eventId: filters.event,
     paymentStatus: filters.payment,
     query: filters.q,

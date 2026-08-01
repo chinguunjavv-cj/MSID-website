@@ -25,7 +25,7 @@ export default async function MissionPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("about.mission");
+  const page = await getPage("about.mission");
 
   return (
     <>

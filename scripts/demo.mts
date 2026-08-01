@@ -11,16 +11,16 @@
 
 import { db, get, newId, run } from "../src/lib/db/index.ts";
 
-db();
+await db();
 
 const clear = process.argv.includes("--clear");
 
 if (clear) {
-  const events = run("DELETE FROM events WHERE slug LIKE 'demo-%'");
-  run("DELETE FROM guidelines WHERE slug LIKE 'demo-%'");
-  run("DELETE FROM publications WHERE slug LIKE 'demo-%'");
-  run("DELETE FROM news_posts WHERE slug LIKE 'demo-%'");
-  run("DELETE FROM board_members WHERE bio_en LIKE 'DEMO%'");
+  const events = await run("DELETE FROM events WHERE slug LIKE 'demo-%'");
+  await run("DELETE FROM guidelines WHERE slug LIKE 'demo-%'");
+  await run("DELETE FROM publications WHERE slug LIKE 'demo-%'");
+  await run("DELETE FROM news_posts WHERE slug LIKE 'demo-%'");
+  await run("DELETE FROM board_members WHERE bio_en LIKE 'DEMO%'");
   console.log(`Removed sample content (${events.changes} events and related records).`);
   process.exit(0);
 }
@@ -32,14 +32,13 @@ if (clear) {
 const year = new Date().getFullYear() + 1;
 const congressSlug = "demo-msid-congress";
 
-let congressId = get<{ id: string }>(
-  "SELECT id FROM events WHERE slug = ?",
-  congressSlug,
+let congressId = (
+  await get<{ id: string }>("SELECT id FROM events WHERE slug = ?", congressSlug)
 )?.id;
 
 if (!congressId) {
   congressId = newId();
-  run(
+  await run(
     `INSERT INTO events
        (id, slug, kind, status, title_mn, title_en, summary_mn, summary_en,
         body_mn, body_en, venue_mn, venue_en, city_mn, city_en,
@@ -78,7 +77,7 @@ Speakers from Mongolia and abroad will present, alongside case conference sessio
   ];
 
   for (const [labelMn, labelEn, audience, amount, early, sort] of fees) {
-    run(
+    await run(
       `INSERT INTO event_fees (id, event_id, label_mn, label_en, audience, amount_mnt, early_amount_mnt, sort)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       newId(),
@@ -102,7 +101,7 @@ Speakers from Mongolia and abroad will present, alongside case conference sessio
   ];
 
   for (const [day, from, to, titleMn, titleEn, speakerMn, speakerEn, sort] of sessions) {
-    run(
+    await run(
       `INSERT INTO event_sessions
          (id, event_id, day, starts_at, ends_at, title_mn, title_en, speaker_mn, speaker_en, sort)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -124,8 +123,8 @@ Speakers from Mongolia and abroad will present, alongside case conference sessio
 /* Training course                                                             */
 /* -------------------------------------------------------------------------- */
 
-if (!get("SELECT id FROM events WHERE slug = 'demo-endoscopy-course'")) {
-  run(
+if (!await get("SELECT id FROM events WHERE slug = 'demo-endoscopy-course'")) {
+  await run(
     `INSERT INTO events
        (id, slug, kind, status, title_mn, title_en, summary_mn, summary_en,
         venue_mn, venue_en, city_mn, city_en, starts_on, ends_on, registration_open, capacity)
@@ -148,8 +147,8 @@ if (!get("SELECT id FROM events WHERE slug = 'demo-endoscopy-course'")) {
 /* Guidelines                                                                  */
 /* -------------------------------------------------------------------------- */
 
-if (!get("SELECT id FROM guidelines WHERE slug = 'demo-ibd-guideline'")) {
-  run(
+if (!await get("SELECT id FROM guidelines WHERE slug = 'demo-ibd-guideline'")) {
+  await run(
     `INSERT INTO guidelines
        (id, slug, code, version, status, title_mn, title_en, summary_mn, summary_en,
         body_mn, body_en, category_mn, category_en, approved_on, effective_from, review_due)
@@ -178,8 +177,8 @@ Note: this is sample content and is not an official guideline of the Society.`,
   );
 }
 
-if (!get("SELECT id FROM guidelines WHERE slug = 'demo-crc-screening'")) {
-  run(
+if (!await get("SELECT id FROM guidelines WHERE slug = 'demo-crc-screening'")) {
+  await run(
     `INSERT INTO guidelines
        (id, slug, code, version, status, title_mn, title_en, summary_mn, summary_en,
         category_mn, category_en, approved_on)
@@ -200,8 +199,8 @@ if (!get("SELECT id FROM guidelines WHERE slug = 'demo-crc-screening'")) {
 /* Publication                                                                 */
 /* -------------------------------------------------------------------------- */
 
-if (!get("SELECT id FROM publications WHERE slug = 'demo-ibd-registry'")) {
-  run(
+if (!await get("SELECT id FROM publications WHERE slug = 'demo-ibd-registry'")) {
+  await run(
     `INSERT INTO publications
        (id, slug, kind, status, title_mn, title_en, authors_mn, authors_en,
         abstract_mn, abstract_en, journal_mn, journal_en, volume, issue, pages, published_on)
@@ -223,8 +222,8 @@ if (!get("SELECT id FROM publications WHERE slug = 'demo-ibd-registry'")) {
 /* News                                                                        */
 /* -------------------------------------------------------------------------- */
 
-if (!get("SELECT id FROM news_posts WHERE slug = 'demo-news-congress-open'")) {
-  run(
+if (!await get("SELECT id FROM news_posts WHERE slug = 'demo-news-congress-open'")) {
+  await run(
     `INSERT INTO news_posts
        (id, slug, status, title_mn, title_en, excerpt_mn, excerpt_en, body_mn, body_en, published_at)
      VALUES (?, 'demo-news-congress-open', 'published', ?, ?, ?, ?, ?, ?, ?)`,
@@ -258,10 +257,10 @@ const board: [string, string, string, string, number][] = [
 ];
 
 for (const [roleMn, roleEn, nameMn, nameEn, sort] of board) {
-  if (get("SELECT id FROM board_members WHERE role_en = ? AND bio_en LIKE 'DEMO%'", roleEn)) {
+  if (await get("SELECT id FROM board_members WHERE role_en = ? AND bio_en LIKE 'DEMO%'", roleEn)) {
     continue;
   }
-  run(
+  await run(
     `INSERT INTO board_members
        (id, name_mn, name_en, role_mn, role_en, institution_mn, institution_en, bio_mn, bio_en, is_current, sort)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,

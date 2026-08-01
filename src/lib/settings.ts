@@ -16,14 +16,16 @@ import {
 export { SETTING_DEFAULTS };
 export type { SettingKey, SiteSettings };
 
-export function getSettings(): SiteSettings {
-  const rows = all<{ key: string; value: string }>("SELECT key, value FROM site_settings");
+export async function getSettings(): Promise<SiteSettings> {
+  const rows = await all<{ key: string; value: string }>(
+    "SELECT key, value FROM site_settings",
+  );
   const stored = Object.fromEntries(rows.map((row) => [row.key, row.value]));
   return { ...SETTING_DEFAULTS, ...stored } as SiteSettings;
 }
 
-export function setSetting(key: SettingKey, value: string): void {
-  run(
+export async function setSetting(key: SettingKey, value: string): Promise<void> {
+  await run(
     `INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')`,
     key,
@@ -31,10 +33,11 @@ export function setSetting(key: SettingKey, value: string): void {
   );
 }
 
-export function setSettings(patch: Partial<SiteSettings>): void {
-  for (const [key, value] of Object.entries(patch)) {
-    if (value !== undefined) setSetting(key as SettingKey, String(value));
-  }
+export async function setSettings(patch: Partial<SiteSettings>): Promise<void> {
+  const entries = Object.entries(patch).filter(([, value]) => value !== undefined);
+  await Promise.all(
+    entries.map(([key, value]) => setSetting(key as SettingKey, String(value))),
+  );
 }
 
 /** True once MSID has entered bank details, which gates the transfer instructions. */

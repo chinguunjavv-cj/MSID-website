@@ -25,7 +25,7 @@ export default async function NewsIndexPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const posts = listPublishedNews(50);
+  const posts = await listPublishedNews(50);
 
   return (
     <>

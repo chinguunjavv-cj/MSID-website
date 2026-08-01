@@ -25,7 +25,7 @@ export default async function ReceivedPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const settings = getSettings();
+  const settings = await getSettings();
 
   return (
     <>

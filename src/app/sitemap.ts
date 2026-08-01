@@ -26,7 +26,7 @@ const STATIC_PATHS = [
   "/membership",
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
 
   const entry = (path: string, lastModified?: string): MetadataRoute.Sitemap[number] => ({
@@ -39,17 +39,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   });
 
+  // Four independent reads, issued together rather than in sequence.
+  const [events, guidelines, publications, news] = await Promise.all([
+    listAllEvents(),
+    listPublishedGuidelines(),
+    listPublishedPublications(),
+    listPublishedNews(200),
+  ]);
+
   return [
     ...STATIC_PATHS.map((path) => entry(path)),
-    ...listAllEvents()
+    ...events
       .filter((event) => event.status === "published")
       .map((event) => entry(`/events/${event.slug}`, event.updated_at)),
-    ...listPublishedGuidelines().map((guideline) =>
+    ...guidelines.map((guideline) =>
       entry(`/guidelines/${guideline.slug}`, guideline.updated_at),
     ),
-    ...listPublishedPublications().map((publication) =>
+    ...publications.map((publication) =>
       entry(`/publications/${publication.slug}`, publication.updated_at),
     ),
-    ...listPublishedNews(200).map((post) => entry(`/news/${post.slug}`, post.updated_at)),
+    ...news.map((post) => entry(`/news/${post.slug}`, post.updated_at)),
   ];
 }

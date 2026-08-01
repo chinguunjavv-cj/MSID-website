@@ -20,16 +20,15 @@ export default async function AdminDashboard({
 
   const mn = locale === "mn";
   const t = getDictionary(locale);
-  const stats = dashboardStats();
-  const settings = getSettings();
-  const recent = listRegistrations({}).slice(0, 8);
-
-  const audit = all<{
-    id: string;
-    action: string;
-    entity: string;
-    created_at: string;
-  }>("SELECT id, action, entity, created_at FROM audit_log ORDER BY created_at DESC LIMIT 8");
+  const [stats, settings, allRecent, audit] = await Promise.all([
+    dashboardStats(),
+    getSettings(),
+    listRegistrations({}),
+    all<{ id: string; action: string; entity: string; created_at: string }>(
+      "SELECT id, action, entity, created_at FROM audit_log ORDER BY created_at DESC LIMIT 8",
+    ),
+  ]);
+  const recent = allRecent.slice(0, 8);
 
   const tiles = [
     {
@@ -88,8 +87,8 @@ export default async function AdminDashboard({
   if (isNoIndex()) {
     warnings.push(
       mn
-        ? `Энэ хувилбарыг хайлтын системд индексжүүлэхгүй байна (${siteUrl()}). Жинхэнэ домэйн дээр нийтлэхдээ NEXT_PUBLIC_SITE_URL-ыг тохируулж, MSID_NOINDEX=0 болгоно уу.`
-        : `This deployment is hidden from search engines (${siteUrl()}). When you launch on the real domain, set NEXT_PUBLIC_SITE_URL and MSID_NOINDEX=0.`,
+        ? `Энэ хувилбарыг хайлтын системд индексжүүлэхгүй байна (${siteUrl()}). Жинхэнэ домэйн дээр нийтлэхдээ MSID_SITE_URL-ыг тохируулж, MSID_NOINDEX=0 болгоно уу.`
+        : `This deployment is hidden from search engines (${siteUrl()}). When you launch on the real domain, set MSID_SITE_URL and MSID_NOINDEX=0.`,
     );
   }
 

@@ -46,8 +46,8 @@ export default async function PortalPage({
   if (!user) redirect(localePath(locale, "/login"));
 
   const t = getDictionary(locale);
-  const member = getMemberRecord(user.id);
-  const registrations = listRegistrationsForUser(user.id);
+  const member = await getMemberRecord(user.id);
+  const registrations = await listRegistrationsForUser(user.id);
   const name = tr(user, "name", locale) || user.email;
 
   const membershipRows = [

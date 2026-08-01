@@ -33,7 +33,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
   if (!event) return {};
   return {
     title: tr(event, "title", locale),
@@ -49,14 +49,17 @@ export default async function EventPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const event = getEventBySlug(slug);
+  const event = await getEventBySlug(slug);
   if (!event) notFound();
 
   const t = getDictionary(locale);
-  const fees = listEventFees(event.id);
-  const sessions = listEventSessions(event.id);
+  // Independent of each other; one round trip's worth of latency, not three.
+  const [fees, sessions, taken] = await Promise.all([
+    listEventFees(event.id),
+    listEventSessions(event.id),
+    countEventRegistrations(event.id),
+  ]);
   const state = registrationState(event);
-  const taken = countEventRegistrations(event.id);
   const remaining = event.capacity ? Math.max(0, event.capacity - taken) : null;
   const countdown = daysUntil(event.starts_on);
 

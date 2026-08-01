@@ -1,28 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { mkdir, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
-import { randomUUID } from "node:crypto";
+import { extname } from "node:path";
 import { currentUser, isStaff } from "@/lib/auth/session";
 import { newId, run } from "@/lib/db";
+import {
+  ALLOWED_UPLOADS,
+  MAX_UPLOAD_BYTES,
+  storeUpload,
+} from "@/lib/storage";
 
 export const runtime = "nodejs";
 
-const MAX_BYTES = 20 * 1024 * 1024;
-
 /**
- * Allowed uploads, keyed by MIME type. The extension is taken from this table rather
- * than from the submitted filename, so a file cannot be stored under an executable or
- * otherwise surprising extension regardless of what it is called.
+ * Admin file upload.
+ *
+ * The storage backend is decided in `@/lib/storage` — Vercel Blob when a token is
+ * present, the local filesystem otherwise — so this route only handles authorisation,
+ * validation and recording the result.
  */
-const ALLOWED: Record<string, string> = {
-  "image/jpeg": ".jpg",
-  "image/png": ".png",
-  "image/webp": ".webp",
-  "image/avif": ".avif",
-  "image/svg+xml": ".svg",
-  "application/pdf": ".pdf",
-};
-
 export async function POST(request: NextRequest) {
   const user = await currentUser();
   if (!isStaff(user)) {
@@ -35,46 +29,40 @@ export async function POST(request: NextRequest) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file supplied" }, { status: 400 });
   }
-  if (file.size > MAX_BYTES) {
+  if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json(
-      { error: `File is larger than ${MAX_BYTES / 1_048_576} MB` },
+      { error: `File is larger than ${MAX_UPLOAD_BYTES / 1_048_576} MB` },
       { status: 413 },
     );
   }
-
-  const extension = ALLOWED[file.type];
-  if (!extension) {
+  if (!ALLOWED_UPLOADS[file.type]) {
     return NextResponse.json(
       { error: `Unsupported file type: ${file.type || extname(file.name)}` },
       { status: 415 },
     );
   }
 
-  /*
-    `turbopackIgnore` stops the build tracer following this `process.cwd()` call and
-    pulling the whole project into the output bundle. The path is resolved at runtime
-    from a fixed literal (or `MSID_UPLOAD_DIR`), never from request data.
-  */
-  const directory =
-    process.env.MSID_UPLOAD_DIR ??
-    join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads");
-  await mkdir(directory, { recursive: true });
+  let stored;
+  try {
+    stored = await storeUpload(file);
+  } catch (error) {
+    console.error("Upload failed", error);
+    return NextResponse.json(
+      { error: (error as Error).message || "Upload failed" },
+      { status: 500 },
+    );
+  }
 
-  const filename = `${randomUUID()}${extension}`;
-  await writeFile(join(directory, filename), Buffer.from(await file.arrayBuffer()));
-
-  const path = `/uploads/${filename}`;
-
-  run(
+  await run(
     `INSERT INTO uploads (id, path, original_name, mime, size, uploaded_by)
      VALUES (?, ?, ?, ?, ?, ?)`,
     newId(),
-    path,
+    stored.path,
     file.name.slice(0, 200),
     file.type,
     file.size,
     user!.id,
   );
 
-  return NextResponse.json({ path, size: file.size, name: file.name });
+  return NextResponse.json(stored);
 }

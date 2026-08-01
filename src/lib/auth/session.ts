@@ -35,7 +35,7 @@ export async function createSession(userId: string, userAgent = ""): Promise<voi
   const sessionId = randomUUID();
   const expires = new Date(Date.now() + SESSION_DAYS * 86_400_000);
 
-  run(
+  await run(
     "INSERT INTO sessions (id, user_id, expires_at, user_agent) VALUES (?, ?, ?, ?)",
     sessionId,
     userId,
@@ -65,7 +65,7 @@ export async function destroySession(): Promise<void> {
   if (token) {
     try {
       const { payload } = await jwtVerify(token, secret());
-      run("DELETE FROM sessions WHERE id = ?", String(payload.sid));
+      await run("DELETE FROM sessions WHERE id = ?", String(payload.sid));
     } catch {
       // An unverifiable token has nothing to revoke.
     }
@@ -90,18 +90,18 @@ export async function currentUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  const session = get<{ user_id: string; expires_at: string }>(
+  const session = await get<{ user_id: string; expires_at: string }>(
     "SELECT user_id, expires_at FROM sessions WHERE id = ?",
     sessionId,
   );
   if (!session) return null;
 
   if (new Date(session.expires_at).getTime() < Date.now()) {
-    run("DELETE FROM sessions WHERE id = ?", sessionId);
+    await run("DELETE FROM sessions WHERE id = ?", sessionId);
     return null;
   }
 
-  const user = get<User>(
+  const user = await get<User>(
     "SELECT id, email, role, status, name_mn, name_en FROM users WHERE id = ?",
     session.user_id,
   );
@@ -122,6 +122,6 @@ export function isStaff(user: SessionUser | null): boolean {
 }
 
 /** Removes expired session rows. Called opportunistically on sign-in. */
-export function pruneSessions(): void {
-  run("DELETE FROM sessions WHERE expires_at < ?", new Date().toISOString());
+export async function pruneSessions(): Promise<void> {
+  await run("DELETE FROM sessions WHERE expires_at < ?", new Date().toISOString());
 }

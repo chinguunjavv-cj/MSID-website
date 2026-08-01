@@ -13,6 +13,8 @@
     "admin": "node --env-file-if-exists=.env.local scripts/add-admin.mts"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "@vercel/blob": "^2.6.1",
     "jose": "^6.2.5",
     "next": "16.2.12",
     "react": "19.2.4",

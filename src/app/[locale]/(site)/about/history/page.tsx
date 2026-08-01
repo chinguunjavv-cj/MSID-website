@@ -26,8 +26,8 @@ export default async function HistoryPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
-  const page = getPage("about.history");
-  const entries = listHistoryEntries();
+  const page = await getPage("about.history");
+  const entries = await listHistoryEntries();
 
   return (
     <>
