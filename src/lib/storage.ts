@@ -55,17 +55,48 @@ export async function storeUpload(file: File): Promise<StoredFile> {
 
   const filename = `${randomUUID()}${extension}`;
 
+  /*
+    On Vercel the filesystem is read-only, so falling back to it would fail with an
+    opaque EROFS error deep inside `mkdir`. Say what is actually wrong instead.
+  */
+  if (process.env.VERCEL && !usingBlobStorage()) {
+    throw new Error(
+      "BLOB_READ_WRITE_TOKEN is not set. Vercel has no writable filesystem, so uploads " +
+        "need a Vercel Blob store with **public** access — connect one to this project " +
+        "and make sure its read-write token is included in the environment.",
+    );
+  }
+
   if (usingBlobStorage()) {
     // Imported lazily so a filesystem deployment never loads the Blob SDK.
     const { put } = await import("@vercel/blob");
-    const blob = await put(`uploads/${filename}`, file, {
-      access: "public",
-      contentType: file.type,
-      // Filenames are already random UUIDs; a second random suffix would only make
-      // the stored URL harder to read.
-      addRandomSuffix: false,
-    });
-    return { path: blob.url, size: file.size, name: file.name };
+    try {
+      /*
+        `public` is required, not a preference. Board photographs, event covers and
+        guideline PDFs are rendered by plain <img> and <a download> on a public site;
+        a private store would reject this call, and its blobs can only be delivered by
+        streaming them through a Function. A store's access mode cannot be changed
+        after creation, so a private store has to be replaced with a public one.
+      */
+      const blob = await put(`uploads/${filename}`, file, {
+        access: "public",
+        contentType: file.type,
+        // Filenames are already random UUIDs; a second random suffix would only make
+        // the stored URL harder to read.
+        addRandomSuffix: false,
+      });
+      return { path: blob.url, size: file.size, name: file.name };
+    } catch (error) {
+      const message = (error as Error).message ?? "";
+      if (/access|private/i.test(message)) {
+        throw new Error(
+          "The connected Vercel Blob store is private. This site needs a store created " +
+            "with public access — a store's access mode cannot be changed after " +
+            "creation, so create a new public store and connect it to this project.",
+        );
+      }
+      throw error;
+    }
   }
 
   const directory = uploadDirectory();

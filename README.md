@@ -213,9 +213,15 @@ same commit deploys to either.
    turso db show msid --url
    turso db tokens create msid
    ```
-2. **Add a Blob store** (Storage → Create → Blob). Vercel sets
-   `BLOB_READ_WRITE_TOKEN` for you. Without it, uploading a guideline PDF fails —
-   Vercel has no writable disk.
+2. **Add a Blob store** (Storage → Create Database → Blob). Two things matter:
+   - **Set access to Public.** Board photographs, event covers and guideline PDFs are
+     rendered by plain `<img>` and `<a download>` on a public site. A private store
+     rejects the upload, and its files can only be delivered by streaming them through
+     a Function. **The access mode cannot be changed after creation** — a private store
+     has to be replaced.
+   - **Include the read-write token** in Production, Preview and Development. This is
+     what sets `BLOB_READ_WRITE_TOKEN`; `BLOB_STORE_ID` and `BLOB_WEBHOOK_PUBLIC_KEY`
+     alone are not enough, and the app will refuse the upload with a message saying so.
 3. **Set the remaining variables:**
 
    | Variable | Value |
