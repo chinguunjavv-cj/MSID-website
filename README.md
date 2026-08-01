@@ -222,7 +222,7 @@ same commit deploys to either.
    |---|---|
    | `SESSION_SECRET` | `openssl rand -base64 48` |
    | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | the first administrator |
-   | `MSID_SITE_URL` | optional — the `*.vercel.app` URL is detected on its own |
+   | `MSID_SITE_URL` | optional — Vercel's own domain is detected via `VERCEL_PROJECT_PRODUCTION_URL`. Set this once you have a custom domain |
    | `MSID_NOINDEX` | `0` once you launch on a real domain |
 
 4. **Seed the database once**, from your machine, pointing at Turso:

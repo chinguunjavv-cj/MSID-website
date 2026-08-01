@@ -17,23 +17,43 @@
  * the server, so an un-prefixed variable is both correct and settable after the build.
  *
  * `NEXT_PUBLIC_SITE_URL` is still honoured as a fallback for existing setups. Failing
- * both, the host platform's own variable is used, so a preview deploy is right without
- * anyone configuring anything — Railway and Render both publish their subdomain.
+ * both, the host platform's own variable is used, so a deploy is correct without anyone
+ * configuring anything — Vercel, Railway and Render all publish their own domain.
  */
 export function siteUrl(): string {
   const explicit = process.env.MSID_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, "");
+  if (explicit) return withProtocol(explicit);
+
+  /*
+    Vercel exposes two: the stable production domain and the per-deployment URL. Prefer
+    the production one so canonical tags and the sitemap do not point at a deployment
+    hash that changes on every push; fall back to the deployment URL on previews, which
+    have no production domain of their own.
+  */
+  const vercelProduction = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercelProduction && process.env.VERCEL_ENV === "production") {
+    return withProtocol(vercelProduction);
+  }
+  const vercelDeployment = process.env.VERCEL_URL?.trim();
+  if (vercelDeployment) return withProtocol(vercelDeployment);
+  if (vercelProduction) return withProtocol(vercelProduction);
 
   const railway = process.env.RAILWAY_PUBLIC_DOMAIN?.trim();
-  if (railway) return `https://${railway.replace(/^https?:\/\//, "").replace(/\/$/, "")}`;
+  if (railway) return withProtocol(railway);
 
   const render = process.env.RENDER_EXTERNAL_URL?.trim();
-  if (render) return render.replace(/\/$/, "");
+  if (render) return withProtocol(render);
 
   const legacy = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  if (legacy) return legacy.replace(/\/$/, "");
+  if (legacy) return withProtocol(legacy);
 
   return "http://localhost:3000";
+}
+
+/** Platform variables give a bare hostname; a configured value may already have one. */
+function withProtocol(value: string): string {
+  const trimmed = value.replace(/\/$/, "");
+  return /^https?:\/\//.test(trimmed) ? trimmed : `https://${trimmed}`;
 }
 
 /**
