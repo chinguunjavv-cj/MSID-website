@@ -1,0 +1,31 @@
+{
+  "name": "msid-website",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "node --env-file-if-exists=.env.local scripts/seed.mts",
+    "typecheck": "tsc --noEmit",
+    "demo": "node --env-file-if-exists=.env.local scripts/demo.mts",
+    "demo:clear": "node --env-file-if-exists=.env.local scripts/demo.mts --clear",
+    "admin": "node --env-file-if-exists=.env.local scripts/add-admin.mts"
+  },
+  "dependencies": {
+    "jose": "^6.2.5",
+    "next": "16.2.12",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "server-only": "^0.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^24.13.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

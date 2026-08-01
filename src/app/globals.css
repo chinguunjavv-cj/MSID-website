@@ -1,0 +1,621 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   MSID design tokens
+
+   Full rationale in DESIGN.md. Two rules that get broken by accident:
+   - Muted prose stops at ink-600. Anything lighter fails 4.5:1 on paper.
+   - There is no cream/sand/beige surface in this system. `paper` is white.
+   ========================================================================== */
+
+@theme {
+  /* --- Brand: copper. Sampled from the MSID logo's intestine gradient. ---- */
+  --color-copper-50: oklch(0.968 0.012 50);
+  --color-copper-100: oklch(0.93 0.028 50);
+  --color-copper-200: oklch(0.872 0.052 50);
+  --color-copper-300: oklch(0.795 0.083 50);
+  --color-copper-400: oklch(0.7 0.112 50);
+  --color-copper-500: oklch(0.618 0.132 48);
+  --color-copper-600: oklch(0.545 0.134 46);
+  --color-copper-700: oklch(0.462 0.115 44);
+  --color-copper-800: oklch(0.385 0.094 43);
+  --color-copper-900: oklch(0.315 0.075 42);
+
+  /* --- Brand: gold. From the MSID wordmark. Sparing use only. ------------ */
+  --color-gold-400: oklch(0.795 0.118 82);
+  --color-gold-500: oklch(0.705 0.132 79);
+  --color-gold-600: oklch(0.615 0.118 74);
+
+  /* --- Neutrals: ink. Chroma leans to copper's hue, never to generic warm. */
+  --color-ink-950: oklch(0.175 0.014 45);
+  --color-ink-900: oklch(0.235 0.016 45);
+  --color-ink-800: oklch(0.31 0.014 45);
+  --color-ink-700: oklch(0.4 0.012 45);
+  --color-ink-600: oklch(0.5 0.01 45);
+  --color-ink-500: oklch(0.585 0.009 45);
+  --color-ink-400: oklch(0.7 0.007 45);
+  --color-ink-300: oklch(0.815 0.005 45);
+  --color-ink-200: oklch(0.895 0.004 45);
+  --color-ink-100: oklch(0.945 0.003 45);
+  --color-ink-50: oklch(0.975 0.002 45);
+  --color-paper: oklch(0.995 0.001 45);
+
+  /* --- Semantic: record status. Always paired with a word, never alone. --- */
+  --color-status-active: oklch(0.52 0.115 155);
+  --color-status-active-bg: oklch(0.955 0.028 155);
+  --color-status-pending: oklch(0.53 0.115 75);
+  --color-status-pending-bg: oklch(0.96 0.035 85);
+  --color-status-expired: oklch(0.52 0.15 25);
+  --color-status-expired-bg: oklch(0.958 0.022 25);
+  --color-status-info: oklch(0.5 0.105 245);
+  --color-status-info-bg: oklch(0.958 0.02 245);
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-sans: var(--font-commissioner), ui-sans-serif, system-ui, sans-serif;
+  --font-read: var(--font-literata), ui-serif, Georgia, serif;
+
+  --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.03em;
+
+  --text-h1: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
+  --text-h1--line-height: 1.08;
+  --text-h1--letter-spacing: -0.025em;
+
+  --text-h2: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.02em;
+
+  --text-h3: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.015em;
+
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.65;
+
+  --text-read: 1.1875rem;
+  --text-read--line-height: 1.75;
+
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.55;
+
+  --text-label: 0.8125rem;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.01em;
+
+  /*
+    The desktop nav needs more room than a stock `lg` breakpoint gives it: the five
+    Mongolian menu labels are ~30% wider than their English equivalents, and the
+    language that overflows is the one that sets the breakpoint.
+  */
+  --breakpoint-nav: 68rem;
+
+  /* --- Shape ------------------------------------------------------------- */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+
+  /* --- Motion ------------------------------------------------------------ */
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+
+  --animate-settle: settle 0.62s var(--ease-out-quart) both;
+  --animate-fade-up: fade-up 0.5s var(--ease-out-quart) both;
+
+  @keyframes settle {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    /* Semantic stacking order. Never write an arbitrary z-index. */
+    --z-base: 0;
+    --z-raised: 10;
+    --z-dropdown: 20;
+    --z-sticky: 30;
+    --z-backdrop: 40;
+    --z-modal: 50;
+    --z-toast: 60;
+    --z-tooltip: 70;
+
+    --duration-state: 120ms;
+    --duration-element: 240ms;
+
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Sticky masthead height, so in-page anchors are not hidden behind it. */
+    scroll-padding-top: 5.5rem;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink-700);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-ink-900);
+    font-weight: 620;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Dates, fees and counts align in a column or it is not a register. */
+  time,
+  .tabular,
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-copper-600);
+    outline-offset: 2px;
+    border-radius: var(--radius-xs);
+  }
+
+  /* Inside drenched copper or ink panels the copper ring disappears. */
+  .on-dark :focus-visible,
+  .on-copper :focus-visible {
+    outline-color: var(--color-paper);
+  }
+
+  ::selection {
+    background-color: var(--color-copper-200);
+    color: var(--color-ink-950);
+  }
+
+  ::placeholder {
+    color: var(--color-ink-600);
+    opacity: 1;
+  }
+
+  hr {
+    border-color: var(--color-ink-200);
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  /*
+    Grid items default to `min-width: auto`, so a single wide descendant — a programme
+    table, a long DOI — inflates its whole track and pushes the page sideways on
+    mobile. Everything wide in this design scrolls inside its own `.table-scroll`
+    container, so a track should never be stretched by its contents.
+
+    `:where()` keeps specificity at zero, so an explicit `min-w-*` utility still wins.
+  */
+  :where(.grid) > * {
+    min-width: 0;
+  }
+}
+
+@layer components {
+  /* --- Layout ------------------------------------------------------------ */
+
+  .shell {
+    width: 100%;
+    max-width: 75rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  }
+
+  .measure {
+    max-width: 68ch;
+  }
+
+  /* --- Long-form reading (Literata) -------------------------------------- */
+
+  .reading {
+    font-family: var(--font-read);
+    font-size: var(--text-read);
+    line-height: 1.75;
+    color: var(--color-ink-800);
+  }
+
+  .reading > p + p {
+    margin-top: 1.15em;
+  }
+
+  .reading a {
+    color: var(--color-copper-700);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .reading a:hover {
+    color: var(--color-copper-800);
+  }
+
+  /* --- The register row: the signature component ------------------------- */
+
+  .register {
+    border-top: 1px solid var(--color-ink-200);
+  }
+
+  .register-row {
+    display: grid;
+    gap: 0.25rem 1.5rem;
+    padding-block: 1.25rem;
+    border-bottom: 1px solid var(--color-ink-200);
+    transition: background-color var(--duration-state) var(--ease-out-quart);
+  }
+
+  a.register-row:hover {
+    background-color: var(--color-ink-50);
+  }
+
+  @media (min-width: 48rem) {
+    .register-row {
+      grid-template-columns: 9rem minmax(0, 1fr) auto;
+      align-items: baseline;
+      padding-block: 1.5rem;
+    }
+  }
+
+  /* --- Status pill -------------------------------------------------------- */
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.1875rem 0.5rem;
+    border-radius: var(--radius-xs);
+    font-size: 0.78125rem;
+    font-weight: 560;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .pill-active {
+    background-color: var(--color-status-active-bg);
+    color: var(--color-status-active);
+  }
+  .pill-pending {
+    background-color: var(--color-status-pending-bg);
+    color: var(--color-status-pending);
+  }
+  .pill-expired {
+    background-color: var(--color-status-expired-bg);
+    color: var(--color-status-expired);
+  }
+  .pill-info {
+    background-color: var(--color-status-info-bg);
+    color: var(--color-status-info);
+  }
+  .pill-neutral {
+    background-color: var(--color-ink-100);
+    color: var(--color-ink-700);
+  }
+
+  /* --- Buttons ------------------------------------------------------------ */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6875rem 1.125rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-state) var(--ease-out-quart),
+      border-color var(--duration-state) var(--ease-out-quart),
+      color var(--duration-state) var(--ease-out-quart);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .btn-primary {
+    background-color: var(--color-copper-700);
+    color: var(--color-paper);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-copper-800);
+  }
+
+  .btn-secondary {
+    background-color: transparent;
+    border-color: var(--color-ink-300);
+    color: var(--color-ink-900);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-ink-900);
+    background-color: var(--color-ink-50);
+  }
+
+  .btn-on-dark {
+    background-color: var(--color-paper);
+    color: var(--color-ink-950);
+  }
+  .btn-on-dark:hover:not(:disabled) {
+    background-color: var(--color-copper-100);
+  }
+
+  .btn-outline-light {
+    background-color: transparent;
+    border-color: color-mix(in oklab, var(--color-paper) 45%, transparent);
+    color: var(--color-paper);
+  }
+  .btn-outline-light:hover:not(:disabled) {
+    border-color: var(--color-paper);
+    background-color: color-mix(in oklab, var(--color-paper) 12%, transparent);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-copper-700);
+    padding-inline: 0;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--color-copper-800);
+  }
+
+  /* --- Forms -------------------------------------------------------------- */
+
+  .field-label {
+    display: block;
+    font-size: var(--text-label);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-ink-800);
+    margin-bottom: 0.375rem;
+  }
+
+  .field-hint {
+    font-size: var(--text-small);
+    color: var(--color-ink-600);
+    margin-top: 0.375rem;
+  }
+
+  .field-error {
+    font-size: var(--text-small);
+    font-weight: 560;
+    color: var(--color-status-expired);
+    margin-top: 0.375rem;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    background-color: var(--color-paper);
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-ink-900);
+    transition: border-color var(--duration-state) var(--ease-out-quart);
+  }
+
+  .input:hover:not(:disabled),
+  .select:hover:not(:disabled),
+  .textarea:hover:not(:disabled) {
+    border-color: var(--color-ink-400);
+  }
+
+  .input:disabled,
+  .select:disabled,
+  .textarea:disabled {
+    background-color: var(--color-ink-50);
+    color: var(--color-ink-600);
+    cursor: not-allowed;
+  }
+
+  .input[aria-invalid="true"],
+  .select[aria-invalid="true"],
+  .textarea[aria-invalid="true"] {
+    border-color: var(--color-status-expired);
+  }
+
+  .textarea {
+    min-height: 8rem;
+    resize: vertical;
+  }
+
+  .select {
+    appearance: none;
+    padding-right: 2.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23736a63' stroke-width='1.5'%3E%3Cpath d='M1 1.5 6 6.5l5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 0.75rem;
+  }
+
+  /* --- Tables ------------------------------------------------------------- */
+
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-small);
+  }
+
+  .data-table caption {
+    text-align: left;
+    font-size: var(--text-label);
+    font-weight: 600;
+    color: var(--color-ink-600);
+    padding-bottom: 0.75rem;
+  }
+
+  .data-table th {
+    text-align: left;
+    font-size: var(--text-label);
+    font-weight: 620;
+    letter-spacing: 0.01em;
+    color: var(--color-ink-700);
+    background-color: var(--color-ink-100);
+    padding: 0.625rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--color-ink-200);
+    color: var(--color-ink-800);
+    vertical-align: top;
+  }
+
+  .data-table tbody tr:hover {
+    background-color: var(--color-ink-50);
+  }
+
+  /* --- Surfaces ----------------------------------------------------------- */
+
+  .on-dark {
+    background-color: var(--color-ink-950);
+    color: var(--color-ink-200);
+  }
+  .on-dark h1,
+  .on-dark h2,
+  .on-dark h3,
+  .on-dark h4 {
+    color: var(--color-paper);
+  }
+
+  .on-copper {
+    background-color: var(--color-copper-700);
+    color: color-mix(in oklab, var(--color-paper) 88%, var(--color-copper-200));
+  }
+  .on-copper h1,
+  .on-copper h2,
+  .on-copper h3 {
+    color: var(--color-paper);
+  }
+
+  /* Light type on a dark ground reads lighter and needs more room. */
+  .on-dark p,
+  .on-copper p {
+    line-height: 1.72;
+  }
+}
+
+@layer utilities {
+  .z-dropdown {
+    z-index: var(--z-dropdown);
+  }
+  .z-sticky {
+    z-index: var(--z-sticky);
+  }
+  .z-backdrop {
+    z-index: var(--z-backdrop);
+  }
+  .z-modal {
+    z-index: var(--z-modal);
+  }
+  .z-toast {
+    z-index: var(--z-toast);
+  }
+
+  /* Visible only to screen readers, until focused. */
+  .sr-only-focusable:not(:focus):not(:active) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/*
+  Reduced motion is not an afterthought. Every animation here collapses to an instant
+  state change; nothing in the site gates content visibility on a transition, so a
+  reduced-motion visitor sees exactly the same content.
+*/
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #444;
+  }
+}
