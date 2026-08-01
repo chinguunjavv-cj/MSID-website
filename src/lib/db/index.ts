@@ -71,6 +71,29 @@ async function connect(): Promise<Client> {
   // means a freshly created Turso database comes up working.
   await client.executeMultiple(SCHEMA);
 
+  /*
+    Seed on first connection.
+
+    A serverless host has no entrypoint to run `npm run seed` from, and Vercel's
+    `env pull` replaces encrypted values with the literal string `[SENSITIVE]`, so the
+    credentials to seed remotely cannot be obtained either. Without this, a Vercel
+    deployment comes up with empty tables: no administrator to sign in as, no partner
+    societies, no page content.
+
+    `seedDatabase` is idempotent and returns early once content exists, so the steady
+    -state cost is one `COUNT(*)` per cold start. A failure here must not take the site
+    down — an empty site that renders is better than one that 500s — so it is logged
+    and swallowed.
+  */
+  try {
+    const { seedDatabase } = await import("./seed-data.ts");
+    const result = await runTransaction(client, (tx) => seedDatabase(tx));
+    if (result.seededContent) console.log("Database seeded with first-run content.");
+    if (result.createdAdmin) console.log(`Administrator created: ${result.createdAdmin}`);
+  } catch (error) {
+    console.error("Seeding on first connection failed", error);
+  }
+
   return client;
 }
 
@@ -128,7 +151,20 @@ export interface Tx {
 
 /** Runs `fn` inside a transaction, rolling back if it throws. */
 export async function transaction<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
-  const client = await db();
+  return runTransaction(await db(), fn);
+}
+
+/**
+ * The same, against a client passed in explicitly.
+ *
+ * Seeding runs *inside* `connect()`, before the cached connection promise has settled.
+ * Going through `db()` there would re-enter `connect()` and wait on a promise that
+ * cannot resolve until the seeding it is waiting for completes.
+ */
+export async function runTransaction<T>(
+  client: Client,
+  fn: (tx: Tx) => Promise<T>,
+): Promise<T> {
   const tx = await client.transaction("write");
 
   const runner: Tx = {
