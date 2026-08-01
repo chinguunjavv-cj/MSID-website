@@ -8,14 +8,16 @@
  *
  * It is applied on first connection and is written with `CREATE TABLE IF NOT EXISTS`,
  * so re-running it is safe. Additive changes go in the MIGRATIONS list in ./index.ts.
+ *
+ * DDL only — no PRAGMA statements. `journal_mode` and friends describe how a local
+ * SQLite file is written, which a hosted libSQL server rejects outright; leaving them
+ * here made every connection to Turso throw. `LOCAL_PRAGMAS` in ./index.ts applies them
+ * to file-backed connections only.
  */
 export const SCHEMA = `-- MSID website schema
 -- Every content table carries a paired _mn / _en column set. Mongolian is the primary
 -- language; English is a full peer. A row with an empty _en is legal and renders as a
 -- "not yet translated" state rather than as broken output.
-
-PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
 
 -- ---------------------------------------------------------------------------
 -- Identity

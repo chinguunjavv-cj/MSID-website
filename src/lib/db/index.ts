@@ -39,10 +39,23 @@ function connectionConfig(): { url: string; authToken?: string } {
  */
 type GlobalWithDb = typeof globalThis & { __msidDb?: Promise<Client> };
 
+/**
+ * Storage settings that only mean anything for a local SQLite file.
+ *
+ * A hosted libSQL server manages its own durability and rejects these, so sending them
+ * to Turso throws — and because the schema runs on connection, that failure surfaces as
+ * every single page returning a 500.
+ */
+const LOCAL_PRAGMAS = `
+PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
+`;
+
 async function connect(): Promise<Client> {
   const config = connectionConfig();
+  const isLocalFile = config.url.startsWith("file:");
 
-  if (config.url.startsWith("file:")) {
+  if (isLocalFile) {
     // The directory has to exist before SQLite will create the file in it.
     const { mkdirSync } = await import("node:fs");
     const { dirname } = await import("node:path");
@@ -51,6 +64,8 @@ async function connect(): Promise<Client> {
   }
 
   const client = createClient(config);
+
+  if (isLocalFile) await client.executeMultiple(LOCAL_PRAGMAS);
 
   // `CREATE TABLE IF NOT EXISTS` throughout, so this is safe on every cold start and
   // means a freshly created Turso database comes up working.
