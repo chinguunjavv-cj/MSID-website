@@ -28,6 +28,7 @@ export default async function MembershipPage({
   const t = getDictionary(locale);
   const intro = await getPage("membership.intro");
   const benefits = await getPage("membership.benefits");
+  const benefitsBody = tr(benefits, "body", locale);
 
   const types: (keyof typeof t.membership.type)[] = [
     "full",
@@ -41,19 +42,18 @@ export default async function MembershipPage({
       <PageHeader
         title={tr(intro, "title", locale) || t.membership.title}
         lead={tr(intro, "body", locale) || t.membership.lead}
-        meta={
-          <Link href={localePath(locale, "/membership/apply")} className="btn btn-on-dark">
-            {t.membership.apply}
-          </Link>
-        }
       />
 
       <div className="shell py-14 md:py-20">
-        <div className="grid gap-14 md:grid-cols-2 md:gap-20">
-          <section>
-            <h2 className="text-h3 font-bold">{t.membership.benefits}</h2>
-            <ProseList body={tr(benefits, "body", locale)} />
-          </section>
+        <div className={`grid gap-14 md:gap-20 ${benefitsBody ? "md:grid-cols-2" : ""}`}>
+          {/* Only rendered when there is something to list — a heading with nothing
+              under it reads as a broken page, not as an empty one. */}
+          {benefitsBody && (
+            <section>
+              <h2 className="text-h3 font-bold">{t.membership.benefits}</h2>
+              <ProseList body={benefitsBody} />
+            </section>
+          )}
 
           <section>
             <h2 className="text-h3 font-bold">{t.membership.types}</h2>

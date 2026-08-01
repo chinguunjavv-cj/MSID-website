@@ -374,12 +374,14 @@ export default async function HomePage({
             </Link>
           </div>
 
-          <div>
-            <h3 className="text-label font-semibold text-ink-700">
-              {t.membership.benefits}
-            </h3>
-            <ProseList body={tr(benefits, "body", locale)} />
-          </div>
+          {tr(benefits, "body", locale) && (
+            <div>
+              <h3 className="text-label font-semibold text-ink-700">
+                {t.membership.benefits}
+              </h3>
+              <ProseList body={tr(benefits, "body", locale)} />
+            </div>
+          )}
         </div>
       </section>
 
