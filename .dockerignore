@@ -1,0 +1,9 @@
+node_modules
+.next
+data
+public/uploads
+.git
+.env*.local
+.claude
+*.md
+!README.md

@@ -33,7 +33,7 @@ export default async function AdminMembersPage({
       {pending > 0 && (
         <p className="mt-3 text-ink-700">
           {mn
-            ? `${pending} өргөдөл хянагдахыг хүлээж байна. "Хүчинтэй" болгосноор тухайн хүн системд нэвтрэх эрхтэй болно.`
+            ? `Гишүүнээр элсэх ${pending} хүсэлт хянагдахыг хүлээж байна. "Хүчинтэй" болгосноор тухайн хүн системд нэвтрэх эрхтэй болно.`
             : `${pending} application${pending === 1 ? "" : "s"} awaiting review. Setting a member to "Active" is what lets them sign in.`}
         </p>
       )}

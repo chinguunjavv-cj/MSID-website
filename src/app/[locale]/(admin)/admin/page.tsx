@@ -37,7 +37,7 @@ export default async function AdminDashboard({
       href: "/admin/members?status=active",
     },
     {
-      label: mn ? "Хүлээгдэж буй өргөдөл" : "Pending applications",
+      label: mn ? "Хүлээгдэж буй хүсэлт" : "Pending applications",
       value: stats.pendingMembers,
       href: "/admin/members?status=pending",
     },

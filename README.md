@@ -188,9 +188,45 @@ Roles: `admin` (everything, including creating users), `editor` (all content), `
 
 ## Deployment
 
-The app needs a Node runtime and a writable disk (SQLite + uploads). A small VPS is the
-natural fit; Vercel's serverless filesystem is not, because the database would not
-persist between requests.
+The app keeps its data in a SQLite file and its uploads on disk, so it needs a host that
+gives it a **persistent volume**.
+
+**Vercel will not work for this app.** Its filesystem is ephemeral and per-invocation, so
+the database resets constantly — every event, guideline and membership approval an
+administrator makes would disappear. Moving to Vercel later means switching the data
+layer to a hosted database such as Turso, which also means making every query `async`.
+
+### Railway (or Render) — deploys from this repo
+
+A `Dockerfile` and `railway.json` are included; no local Docker needed.
+
+1. **New Project → Deploy from GitHub repo →** `MSID-website`. Railway detects the
+   Dockerfile on its own.
+2. **Add a Volume**, mount path **`/data`**. This is the step that matters — without it
+   the database is wiped on every redeploy.
+3. **Variables:**
+
+   | Variable | Value |
+   |---|---|
+   | `SESSION_SECRET` | output of `openssl rand -base64 48` |
+   | `NEXT_PUBLIC_SITE_URL` | the Railway URL, e.g. `https://msid.up.railway.app` |
+   | `ADMIN_EMAIL` | your email — the first administrator, created on first boot |
+   | `ADMIN_PASSWORD` | the password for it (change after signing in) |
+   | `MSID_SEED_DEMO` | `1` to bring the site up with sample content; omit for empty |
+
+   `MSID_DB_PATH` and `MSID_UPLOAD_DIR` are already set in the Dockerfile and point at
+   the volume. Leave them alone.
+4. **Generate a domain** under Settings → Networking, then set `NEXT_PUBLIC_SITE_URL`
+   to it and redeploy so canonical URLs and the sitemap are right.
+
+`scripts/docker-entrypoint.sh` runs on every boot. It applies the schema, tops up MSID's
+published facts, and creates the administrator only if that email has no account yet —
+all idempotent, so restarts and redeploys are safe.
+
+Render is the same shape: a Web Service from this repo, Docker runtime, a Disk mounted
+at `/data`, and the same variables.
+
+### Any VPS
 
 ```bash
 npm ci
@@ -198,18 +234,30 @@ npm run build
 npm start                      # port 3000; put nginx or Caddy in front for TLS
 ```
 
-Set in the production environment:
-
 | Variable | Purpose |
 |---|---|
 | `SESSION_SECRET` | Required. ≥32 characters |
 | `MSID_DB_PATH` | e.g. `/var/lib/msid/msid.db` — on a persistent volume |
-| `MSID_UPLOAD_DIR` | e.g. `/var/lib/msid/uploads`, served at `/uploads` |
+| `MSID_UPLOAD_DIR` | e.g. `/var/lib/msid/uploads` |
 | `NEXT_PUBLIC_SITE_URL` | `https://msid.mn` — canonical URLs, sitemap, QPay callbacks |
 | `QPAY_*` | Only once QPay credentials exist |
 
+Uploads are served by a route handler (`/uploads/[...path]`), not by static hosting, so
+they work from a volume outside the project directory. It serves only image and PDF
+types and refuses any path that resolves outside the upload directory.
+
 **Backup is one file.** `sqlite3 msid.db ".backup backup.db"` (safe while running), plus
 the uploads directory.
+
+### Administrator accounts
+
+```bash
+ADMIN_EMAIL=you@example.com ADMIN_NAME="Таны нэр" ADMIN_PASSWORD='…' npm run admin
+```
+
+Creates an administrator, or promotes and resets the password of an existing account —
+so this is also the recovery path for a forgotten password. Credentials come from the
+environment rather than arguments, so they stay out of shell history.
 
 ---
 
