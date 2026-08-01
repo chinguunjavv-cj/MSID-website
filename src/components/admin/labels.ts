@@ -10,10 +10,10 @@ export function formLabels(locale: Locale): Record<string, string> {
     delete: mn ? "Устгах" : "Delete",
     // "Бичлэг" now means video everywhere else on the site, so records are "контент".
     deleteHint: mn
-      ? "Устгасан контентыг сэргээх боломжгүй."
+      ? "Устгасан контентийг сэргээх боломжгүй."
       : "Deleting a record cannot be undone.",
     confirmDelete: mn
-      ? "Энэ контентыг устгах уу? Буцаах боломжгүй."
+      ? "Энэ контентийг устгах уу? Буцаах боломжгүй."
       : "Delete this record? This cannot be undone.",
     uploading: mn ? "Хуулж байна…" : "Uploading…",
     /*
@@ -21,8 +21,8 @@ export function formLabels(locale: Locale): Record<string, string> {
       supported formats are stated up front rather than after a failed upload.
     */
     fileHint: mn
-      ? "JPG, PNG, WebP, AVIF, PDF. Дээд тал нь 20 MB. iPhone-ы HEIC зургийг эхлээд JPG болгож хөрвүүлнэ үү."
-      : "JPG, PNG, WebP, AVIF, PDF. Up to 20 MB. Convert iPhone HEIC photos to JPG first.",
+      ? "JPG, PNG, WebP, AVIF, SVG, PDF. Дээд тал нь 20 MB. iPhone-ы HEIC зургийг эхлээд JPG болгож хөрвүүлнэ үү."
+      : "JPG, PNG, WebP, AVIF, SVG, PDF. Up to 20 MB. Convert iPhone HEIC photos to JPG first.",
     remove: mn ? "Хасах" : "Remove",
     add: mn ? "Нэмэх" : "Add",
     cancel: mn ? "Цуцлах" : "Cancel",

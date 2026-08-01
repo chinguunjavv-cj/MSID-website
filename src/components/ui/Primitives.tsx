@@ -206,13 +206,9 @@ export function EmptyState({
 }
 
 /* -------------------------------------------------------------------------- */
-/* Translation notice                                                          */
+/* Page-level notices                                                          */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Shown when a record exists but has no text in the visitor's language. The fallback
- * content is still displayed; this only explains why it is in the other language.
- */
 /**
  * Shown on a page that is only visible because a member of staff is signed in.
  *
@@ -236,12 +232,16 @@ export function StaffPreviewNotice({
   return (
     <div className="border-b-2 border-status-pending bg-status-pending-bg px-4 py-2 text-center text-small">
       {mn
-        ? `Энэ хуудас ${label} төлөвтэй байна. Зөвхөн та харж байгаа бөгөөд зочдод харагдахгүй.`
+        ? `Энэ хуудас ${label} төлөвтэй байна. Үүнийг зөвхөн та харж байгаа бөгөөд зочдод харагдахгүй.`
         : `This page is ${label}. Only signed-in staff can see it; visitors get a “not found” page.`}
     </div>
   );
 }
 
+/**
+ * Shown when a record exists but has no text in the visitor's language. The fallback
+ * content is still displayed; this only explains why it is in the other language.
+ */
 export function TranslationNotice({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   return (

@@ -139,7 +139,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
         section: SECTION_MEDIA,
         placeholder: "https://www.youtube.com/watch?v=…",
         hint: {
-          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг буулгана уу. Бичлэг хуудсанд шууд тусна.",
+          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг оруулна уу. Бичлэг хуудсан дээр шууд харагдана.",
           en: "Paste a YouTube, Vimeo or Facebook video link. It is embedded directly in the page.",
         },
       },
@@ -253,7 +253,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
         section: SECTION_MEDIA,
         placeholder: "https://www.youtube.com/watch?v=…",
         hint: {
-          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг буулгана уу. Бичлэг хуудсанд шууд тусна.",
+          mn: "YouTube, Vimeo, Facebook-ийн бичлэгийн холбоосыг оруулна уу. Бичлэг хуудсан дээр шууд харагдана.",
           en: "Paste a YouTube, Vimeo or Facebook video link. It is embedded directly in the page.",
         },
       },
