@@ -6,8 +6,14 @@ import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getNewsBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/format";
-import { PageHeader, Prose, TranslationNotice } from "@/components/ui/Primitives";
+import {
+  PageHeader,
+  Prose,
+  StaffPreviewNotice,
+  TranslationNotice,
+} from "@/components/ui/Primitives";
 import { VideoEmbed } from "@/components/site/VideoEmbed";
+import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
   params,
@@ -32,7 +38,12 @@ export default async function NewsPostPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const post = await getNewsBySlug(slug);
+  /*
+    Staff see unpublished records here so "View on site" in the admin is a real
+    preview. Everyone else gets the published-only query, and a draft 404s.
+  */
+  const staff = isStaff(await currentUser());
+  const post = await getNewsBySlug(slug, staff);
   if (!post) notFound();
 
   const t = getDictionary(locale);
@@ -40,6 +51,10 @@ export default async function NewsPostPage({
 
   return (
     <>
+      {post.status !== "published" && (
+        <StaffPreviewNotice locale={locale} status={post.status} />
+      )}
+
       <PageHeader
         title={tr(post, "title", locale)}
         lead={tr(post, "excerpt", locale) || undefined}

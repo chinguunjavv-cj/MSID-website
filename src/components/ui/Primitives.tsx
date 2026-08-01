@@ -213,6 +213,35 @@ export function EmptyState({
  * Shown when a record exists but has no text in the visitor's language. The fallback
  * content is still displayed; this only explains why it is in the other language.
  */
+/**
+ * Shown on a page that is only visible because a member of staff is signed in.
+ *
+ * Without it, previewing an unpublished record looks exactly like the live page, and an
+ * editor can believe a draft is published when the public still sees a 404.
+ */
+export function StaffPreviewNotice({
+  locale,
+  status,
+}: {
+  locale: Locale;
+  status: string;
+}) {
+  const mn = locale === "mn";
+  const label = mn
+    ? status === "draft"
+      ? "төсөл"
+      : "архивласан"
+    : status;
+
+  return (
+    <div className="border-b-2 border-status-pending bg-status-pending-bg px-4 py-2 text-center text-small">
+      {mn
+        ? `Энэ хуудас ${label} төлөвтэй байна. Зөвхөн та харж байгаа бөгөөд зочдод харагдахгүй.`
+        : `This page is ${label}. Only signed-in staff can see it; visitors get a “not found” page.`}
+    </div>
+  );
+}
+
 export function TranslationNotice({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   return (

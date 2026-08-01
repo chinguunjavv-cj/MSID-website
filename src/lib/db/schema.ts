@@ -75,6 +75,17 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 
+-- One row per failed sign-in, used to throttle guessing. The identity column holds
+-- either "email:someone@example.com" or "ip:1.2.3.4", so a single table limits both
+-- the account being attacked and the machine doing the attacking.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id           TEXT PRIMARY KEY,
+  identity     TEXT NOT NULL,
+  attempted_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(identity, attempted_at);
+
 -- ---------------------------------------------------------------------------
 -- Events and programmes
 -- ---------------------------------------------------------------------------

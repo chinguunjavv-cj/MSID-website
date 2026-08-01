@@ -10,6 +10,15 @@ import { FormErrorSummary } from "@/components/ui/Primitives";
 
 const INITIAL: FormState = { errors: [] };
 
+/*
+  Mirrors `ALLOWED_UPLOADS` in `@/lib/storage`, which cannot be imported here because it
+  is a `server-only` module. `image/*` was too generous: an iPhone hands over HEIC,
+  which the browser happily offered and the server then rejected — the picker now only
+  shows files the upload will actually accept.
+*/
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/svg+xml";
+const FILE_ACCEPT = `application/pdf,${IMAGE_ACCEPT}`;
+
 /* -------------------------------------------------------------------------- */
 /* Upload field                                                                */
 /* -------------------------------------------------------------------------- */
@@ -70,6 +79,8 @@ function UploadField({
         />
         {busy && <span className="text-small text-ink-600">{labels.uploading}</span>}
       </div>
+
+      <p className="field-hint">{labels.fileHint}</p>
 
       {path && (
         <p className="mt-2 flex flex-wrap items-center gap-3 text-small">
@@ -200,7 +211,7 @@ function SingleField({
         name={field.name}
         label={label}
         defaultValue={value}
-        accept={field.kind === "image" ? "image/*" : "application/pdf,image/*"}
+        accept={field.kind === "image" ? IMAGE_ACCEPT : FILE_ACCEPT}
         labels={labels}
       />
     );
@@ -297,6 +308,7 @@ export function ResourceForm({
   recordId,
   relationOptions = {},
   labels,
+  deleteBlockedReason,
 }: {
   resource: ResourceDef;
   locale: Locale;
@@ -304,6 +316,8 @@ export function ResourceForm({
   recordId?: string;
   relationOptions?: Record<string, { value: string; label: string }[]>;
   labels: Record<string, string>;
+  /** Set when the record has attached data that deletion would destroy. */
+  deleteBlockedReason?: string | null;
 }) {
   const [state, action] = useActionState(saveResourceAction, INITIAL);
 
@@ -365,12 +379,18 @@ export function ResourceForm({
       </form>
 
       {recordId && !resource.fixed && (
-        <DeleteForm
-          resourceKey={resource.key}
-          recordId={recordId}
-          locale={locale}
-          labels={labels}
-        />
+        deleteBlockedReason ? (
+          <div className="mt-16 max-w-4xl border-t border-ink-200 pt-6">
+            <p className="text-small text-ink-600">{deleteBlockedReason}</p>
+          </div>
+        ) : (
+          <DeleteForm
+            resourceKey={resource.key}
+            recordId={recordId}
+            locale={locale}
+            labels={labels}
+          />
+        )
       )}
     </>
   );

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/Primitives";
 import { EventRow_, GuidelineRow, NewsRow } from "@/components/site/records";
 import { MsidMark } from "@/components/site/Mark";
+import { safeExternalLink } from "@/lib/video";
 
 export default async function HomePage({
   params,
@@ -395,7 +396,7 @@ export default async function HomePage({
             {partners.map((partner) => (
               <li key={partner.id}>
                 <a
-                  href={partner.url}
+                  href={safeExternalLink(partner.url) ?? "#"}
                   target="_blank"
                   rel="noreferrer noopener"
                   className="group block"

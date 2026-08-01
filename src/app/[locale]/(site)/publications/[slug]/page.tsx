@@ -5,7 +5,14 @@ import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPublicationBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/format";
-import { PageHeader, Prose, TranslationNotice } from "@/components/ui/Primitives";
+import {
+  PageHeader,
+  Prose,
+  StaffPreviewNotice,
+  TranslationNotice,
+} from "@/components/ui/Primitives";
+import { safeExternalLink } from "@/lib/video";
+import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
   params,
@@ -27,7 +34,12 @@ export default async function PublicationPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const publication = await getPublicationBySlug(slug);
+  /*
+    Staff see unpublished records here so "View on site" in the admin is a real
+    preview. Everyone else gets the published-only query, and a draft 404s.
+  */
+  const staff = isStaff(await currentUser());
+  const publication = await getPublicationBySlug(slug, staff);
   if (!publication) notFound();
 
   const t = getDictionary(locale);
@@ -44,6 +56,10 @@ export default async function PublicationPage({
 
   return (
     <>
+      {publication.status !== "published" && (
+        <StaffPreviewNotice locale={locale} status={publication.status} />
+      )}
+
       <PageHeader
         title={tr(publication, "title", locale)}
         breadcrumb={[
@@ -73,7 +89,7 @@ export default async function PublicationPage({
               )}
               {publication.external_url && (
                 <a
-                  href={publication.external_url}
+                  href={safeExternalLink(publication.external_url) ?? "#"}
                   target="_blank"
                   rel="noreferrer noopener"
                   className="btn btn-secondary"

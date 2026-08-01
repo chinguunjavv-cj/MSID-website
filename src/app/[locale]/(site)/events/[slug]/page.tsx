@@ -21,11 +21,14 @@ import {
 } from "@/lib/format";
 import {
   PageHeader,
+  StaffPreviewNotice,
   Prose,
   StatusPill,
   TranslationNotice,
 } from "@/components/ui/Primitives";
 import { VideoEmbed } from "@/components/site/VideoEmbed";
+import { safeExternalLink } from "@/lib/video";
+import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
   params,
@@ -50,7 +53,12 @@ export default async function EventPage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const event = await getEventBySlug(slug);
+  /*
+    Staff see unpublished records here so "View on site" in the admin is a real
+    preview. Everyone else gets the published-only query, and a draft 404s.
+  */
+  const staff = isStaff(await currentUser());
+  const event = await getEventBySlug(slug, staff);
   if (!event) notFound();
 
   const t = getDictionary(locale);
@@ -83,6 +91,10 @@ export default async function EventPage({
 
   return (
     <>
+      {event.status !== "published" && (
+        <StaffPreviewNotice locale={locale} status={event.status} />
+      )}
+
       <PageHeader
         title={tr(event, "title", locale)}
         lead={tr(event, "summary", locale) || undefined}
@@ -218,7 +230,7 @@ export default async function EventPage({
 
             {event.external_url && (
               <a
-                href={event.external_url}
+                href={safeExternalLink(event.external_url) ?? "#"}
                 target="_blank"
                 rel="noreferrer noopener"
                 className="btn btn-secondary mt-3 w-full"

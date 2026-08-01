@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { randomUUID } from "node:crypto";
@@ -77,8 +78,12 @@ export async function destroySession(): Promise<void> {
 /**
  * Resolves the signed-in user, or null. Verifies the signature, that the session row
  * still exists and has not expired, and that the account is still usable.
+ *
+ * `cache()` deduplicates it within a request. The masthead needs the user on every page
+ * of the site, and the admin layout and the page inside it each ask again — two extra
+ * queries per request, repeated for the whole admin.
  */
-export async function currentUser(): Promise<SessionUser | null> {
+export const currentUser = cache(async function currentUser(): Promise<SessionUser | null> {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
@@ -115,7 +120,7 @@ export async function currentUser(): Promise<SessionUser | null> {
     name_mn: user.name_mn,
     name_en: user.name_en,
   };
-}
+});
 
 export function isStaff(user: SessionUser | null): boolean {
   return user?.role === "admin" || user?.role === "editor";

@@ -6,6 +6,7 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listPartners } from "@/lib/queries";
 import { EmptyState, PageHeader } from "@/components/ui/Primitives";
+import { safeExternalLink } from "@/lib/video";
 
 export async function generateMetadata({
   params,
@@ -78,7 +79,7 @@ export default async function CollaborationPage({
 
                   {partner.url && (
                     <a
-                      href={partner.url}
+                      href={safeExternalLink(partner.url) ?? "#"}
                       target="_blank"
                       rel="noreferrer noopener"
                       className="btn btn-secondary self-start whitespace-nowrap"

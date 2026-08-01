@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { all, run } from "@/lib/db";
 import {
   SETTING_DEFAULTS,
@@ -16,13 +17,19 @@ import {
 export { SETTING_DEFAULTS };
 export type { SettingKey, SiteSettings };
 
-export async function getSettings(): Promise<SiteSettings> {
+/**
+ * Wrapped in React's `cache()` so the settings are fetched once per request rather than
+ * once per caller. The footer reads them on every page in the site, and six pages read
+ * them again for their own content — against a hosted database each of those is a
+ * network round trip, not a disk read.
+ */
+export const getSettings = cache(async function getSettings(): Promise<SiteSettings> {
   const rows = await all<{ key: string; value: string }>(
     "SELECT key, value FROM site_settings",
   );
   const stored = Object.fromEntries(rows.map((row) => [row.key, row.value]));
   return { ...SETTING_DEFAULTS, ...stored } as SiteSettings;
-}
+});
 
 export async function setSetting(key: SettingKey, value: string): Promise<void> {
   await run(

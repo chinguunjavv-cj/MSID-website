@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { all, get, count } from "@/lib/db";
 import type {
   BoardMember,
@@ -85,12 +86,23 @@ export async function countPastEvents(): Promise<number> {
   );
 }
 
-export async function getEventBySlug(slug: string, includeDrafts = false): Promise<EventRow | undefined> {
+/**
+ * The four slug lookups below are wrapped in React's `cache()`.
+ *
+ * Every detail page reads its record twice — once in `generateMetadata` for the title
+ * and description, once in the page itself — and Next deduplicates `fetch()` calls but
+ * not arbitrary async functions. Without this, opening one guideline is two identical
+ * round trips to a database on the other side of a network.
+ */
+export const getEventBySlug = cache(async function getEventBySlug(
+  slug: string,
+  includeDrafts = false,
+): Promise<EventRow | undefined> {
   return get<EventRow>(
     `SELECT * FROM events WHERE slug = ?${includeDrafts ? "" : " AND status = 'published'"}`,
     slug,
   );
-}
+});
 
 export async function getEventById(id: string): Promise<EventRow | undefined> {
   return get<EventRow>("SELECT * FROM events WHERE id = ?", id);
@@ -254,7 +266,7 @@ export async function listAllGuidelines(): Promise<Guideline[]> {
   );
 }
 
-export async function getGuidelineBySlug(
+export const getGuidelineBySlug = cache(async function getGuidelineBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<Guideline | undefined> {
@@ -264,7 +276,7 @@ export async function getGuidelineBySlug(
     }`,
     slug,
   );
-}
+});
 
 export async function getGuidelineById(id: string): Promise<Guideline | undefined> {
   return get<Guideline>("SELECT * FROM guidelines WHERE id = ?", id);
@@ -296,7 +308,7 @@ export async function listAllPublications(): Promise<Publication[]> {
   );
 }
 
-export async function getPublicationBySlug(
+export const getPublicationBySlug = cache(async function getPublicationBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<Publication | undefined> {
@@ -306,7 +318,7 @@ export async function getPublicationBySlug(
     }`,
     slug,
   );
-}
+});
 
 export async function getPublicationById(id: string): Promise<Publication | undefined> {
   return get<Publication>("SELECT * FROM publications WHERE id = ?", id);
@@ -333,14 +345,17 @@ export async function listAllNews(): Promise<NewsPost[]> {
   );
 }
 
-export async function getNewsBySlug(slug: string, includeDrafts = false): Promise<NewsPost | undefined> {
+export const getNewsBySlug = cache(async function getNewsBySlug(
+  slug: string,
+  includeDrafts = false,
+): Promise<NewsPost | undefined> {
   return get<NewsPost>(
     `SELECT * FROM news_posts WHERE slug = ?${
       includeDrafts ? "" : " AND status = 'published'"
     }`,
     slug,
   );
-}
+});
 
 export async function getNewsById(id: string): Promise<NewsPost | undefined> {
   return get<NewsPost>("SELECT * FROM news_posts WHERE id = ?", id);

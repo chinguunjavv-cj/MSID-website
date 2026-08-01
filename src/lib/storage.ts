@@ -35,11 +35,17 @@ export function usingBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
+/**
+ * Where filesystem uploads live.
+ *
+ * A relative default rather than `join(process.cwd(), …)`: `fs` resolves it against the
+ * working directory either way, and one fewer runtime lookup is one fewer thing for the
+ * bundler to reason about. (The build still warns that this module's dynamic reads
+ * cause the uploads route to trace broadly — inherent to a route that streams arbitrary
+ * files off disk, and harmless, since that route is dead code on Vercel.)
+ */
 export function uploadDirectory(): string {
-  return (
-    process.env.MSID_UPLOAD_DIR ??
-    join(/* turbopackIgnore: true */ process.cwd(), "public", "uploads")
-  );
+  return process.env.MSID_UPLOAD_DIR ?? join("public", "uploads");
 }
 
 export interface StoredFile {

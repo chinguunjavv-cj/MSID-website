@@ -8,11 +8,13 @@ import { findSuccessor, getGuidelineById, getGuidelineBySlug } from "@/lib/queri
 import { formatDate } from "@/lib/format";
 import {
   PageHeader,
+  StaffPreviewNotice,
   Prose,
   StatusPill,
   TranslationNotice,
   guidelineTone,
 } from "@/components/ui/Primitives";
+import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
   params,
@@ -37,7 +39,12 @@ export default async function GuidelinePage({
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
 
-  const guideline = await getGuidelineBySlug(slug);
+  /*
+    Staff see unpublished records here so "View on site" in the admin is a real
+    preview. Everyone else gets the published-only query, and a draft 404s.
+  */
+  const staff = isStaff(await currentUser());
+  const guideline = await getGuidelineBySlug(slug, staff);
   if (!guideline) notFound();
 
   const t = getDictionary(locale);
@@ -58,6 +65,10 @@ export default async function GuidelinePage({
 
   return (
     <>
+      {guideline.status !== "published" && (
+        <StaffPreviewNotice locale={locale} status={guideline.status} />
+      )}
+
       <PageHeader
         title={tr(guideline, "title", locale)}
         lead={tr(guideline, "summary", locale) || undefined}

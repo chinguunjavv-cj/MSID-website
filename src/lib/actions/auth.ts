@@ -11,6 +11,11 @@ import {
   destroySession,
   pruneSessions,
 } from "@/lib/auth/session";
+import {
+  checkSignInThrottle,
+  clearSignInAttempts,
+  recordFailedSignIn,
+} from "@/lib/auth/throttle";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localePath } from "@/lib/i18n/config";
 import type { FormState } from "@/lib/actions/types";
@@ -35,6 +40,14 @@ export async function signInAction(
 
   if (!email || !password) return { errors: [t.errors.formHasErrors] };
 
+  /*
+    Before the password is checked, not after: verifying one costs about 130 MB and a
+    tenth of a second of CPU, so an unthrottled form is a denial-of-service tool as well
+    as a guessing oracle.
+  */
+  const throttle = await checkSignInThrottle(email);
+  if (throttle.blocked) return { errors: [t.auth.tooManyAttempts] };
+
   const user = await get<{
     id: string;
     password_hash: string;
@@ -45,6 +58,7 @@ export async function signInAction(
   // Same message whether the address is unknown or the password is wrong, so the form
   // cannot be used to enumerate who holds an account.
   if (!user || !(await verifyPassword(password, user.password_hash))) {
+    await recordFailedSignIn(email);
     return { errors: [t.auth.invalidCredentials] };
   }
 
@@ -53,7 +67,7 @@ export async function signInAction(
     return { errors: [t.auth.accountPending] };
   }
 
-  await pruneSessions();
+  await Promise.all([pruneSessions(), clearSignInAttempts(email)]);
   const userAgent = (await headers()).get("user-agent") ?? "";
 
   /*

@@ -4,7 +4,8 @@ import { get } from "@/lib/db";
 import { tr } from "@/lib/db/types";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { bi, getResource } from "@/lib/admin/resources";
-import { relationOptions } from "@/lib/actions/admin";
+import { relationOptions } from "@/lib/admin/options";
+import { deletionBlockedReason } from "@/lib/admin/deletion";
 import { listEventFees, listEventSessions } from "@/lib/queries";
 import { ResourceForm } from "@/components/admin/ResourceForm";
 import { EventFees, EventProgramme } from "@/components/admin/EventExtras";
@@ -82,6 +83,7 @@ export default async function EditResourcePage({
           recordId={id}
           relationOptions={relations}
           labels={labels}
+          deleteBlockedReason={await deletionBlockedReason(resource.key, id, locale)}
         />
       </div>
 

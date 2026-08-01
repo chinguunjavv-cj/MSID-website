@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { bi, getResource } from "@/lib/admin/resources";
-import { relationOptions } from "@/lib/actions/admin";
+import { relationOptions } from "@/lib/admin/options";
 import { ResourceForm } from "@/components/admin/ResourceForm";
 import { formLabels } from "@/components/admin/labels";
 

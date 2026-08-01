@@ -67,6 +67,17 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       ALTER TABLE news_posts ADD COLUMN video_url TEXT NOT NULL DEFAULT '';
     `,
   },
+  {
+    id: "2026-08-01-login-attempts",
+    sql: `
+      CREATE TABLE IF NOT EXISTS login_attempts (
+        id           TEXT PRIMARY KEY,
+        identity     TEXT NOT NULL,
+        attempted_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(identity, attempted_at);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

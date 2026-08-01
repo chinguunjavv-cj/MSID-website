@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
-  all,
   get,
   newId,
   run,
@@ -16,6 +15,7 @@ import {
 import { currentUser, isStaff, type SessionUser } from "@/lib/auth/session";
 import { hashPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { getResource, type FieldDef, type ResourceDef } from "@/lib/admin/resources";
+import { deletionBlockedReason } from "@/lib/admin/deletion";
 import { setSettings, type SiteSettings } from "@/lib/settings";
 import { localePath } from "@/lib/i18n/config";
 import type { FormState } from "@/lib/actions/types";
@@ -198,28 +198,31 @@ export async function deleteResourceAction(formData: FormData): Promise<void> {
   const id = String(formData.get("__id") ?? "");
   const idColumn = resource.idColumn ?? "id";
 
-  await run(`DELETE FROM ${resource.table} WHERE ${idColumn} = ?`, id);
-  await audit(user.id, `${resource.key}.delete`, resource.key, id);
+  // Checked again here, not only in the page that hides the button: the action is an
+  // endpoint of its own.
+  const blocked = await deletionBlockedReason(resource.key, id, locale);
+  if (blocked) throw new Error(blocked);
+
+  await transaction(async (tx) => {
+    /*
+      Children are removed explicitly rather than left to ON DELETE CASCADE. The schema
+      declares the foreign keys, but SQLite only enforces them when `foreign_keys` is on
+      for the connection, and a hosted libSQL server is reached over HTTP with no
+      guarantee that the pragma set at connection time applies to the statement. Doing
+      it here means the fee table and the programme do not accumulate rows belonging to
+      events that no longer exist, whatever the server decides.
+    */
+    if (resource.key === "events") {
+      await tx.run("DELETE FROM event_fees WHERE event_id = ?", id);
+      await tx.run("DELETE FROM event_sessions WHERE event_id = ?", id);
+    }
+
+    await tx.run(`DELETE FROM ${resource.table} WHERE ${idColumn} = ?`, id);
+    await auditTx(tx, user.id, `${resource.key}.delete`, resource.key, id);
+  });
 
   revalidatePath("/", "layout");
   redirect(localePath(locale, `/admin/${resource.key}`));
-}
-
-/** Select options for a relation field, excluding the record being edited. */
-export async function relationOptions(
-  table: string,
-  labelColumn: string,
-  excludeId?: string,
-): Promise<{ value: string; label: string }[]> {
-  await requireStaff();
-  const allowed = ["guidelines", "events", "publications"];
-  if (!allowed.includes(table)) return [];
-
-  return all<{ value: string; label: string }>(
-    `SELECT id AS value, COALESCE(NULLIF(${labelColumn}_mn, ''), ${labelColumn}_en) AS label
-     FROM ${table} WHERE id IS NOT ? ORDER BY created_at DESC LIMIT 200`,
-    excludeId ?? null,
-  );
 }
 
 /* -------------------------------------------------------------------------- */

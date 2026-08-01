@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { PageHeader, Prose } from "@/components/ui/Primitives";
+import { safeExternalLink } from "@/lib/video";
 
 export async function generateMetadata({
   params,
@@ -92,7 +93,7 @@ export default async function ContactPage({
         {settings.facebook_url && (
           <p className="mt-10">
             <a
-              href={settings.facebook_url}
+              href={safeExternalLink(settings.facebook_url) ?? "#"}
               target="_blank"
               rel="noreferrer noopener"
               className="btn btn-secondary"

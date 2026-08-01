@@ -7,6 +7,7 @@ import { localePath } from "@/lib/i18n/config";
 import { listPartners } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/format";
+import { safeExternalLink } from "@/lib/video";
 
 export async function Footer({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
@@ -70,7 +71,7 @@ export async function Footer({ locale }: { locale: Locale }) {
           </address>
           {settings.facebook_url && (
             <a
-              href={settings.facebook_url}
+              href={safeExternalLink(settings.facebook_url) ?? "#"}
               target="_blank"
               rel="noreferrer noopener"
               className="mt-4 inline-block text-small font-medium text-copper-400 transition-colors duration-100 hover:text-copper-300"
@@ -111,7 +112,7 @@ export async function Footer({ locale }: { locale: Locale }) {
                 {partners.map((partner) => (
                   <li key={partner.id}>
                     <a
-                      href={partner.url}
+                      href={safeExternalLink(partner.url) ?? "#"}
                       target="_blank"
                       rel="noreferrer noopener"
                       className="text-ink-300 transition-colors duration-100 hover:text-paper"
