@@ -57,7 +57,12 @@ export async function generateMetadata({
       template: `%s · ${t.org.acronym}`,
     },
     description: t.org.tagline,
-    icons: { icon: "/favicon.ico", apple: "/brand/msid-logo.jpg" },
+    /*
+      Icons are not declared here. `src/app/icon.png` and `src/app/apple-icon.png` are
+      picked up by the file convention, which fingerprints them for caching; naming
+      them manually would point at unversioned paths and, worse, the scaffolded
+      `favicon.ico` used to win over both.
+    */
     robots: isNoIndex() ? { index: false, follow: false } : undefined,
     alternates: {
       canonical: `/${locale}`,
