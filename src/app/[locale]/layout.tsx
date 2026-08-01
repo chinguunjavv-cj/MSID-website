@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { LOCALES, LOCALE_HTML_LANG, isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
+import { isNoIndex, siteUrl } from "@/lib/site";
 
 /**
  * Root layout. There is no `app/layout.tsx`; every route is locale-prefixed, so this
@@ -47,7 +48,7 @@ export async function generateMetadata({
   const { locale } = await params;
   if (!isLocale(locale)) return {};
   const t = getDictionary(locale);
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = siteUrl();
 
   return {
     metadataBase: new URL(base),
@@ -57,6 +58,7 @@ export async function generateMetadata({
     },
     description: t.org.tagline,
     icons: { icon: "/favicon.ico", apple: "/brand/msid-logo.jpg" },
+    robots: isNoIndex() ? { index: false, follow: false } : undefined,
     alternates: {
       canonical: `/${locale}`,
       languages: { "mn-MN": "/mn", en: "/en" },

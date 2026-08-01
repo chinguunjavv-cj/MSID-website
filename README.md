@@ -158,7 +158,7 @@ QPay support is written and wired; it needs credentials MSID does not have yet.
    QPAY_PASSWORD=…
    QPAY_INVOICE_CODE=…
    QPAY_CALLBACK_SECRET=…      # openssl rand -hex 32
-   NEXT_PUBLIC_SITE_URL=https://msid.mn
+   MSID_SITE_URL=https://msid.mn
    ```
 3. Tick **QPay-г идэвхжүүлэх** in Admin → Тохиргоо.
 
@@ -209,15 +209,16 @@ A `Dockerfile` and `railway.json` are included; no local Docker needed.
    | Variable | Value |
    |---|---|
    | `SESSION_SECRET` | output of `openssl rand -base64 48` |
-   | `NEXT_PUBLIC_SITE_URL` | the Railway URL, e.g. `https://msid.up.railway.app` |
+   | `MSID_SITE_URL` | the Railway URL, e.g. `https://msid-website-production.up.railway.app` — optional, Railway's own domain is detected if omitted |
    | `ADMIN_EMAIL` | your email — the first administrator, created on first boot |
    | `ADMIN_PASSWORD` | the password for it (change after signing in) |
    | `MSID_SEED_DEMO` | `1` to bring the site up with sample content; omit for empty |
 
    `MSID_DB_PATH` and `MSID_UPLOAD_DIR` are already set in the Dockerfile and point at
    the volume. Leave them alone.
-4. **Generate a domain** under Settings → Networking, then set `NEXT_PUBLIC_SITE_URL`
-   to it and redeploy so canonical URLs and the sitemap are right.
+4. **Generate a domain** under Settings → Networking. Railway publishes it as
+   `RAILWAY_PUBLIC_DOMAIN`, which the app picks up on its own, so no domain purchase
+   is needed for a client review.
 
 `scripts/docker-entrypoint.sh` runs on every boot. It applies the schema, tops up MSID's
 published facts, and creates the administrator only if that email has no account yet —
@@ -239,7 +240,8 @@ npm start                      # port 3000; put nginx or Caddy in front for TLS
 | `SESSION_SECRET` | Required. ≥32 characters |
 | `MSID_DB_PATH` | e.g. `/var/lib/msid/msid.db` — on a persistent volume |
 | `MSID_UPLOAD_DIR` | e.g. `/var/lib/msid/uploads` |
-| `NEXT_PUBLIC_SITE_URL` | `https://msid.mn` — canonical URLs, sitemap, QPay callbacks |
+| `MSID_SITE_URL` | `https://msid.mn` — canonical URLs, sitemap, QPay callbacks |
+| `MSID_NOINDEX` | `0` to allow search engines. Preview hosts are hidden automatically |
 | `QPAY_*` | Only once QPay credentials exist |
 
 Uploads are served by a route handler (`/uploads/[...path]`), not by static hosting, so

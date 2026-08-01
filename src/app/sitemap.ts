@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { LOCALES } from "@/lib/i18n/config";
+import { siteUrl } from "@/lib/site";
 import {
   listPublishedGuidelines,
   listPublishedNews,
@@ -26,10 +27,7 @@ const STATIC_PATHS = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
+  const base = siteUrl();
 
   const entry = (path: string, lastModified?: string): MetadataRoute.Sitemap[number] => ({
     url: `${base}/mn${path}`,

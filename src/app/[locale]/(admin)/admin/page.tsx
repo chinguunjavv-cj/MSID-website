@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { dashboardStats, listRegistrations } from "@/lib/queries";
 import { getSettings, hasBankDetails } from "@/lib/settings";
 import { qpayConfigured } from "@/lib/payments/qpay";
+import { isNoIndex, siteUrl } from "@/lib/site";
 import { formatDateNumeric, formatMnt } from "@/lib/format";
 import { Notice, StatusPill, paymentTone } from "@/components/ui/Primitives";
 
@@ -78,6 +79,17 @@ export default async function AdminDashboard({
       mn
         ? "QPay идэвхжүүлсэн боловч QPAY_* орчны хувьсагчид тохируулаагүй байна."
         : "QPay is switched on but the QPAY_* environment variables are not set.",
+    );
+  }
+  /*
+    Shown on every admin visit so a launched site cannot quietly stay invisible to
+    search engines — the flip side of defaulting preview deployments to noindex.
+  */
+  if (isNoIndex()) {
+    warnings.push(
+      mn
+        ? `Энэ хувилбарыг хайлтын системд индексжүүлэхгүй байна (${siteUrl()}). Жинхэнэ домэйн дээр нийтлэхдээ NEXT_PUBLIC_SITE_URL-ыг тохируулж, MSID_NOINDEX=0 болгоно уу.`
+        : `This deployment is hidden from search engines (${siteUrl()}). When you launch on the real domain, set NEXT_PUBLIC_SITE_URL and MSID_NOINDEX=0.`,
     );
   }
 

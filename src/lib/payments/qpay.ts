@@ -1,4 +1,5 @@
 import "server-only";
+import { siteUrl } from "@/lib/site";
 
 /**
  * QPay v2 client.
@@ -101,8 +102,7 @@ export async function createQpayInvoice(input: {
   const config = qpayConfig();
   if (!config) throw new Error("QPay is not configured.");
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const callbackUrl = `${siteUrl}/api/payments/qpay/callback?reference=${encodeURIComponent(
+  const callbackUrl = `${siteUrl()}/api/payments/qpay/callback?reference=${encodeURIComponent(
     input.reference,
   )}&secret=${encodeURIComponent(config.callbackSecret)}`;
 
