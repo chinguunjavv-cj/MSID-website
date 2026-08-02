@@ -1,0 +1,871 @@
+<title>MSID вэбсайтын гарын авлага</title>
+
+<style>
+  /*
+    Palette, type scale and rules follow the MSID site's own design system
+    (src/app/globals.css): copper sampled from the logo, neutrals whose chroma
+    leans to copper's hue rather than a generic warm grey, and white paper —
+    the system has no cream surface.
+
+    Commissioner and Literata cannot be loaded here (the artifact CSP blocks
+    font CDNs, and a silent fallback would be worse than an honest one), so the
+    hierarchy is carried by weight, size and tracking on a system stack that
+    renders Mongolian Cyrillic — including ө and ү — everywhere.
+  */
+
+  :root {
+    --paper:        #fdfcfb;
+    --surface:      #f6f3f1;
+    --surface-2:    #efebe8;
+    --line:         #e3ddd9;
+    --line-strong:  #cdc5c0;
+
+    --ink:          #2b241f;
+    --ink-strong:   #1a1512;
+    --ink-muted:    #6f6862;
+
+    --copper:       #8a4b2e;
+    --copper-bright:#a85a33;
+    --copper-wash:  #f7ede7;
+
+    --warn:         #8a6420;
+    --warn-wash:    #fbf4e4;
+    --warn-line:    #e0cda0;
+
+    --font-ui: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+    --measure: 66ch;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:        #17130f;
+      --surface:      #1f1a16;
+      --surface-2:    #272119;
+      --line:         #322a24;
+      --line-strong:  #473c34;
+
+      --ink:          #ece7e2;
+      --ink-strong:   #fbf8f5;
+      --ink-muted:    #a29890;
+
+      --copper:       #d98d5f;
+      --copper-bright:#e8a377;
+      --copper-wash:  #2a1d15;
+
+      --warn:         #d3ab5e;
+      --warn-wash:    #2a2113;
+      --warn-line:    #4d3d1e;
+
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:        #17130f;
+    --surface:      #1f1a16;
+    --surface-2:    #272119;
+    --line:         #322a24;
+    --line-strong:  #473c34;
+
+    --ink:          #ece7e2;
+    --ink-strong:   #fbf8f5;
+    --ink-muted:    #a29890;
+
+    --copper:       #d98d5f;
+    --copper-bright:#e8a377;
+    --copper-wash:  #2a1d15;
+
+    --warn:         #d3ab5e;
+    --warn-wash:    #2a2113;
+    --warn-line:    #4d3d1e;
+
+    color-scheme: dark;
+  }
+
+  :root[data-theme="light"] {
+    --paper:        #fdfcfb;
+    --surface:      #f6f3f1;
+    --surface-2:    #efebe8;
+    --line:         #e3ddd9;
+    --line-strong:  #cdc5c0;
+
+    --ink:          #2b241f;
+    --ink-strong:   #1a1512;
+    --ink-muted:    #6f6862;
+
+    --copper:       #8a4b2e;
+    --copper-bright:#a85a33;
+    --copper-wash:  #f7ede7;
+
+    --warn:         #8a6420;
+    --warn-wash:    #fbf4e4;
+    --warn-line:    #e0cda0;
+
+    color-scheme: light;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- masthead --------------------------------------------------------- */
+
+  .masthead {
+    background: var(--ink-strong);
+    color: var(--paper);
+    border-bottom: 3px solid var(--copper-bright);
+  }
+  :root[data-theme="dark"] .masthead,
+  .masthead { color: #fbf8f5; }
+
+  .masthead-inner {
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--copper-bright);
+  }
+  .masthead h1 {
+    font-size: clamp(2rem, 1.4rem + 2.4vw, 3.1rem);
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+  .masthead p {
+    max-width: 54ch;
+    color: #c8bfb8;
+    font-size: 1.0625rem;
+  }
+  .stamp {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: #9c918a;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- shell ------------------------------------------------------------ */
+
+  .shell {
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+    display: grid;
+    gap: 3.5rem;
+  }
+
+  @media (min-width: 62rem) {
+    .shell {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      gap: 4.5rem;
+      align-items: start;
+    }
+  }
+
+  /* ---- contents rail ---------------------------------------------------- */
+
+  .toc {
+    padding-top: 3rem;
+    font-size: 0.9375rem;
+  }
+  @media (min-width: 62rem) {
+    .toc {
+      position: sticky;
+      top: 0;
+      max-height: 100vh;
+      overflow-y: auto;
+      padding-bottom: 3rem;
+    }
+  }
+  .toc h2 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 0.25rem;
+  }
+  .toc ol {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+  }
+  .toc li { border-bottom: 1px solid var(--line); }
+  .toc a {
+    display: grid;
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+    gap: 0.25rem;
+    padding: 0.625rem 0;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .toc a:hover { color: var(--copper); }
+  .toc a:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+  .toc .num {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--ink-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- article ---------------------------------------------------------- */
+
+  article { padding-top: 3rem; min-width: 0; }
+
+  section + section { margin-top: 4rem; }
+
+  section > h2 {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: baseline;
+    font-size: clamp(1.4rem, 1.15rem + 1vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    text-wrap: balance;
+    padding-bottom: 0.9rem;
+    border-bottom: 2px solid var(--ink);
+    scroll-margin-top: 1.5rem;
+  }
+  section > h2 .num {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--copper);
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h3 {
+    font-size: 1.1875rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-top: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h4 {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 1.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  p, ul, ol, .callout, .table-wrap, .steps { max-width: var(--measure); }
+  p { margin-top: 0.85rem; }
+  section > h2 + p, h3 + p, h4 + p { margin-top: 0.75rem; }
+
+  strong { font-weight: 700; color: var(--ink-strong); }
+  em { font-style: normal; color: var(--ink-muted); }
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    padding: 0.1em 0.35em;
+    word-break: break-word;
+  }
+
+  /* ---- lists ------------------------------------------------------------ */
+
+  ul { list-style: none; margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  ul li { display: grid; grid-template-columns: 0.9rem minmax(0, 1fr); gap: 0.75rem; }
+  ul li::before {
+    content: "";
+    width: 0.375rem;
+    height: 0.375rem;
+    background: var(--copper);
+    margin-top: 0.62em;
+  }
+
+  .steps { counter-reset: step; list-style: none; margin-top: 1.1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+  .steps li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+  .steps li::before {
+    content: counter(step);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--copper);
+    border: 1px solid var(--line-strong);
+    width: 1.6rem;
+    height: 1.6rem;
+    display: grid;
+    place-items: center;
+    margin-top: 0.1em;
+  }
+
+  /* ---- tables ----------------------------------------------------------- */
+
+  .table-wrap { overflow-x: auto; margin-top: 1.25rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.9375rem; }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 1rem 0.7rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    border-bottom: 2px solid var(--ink);
+    white-space: nowrap;
+  }
+  td:first-child { font-weight: 600; color: var(--ink-strong); padding-right: 1.5rem; }
+  td code { white-space: nowrap; }
+
+  /* ---- callouts --------------------------------------------------------- */
+
+  .callout {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--warn-wash);
+    border: 1px solid var(--warn-line);
+    border-left: 3px solid var(--warn);
+  }
+  .callout p { margin-top: 0.5rem; }
+  .callout p:first-child { margin-top: 0; }
+  .callout .label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--warn);
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .callout.note {
+    background: var(--copper-wash);
+    border-color: var(--line-strong);
+    border-left-color: var(--copper);
+  }
+  .callout.note .label { color: var(--copper); }
+
+  /* ---- FAQ -------------------------------------------------------------- */
+
+  /* No top rule — this list follows the section heading, which already draws one. */
+  .faq { margin-top: 1.5rem; max-width: var(--measure); }
+  .faq > div { border-bottom: 1px solid var(--line); padding: 1.1rem 0; }
+  .faq dt { font-weight: 700; color: var(--ink-strong); }
+  .faq dd { margin-top: 0.35rem; color: var(--ink); }
+
+  /* ---- footer ----------------------------------------------------------- */
+
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    max-width: var(--measure);
+    color: var(--ink-muted);
+    font-size: 0.9375rem;
+  }
+
+  a { color: var(--copper); }
+  a:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+  html { scroll-behavior: smooth; }
+
+  /* ---- print / PDF ------------------------------------------------------ */
+  /*
+    The same document as an A4 booklet. The contents rail stops being sticky and
+    becomes an ordinary contents page; the light palette is forced, because a dark
+    ground would be printed as a solid block of ink.
+  */
+  @page {
+    size: A4;
+    margin: 18mm 16mm 20mm;
+  }
+
+  @media print {
+    /*
+      All three selectors, not just `:root`. The viewer's theme toggle stamps
+      `data-theme` on the root element, and `:root[data-theme="light"]` out-specifies a
+      bare `:root` no matter which media query it sits in — so printing from a page
+      whose theme had been set kept the screen palette and put a faint warm ground
+      behind every sheet.
+    */
+    :root,
+    :root[data-theme="light"],
+    :root[data-theme="dark"] {
+      --paper:        #ffffff;
+      --surface:      #f6f3f1;
+      --surface-2:    #efebe8;
+      --line:         #d8d1cc;
+      --line-strong:  #b9afa8;
+      --ink:          #241e1a;
+      --ink-strong:   #100c0a;
+      --ink-muted:    #5f5852;
+      --copper:       #7d4229;
+      --copper-bright:#8a4b2e;
+      --copper-wash:  #f7ede7;
+      --warn:         #7a5719;
+      --warn-wash:    #fbf4e4;
+      --warn-line:    #ddc79a;
+      color-scheme: light;
+    }
+
+    body { font-size: 10.5pt; line-height: 1.55; }
+
+    .masthead {
+      background: none;
+      color: var(--ink);
+      border-bottom-width: 2px;
+      break-after: avoid;
+    }
+    .masthead-inner { padding: 0 0 1.25rem; max-width: none; }
+    .masthead h1 { font-size: 26pt; }
+    .masthead p { color: var(--ink-muted); }
+    .stamp { color: var(--ink-muted); }
+
+    .shell {
+      display: block;
+      max-width: none;
+      padding: 0;
+    }
+
+    /* The rail becomes a contents page, then the guide starts on a fresh sheet. */
+    .toc {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      padding: 1.5rem 0 0;
+      break-after: page;
+    }
+    .toc a { color: var(--ink); text-decoration: none; }
+    .toc ol { max-width: 32rem; }
+
+    article { padding-top: 0; }
+
+    /* Each numbered section starts its own page — this is a reference people
+       jump around in, not a narrative read start to finish. */
+    section { break-before: page; break-inside: auto; }
+    section:first-of-type { break-before: avoid; }
+    section + section { margin-top: 0; }
+
+    h2, h3, h4 { break-after: avoid; }
+    p, li { orphans: 3; widows: 3; }
+
+    /*
+      Lists stop being grids on paper. Chrome lays out a grid container wrongly when it
+      also carries `break-inside: avoid` during pagination — the second column collapses
+      onto the first and bold runs print on top of the line above. The same shape, built
+      from a block box and an absolutely positioned marker, fragments correctly.
+    */
+    ul li, .steps li { display: block; position: relative; }
+    ul li { padding-left: 1.65rem; }
+    ul li::before { position: absolute; left: 0.25rem; top: 0.62em; }
+    .steps li { padding-left: 2.45rem; }
+    .steps li::before { position: absolute; left: 0; top: 0; margin-top: 0.1em; }
+
+    .callout, .table-wrap, .faq > div, .steps li, ul li { break-inside: avoid; }
+    .table-wrap { overflow: visible; }
+    table { break-inside: auto; }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid; }
+
+    code { background: none; border: none; padding: 0; font-weight: 600; }
+
+    a { color: var(--ink); text-decoration: none; }
+
+    footer { break-inside: avoid; }
+  }
+</style>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="eyebrow">Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг</p>
+    <h1>Вэбсайтын гарын авлага</h1>
+    <p>Сайтын агуулгыг оруулах, засах, нийтлэх заавар. Програмчлалын мэдлэг шаардахгүй — үндсэндээ хөтчөөр орж, маягт бөглөж, «Хадгалах» товч дарах ажил юм.</p>
+    <p class="stamp">Сүүлд шинэчилсэн: 2026.08.01</p>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="toc" aria-label="Гарчиг">
+    <h2>Агуулга</h2>
+    <ol>
+      <li><a href="#s1"><span class="num">01</span><span>Вэбсайт ямар хэсгүүдээс бүрдэх вэ</span></a></li>
+      <li><a href="#s2"><span class="num">02</span><span>Нэвтрэх</span></a></li>
+      <li><a href="#s3"><span class="num">03</span><span>Контент оруулах ерөнхий журам</span></a></li>
+      <li><a href="#s4"><span class="num">04</span><span>Хэсэг тус бүрийн тайлбар</span></a></li>
+      <li><a href="#s5"><span class="num">05</span><span>Бичлэг нэмэх</span></a></li>
+      <li><a href="#s6"><span class="num">06</span><span>Зураг, файл хуулах</span></a></li>
+      <li><a href="#s7"><span class="num">07</span><span>Арга хэмжээний бүртгэл</span></a></li>
+      <li><a href="#s8"><span class="num">08</span><span>Түгээмэл асуулт</span></a></li>
+      <li><a href="#s9"><span class="num">09</span><span>Одоогоор хийгдээгүй зүйлс</span></a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+    <!-- 1 -->
+    <section id="s1">
+      <h2><span class="num">01</span><span>Вэбсайт ямар хэсгүүдээс бүрдэх вэ</span></h2>
+
+      <p>Сайт гурван давхаргатай.</p>
+
+      <h3>Нийтийн хэсэг</h3>
+      <p>Зочид, гишүүд, түншүүд бүгд харна.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Хуудас</th><th scope="col">Юуг агуулах</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Нүүр</td><td>Товч танилцуулга, ойрын арга хэмжээ, сүүлийн мэдээ, түншүүд</td></tr>
+            <tr><td>Танилцуулга</td><td>Зорилго, түүхэн замнал, удирдах зөвлөл, холбоо барих</td></tr>
+            <tr><td>Арга хэмжээ</td><td>Их хурал, сургалт, хурал — болох гэж буй болон өнгөрсөн</td></tr>
+            <tr><td>Эрдэм шинжилгээ</td><td>Нийгэмлэгийн болон гишүүдийн бүтээл</td></tr>
+            <tr><td>Эмнэлзүйн заавар</td><td>Батлагдсан заавар, стандарт</td></tr>
+            <tr><td>Хамтын ажиллагаа</td><td>Дотоод, гадаадын хамтрагч байгууллагууд</td></tr>
+            <tr><td>Мэдээ</td><td>Нийгэмлэгийн мэдээ, зарлал</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Гишүүний хэсэг</h3>
+      <p>Зөвхөн батлагдсан гишүүд нэвтэрч орно. Гишүүнчлэлийн төлөв, өөрийн мэдээлэл, бүртгүүлсэн арга хэмжээгээ харна.</p>
+
+      <h3>Удирдлагын хэсэг</h3>
+      <p>Та энэ гарын авлагыг ашиглан ажиллах хэсэг. Сайтын бүх агуулгыг эндээс оруулж, засаж, нийтэлнэ.</p>
+
+      <h3>Хоёр хэл</h3>
+      <p>Сайт монгол, англи хоёр хэлтэй. <strong>Монгол хэл нь үндсэн хэл</strong> — хаяг нь <code>/mn/…</code>-ээр эхэлж, шинэ зочин анхдагчаар монгол хувилбар дээр буудаг.</p>
+      <p>Контент оруулахдаа монгол, англи хоёуланг нь зэрэг бөглөнө. Англи талбарыг хоосон орхивол тухайн хэсэг <strong>алга болохгүй</strong> — англи хувилбар дээр монгол эх нь харагдаж, дээр нь «орчуулагдаагүй» тэмдэглэгээ гарна. Тиймээс англи орчуулга дараа хийх боломжтой.</p>
+    </section>
+
+    <!-- 2 -->
+    <section id="s2">
+      <h2><span class="num">02</span><span>Нэвтрэх</span></h2>
+
+      <ol class="steps">
+        <li>Хөтчөөрөө <strong>msidwebsite.vercel.app/mn/login</strong> гэж орно.</li>
+        <li>И-мэйл хаяг, нууц үгээ оруулна.</li>
+        <li>Удирдлагын эрхтэй бол шууд <strong>Удирдлагын хэсэг</strong> рүү орно.</li>
+      </ol>
+
+      <h3>Аюулгүй байдал</h3>
+      <ul>
+        <li>Нууц үгээ <strong>8 удаа</strong> буруу оруулбал 15 минут хаагдана. Энэ нь бусад хүн таны нууц үгийг таах гэж оролдохоос хамгаална.</li>
+        <li>Нэвтэрсэн төлөв <strong>14 хоног</strong> хадгалагдана. Нийтийн компьютер ашигласан бол ажлаа дуусаад заавал <strong>Гарах</strong> дарна уу.</li>
+      </ul>
+
+      <h3>Нууц үгээ солих</h3>
+      <p><strong>Гишүүний хэсэг</strong> (<code>/mn/portal</code>) → <strong>Нууц үг</strong> хэсэгт одоогийн нууц үг, шинэ нууц үгээ оруулна. Нууц үг доод тал нь 10 тэмдэгттэй байна.</p>
+      <p>Нууц үгээ соливол таны бусад бүх төхөөрөмж дээрх нэвтэрсэн төлөв тасарна.</p>
+
+      <div class="callout">
+        <span class="label">Анхаар</span>
+        <p>Нууц үгээ мартвал өөрөө сэргээх боломж одоогоор байхгүй. Сайтыг хөгжүүлсэн хүнтэй холбогдож сэргээлгэнэ. Нууц үгээ найдвартай газар хадгална уу.</p>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section id="s3">
+      <h2><span class="num">03</span><span>Контент оруулах ерөнхий журам</span></h2>
+
+      <p>Бүх төрлийн контент <strong>ижил зарчмаар</strong> ажиллана. Нэгийг сурвал бүгдийг мэднэ.</p>
+
+      <ol class="steps">
+        <li>Зүүн талын цэснээс тухайн хэсгээ сонгоно (жишээ нь <strong>Арга хэмжээ</strong>).</li>
+        <li>Байгаа зүйлээ засах бол нэр дээр нь дарна. Шинээр нэмэх бол <strong>Шинээр нэмэх</strong> товчийг дарна.</li>
+        <li>Маягтыг бөглөнө. Монгол, англи талбар зэрэгцээ байрлана.</li>
+        <li><strong>Төлөв</strong>-ийг сонгоно.</li>
+        <li><strong>Хадгалах</strong> дарна.</li>
+      </ol>
+
+      <h3>Төлөв гэж юу вэ</h3>
+      <p>Төлөв нь тухайн контентыг зочид харах эсэхийг шийднэ.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Төлөв</th><th scope="col">Утга</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Төсөл</td><td>Зөвхөн та харна. Бэлэн болтол ажиллаж болно.</td></tr>
+            <tr><td>Нийтэлсэн</td><td>Сайт дээр бүх хүнд харагдана.</td></tr>
+            <tr><td>Архивласан</td><td>Сайтаас хасагдана, гэхдээ мэдээлэл нь устахгүй.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Эмнэлзүйн заавар арай өөр төлөвтэй: <strong>Төсөл → Хянагдаж буй → Хүчин төгөлдөр → Хүчингүй болсон</strong>.</p>
+
+      <h3>Ажлаа урьдчилж харах</h3>
+      <p>Засварын хуудсын баруун дээд буланд <strong>Сайт дээр харах</strong> товч байна. Энэ нь төсөл төлөвтэй байхад ч ажиллана — та хуудсаа яг зочны нүдээр харж болно. Тухайн үед дээд талд шар зурвас гарч «Энэ хуудас төсөл төлөвтэй байна» гэж сануулна. Зочид энэ хуудсыг нээхэд «олдсонгүй» гэсэн хариу авна.</p>
+
+      <h3>Устгах</h3>
+      <p>Маягтын хамгийн доод хэсэгт улаан <strong>Устгах</strong> товч байна. Устгасан контентийг <strong>сэргээх боломжгүй</strong>.</p>
+      <p>Ихэнх тохиолдолд устгахын оронд <strong>Архивласан</strong> төлөв рүү шилжүүлэх нь зөв. Мэдээлэл нь хадгалагдаж, сайтаас л хасагдана.</p>
+
+      <div class="callout note">
+        <span class="label">Бүртгэлтэй арга хэмжээ</span>
+        <p>Бүртгэлтэй арга хэмжээг устгах боломжгүй. Оролцогчдын нэр, холбоо барих мэдээлэл, төлбөрийн бүртгэл нь тэр арга хэмжээнд холбоотой байдаг тул систем устгахыг зөвшөөрөхгүй бөгөөд «Архивласан» болгохыг санал болгоно.</p>
+      </div>
+
+      <h3>Хаяг</h3>
+      <p>Контентыг <strong>анх хадгалах үед</strong> гарчгаас нь автоматаар хаяг үүснэ (жишээ нь «Гэдэсний эмгэг судлалын их хурал» → <code>gedesnii-emgeg-sudlalyn-ikh-khural</code>). Дараа нь гарчгийг өөрчилсөн ч <strong>хаяг өөрчлөгдөхгүй</strong> — учир нь хэн нэгэн тэр холбоосыг хуваалцсан, эсвэл хайлтын систем хадгалсан байж болно.</p>
+    </section>
+
+    <!-- 4 -->
+    <section id="s4">
+      <h2><span class="num">04</span><span>Хэсэг тус бүрийн тайлбар</span></h2>
+
+      <h3>Хяналтын самбар</h3>
+      <p>Нэвтэрмэгц гарч ирэх хуудас. Хүлээгдэж буй гишүүнчлэлийн хүсэлт, төлбөр хийгдээгүй бүртгэлийн тоог харуулна. Зүүн цэсэнд улаан тоо гарсан бол тэнд таны анхаарал шаардлагатай зүйл байна гэсэн үг.</p>
+
+      <h3>Арга хэмжээ</h3>
+      <p>Хамгийн олон талбартай хэсэг. Их хурал, сургалт, эрдэм шинжилгээний хурал, цахим хурал, кейс хэлэлцүүлэг гэсэн төрөлтэй.</p>
+
+      <h4>Тохиргоо</h4>
+      <ul>
+        <li><strong>Төрөл</strong> — дээрх таван төрлөөс сонгоно.</li>
+        <li><strong>Нүүр хуудсанд онцлох</strong> — тэмдэглэвэл нүүр хуудсанд томоор гарна. Ойрын их хуралд тохиромжтой.</li>
+      </ul>
+
+      <h4>Огноо</h4>
+      <p>Эхлэх, дуусах огноо, илтгэлийн хураангуйн эцсийн хугацаа, хөнгөлөлттэй бүртгэлийн эцсийн хугацаа.</p>
+
+      <h4>Төлбөр (хураамж)</h4>
+      <p>Арга хэмжээг нэг удаа хадгалсны дараа маягтын доор хураамжийн хэсэг гарч ирнэ. Гишүүн, гишүүн бус, дадлагажигч эмч, гадаадын оролцогч гэх мэтээр өөр өөр үнэ тогтоож болно. Хөнгөлөлттэй үнэ бичвэл хөнгөлөлттэй бүртгэлийн эцсийн хугацаа хүртэл тэр үнэ үйлчилнэ.</p>
+
+      <h4>Хөтөлбөр</h4>
+      <p>Мөн хадгалсны дараа гарна. Өдөр, цаг, илтгэлийн нэр, илтгэгч, танхимаар оруулна. Сайт дээр өдрөөр нь бүлэглэн хүснэгт болгож харуулна.</p>
+
+      <h3>Бүртгэл</h3>
+      <p>Арга хэмжээнд бүртгүүлсэн хүмүүсийн жагсаалт. Арга хэмжээгээр, төлбөрийн төлөвөөр шүүх, нэр, и-мэйл, лавлах дугаараар хайх боломжтой.</p>
+      <p>Мөр бүрийн баруун талд <strong>төлбөрийн төлөв</strong>, <strong>оролцооны төлөв</strong> гэсэн хоёр сонголт байна. Өөрчлөөд тухайн мөрийн <strong>Хадгалах</strong> товчийг дарна. Төлбөрийг «Төлсөн» болгоход оролцооны төлөв автоматаар «Баталгаажсан» болно.</p>
+      <p>Дээд талын <strong>CSV татах</strong> товчоор бүх бүртгэлийг Excel-д нээх файлаар татна. Монгол үсэг зөв гарахаар бэлдсэн.</p>
+
+      <h3>Гишүүд</h3>
+      <p>Гишүүнчлэлийн хүсэлт эндээс ирнэ.</p>
+
+      <div class="callout">
+        <span class="label">Хамгийн чухал зүйл</span>
+        <p>Шинэ хүсэлт <strong>Хүлээгдэж буй</strong> төлөвтэй ирнэ. Та <strong>Идэвхтэй</strong> болгож өгтөл тэр хүн нэвтэрч чадахгүй.</p>
+      </div>
+
+      <ul>
+        <li><strong>Идэвхтэй</strong> — гишүүн нэвтэрч, гишүүний хэсгээ харна.</li>
+        <li><strong>Татгалзсан</strong> — бүртгэл нь хаагдана.</li>
+        <li><strong>Хугацаа дууссан</strong> — гишүүнчлэлийн хугацаа дуусахад.</li>
+      </ul>
+
+      <p>Гишүүний дугаар, элссэн огноо, хүчинтэй хугацааг мөн эндээс оруулна.</p>
+      <p><em>Систем одоогоор и-мэйл автоматаар илгээдэггүй. Хүсэлтийг баталсан ч тэр хүнд мэдэгдэл очихгүй тул та өөрөө утсаар эсвэл и-мэйлээр мэдэгдэх шаардлагатай.</em></p>
+
+      <h3>Эмнэлзүйн заавар</h3>
+      <ul>
+        <li><strong>Код</strong> — жишээ нь <code>MSID-CG-2026-01</code>.</li>
+        <li><strong>Хувилбар</strong> — <code>1.0</code>, <code>2.0</code> гэх мэт.</li>
+        <li><strong>Орлож буй баримт</strong> — хуучин заавраа сонговол хоёулаа хоорондоо холбогдож, хуучин нь «Хүчингүй болсон» гэж тэмдэглэгдэн, шинэ рүүгээ заасан холбоостой болно.</li>
+        <li><strong>Файл</strong> — PDF хавсаргавал зочид татаж авна.</li>
+      </ul>
+
+      <h3>Эрдэм шинжилгээ</h3>
+      <p>Өгүүлэл, сэтгүүлийн дугаар, илтгэлийн хураангуй, тайлан. Зохиогч, сэтгүүл, боть, дугаар, хуудас, DOI, гадаад холбоос, PDF файл оруулж болно.</p>
+
+      <h3>Мэдээ</h3>
+      <p>Нийгэмлэгийн мэдээ, зарлал. Товч тайлбар нь жагсаалтад, дэлгэрэнгүй нь мэдээний хуудсанд гарна. Бичлэг хавсаргаж болно.</p>
+
+      <h3>Хуудсууд</h3>
+      <p>Танилцуулга, Гишүүнчлэл, Хамтын ажиллагаа зэрэг <strong>тогтмол хуудсуудын текст</strong>. Эдгээрийг шинээр үүсгэх, устгах боломжгүй — зөвхөн доторх бичвэрийг нь засна.</p>
+
+      <h3>Түүхэн замнал</h3>
+      <p>Оноор нь эрэмбэлэгдэх түүхэн үйл явдлууд. Он, гарчиг, тайлбар оруулна.</p>
+
+      <h3>Удирдах зөвлөл</h3>
+      <p>Гишүүдийн нэр, албан тушаал, зэрэг, ажлын газар, зураг, намтар. <strong>Одоогийн бүрэлдэхүүн</strong> тэмдэглэгээг авбал өмнөх бүрэлдэхүүн болж, тусад нь харагдана. <strong>Эрэмбэ</strong> талбараар дарааллыг тогтооно (бага тоо эхэнд).</p>
+
+      <h3>Түншүүд</h3>
+      <p>Хамтрагч байгууллагууд. Нийгэмлэг, эрдэм шинжилгээний байгууллага, ивээн тэтгэгч, төрийн байгууллага гэж ангилна. Лого, вэбсайтын холбоос оруулна.</p>
+
+      <h3>Тохиргоо</h3>
+      <ul>
+        <li><strong>Холбоо барих</strong> — хаяг, утас, и-мэйл, ажиллах цаг, Facebook хуудасны холбоос. Эдгээр нь сайтын хөл хэсэг болон Холбоо барих хуудсанд харагдана.</li>
+        <li><strong>Нүүр хуудас</strong> — нүүрний том гарчиг, тайлбар, дэвсгэр зураг.</li>
+        <li><strong>Төлбөр</strong> — банкны нэр, дансны дугаар, данс эзэмшигчийн нэр. Эдгээрийг бөглөж өгтөл арга хэмжээнд бүртгүүлсэн хүн шилжүүлгийн мэдээлэл харахгүй, оронд нь «Нийгэмлэгээс и-мэйлээр илгээнэ» гэсэн бичиг харагдана.</li>
+      </ul>
+
+      <h3>Хэрэглэгчид</h3>
+      <ul>
+        <li><strong>Админ</strong> — бүх зүйлийг хийнэ, шинэ ажилтан нэмнэ, эрх өөрчилнө.</li>
+        <li><strong>Редактор</strong> — контент оруулна, засна, устгана. Гэхдээ ажилтан нэмэх, эрх өөрчлөх боломжгүй.</li>
+      </ul>
+      <p>Шинэ ажилтан нэмэхдээ нэр, и-мэйл, нууц үг, эрхийг оруулна. Нууц үгийг тухайн хүнд аюулгүй сувгаар дамжуулж, солиулна уу.</p>
+    </section>
+
+    <!-- 5 -->
+    <section id="s5">
+      <h2><span class="num">05</span><span>Бичлэг нэмэх</span></h2>
+
+      <p>Арга хэмжээ болон Мэдээ хоёрт бичлэг хавсаргаж болно. Өнгөрсөн их хурал, сургалтын бичлэгийг сайт дээрээ тавихад тохиромжтой.</p>
+
+      <ol class="steps">
+        <li>Бичлэгээ <strong>YouTube</strong>, <strong>Vimeo</strong> эсвэл <strong>Facebook</strong> дээр тавина.</li>
+        <li>Тухайн бичлэгийн холбоосыг хуулж авна.</li>
+        <li>Засварын хуудсанд <strong>Зураг, файл</strong> хэсгээс <strong>Бичлэгийн холбоос</strong> талбарт буулгана.</li>
+        <li>Хадгална.</li>
+      </ol>
+
+      <p>Бичлэг тухайн хуудсанд шууд тоглох боломжтойгоор гарч ирнэ.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Эх сурвалж</th><th scope="col">Жишээ</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>YouTube</td><td><code>https://www.youtube.com/watch?v=…</code> эсвэл <code>https://youtu.be/…</code></td></tr>
+            <tr><td>Vimeo</td><td><code>https://vimeo.com/76979871</code></td></tr>
+            <tr><td>Facebook</td><td>Бичлэгийн хуудасны бүтэн холбоос</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Танигдахгүй холбоос оруулбал бичлэг тусгагдахгүй, оронд нь «Бичлэгийг үзэх» гэсэн энгийн холбоос гарна.</p>
+
+      <h3>Яагаад файл биш холбоос вэ</h3>
+      <p>Их хурлын бичлэг хэдэн гигабайт хүрдэг. Түүнийг сайтад шууд байршуулбал хуулахад удаан, хадгалахад үнэтэй, үзэхэд ч удаан болно. YouTube болон Facebook дээр тавьсан бичлэг илүү хурдан ажиллах бөгөөд MSID аль хэдийн Facebook хуудастай тул нэмэлт ажил гарахгүй.</p>
+    </section>
+
+    <!-- 6 -->
+    <section id="s6">
+      <h2><span class="num">06</span><span>Зураг, файл хуулах</span></h2>
+
+      <p><strong>Зөвшөөрөгдөх төрөл:</strong> JPG, PNG, WebP, AVIF, SVG, PDF. Дээд хэмжээ <strong>20 MB</strong>. (SVG нь ихэвчлэн байгууллагын лого байдаг.)</p>
+
+      <h3>iPhone-оор авсан зураг</h3>
+      <p>iPhone анхдагчаар <strong>HEIC</strong> хэлбэрээр зураг авдаг бөгөөд систем түүнийг хүлээж авахгүй. Хуулахаас өмнө JPG болгож хөрвүүлнэ үү.</p>
+      <p><em>Утсан дээрээ: Тохиргоо → Камер → Формат → «Хамгийн нийцтэй» сонговол цаашид JPG хэлбэрээр авна.</em></p>
+
+      <h3>Зургийн тайлбар</h3>
+      <p>Зураг оруулах бүрд доор нь <strong>Зургийн тайлбар</strong> гэсэн талбар байна. Үүнийг заавал бөглөнө үү. Тайлбар нь:</p>
+      <ul>
+        <li>Харааны бэрхшээлтэй хүн дэлгэц уншигч программаар сонсоно;</li>
+        <li>Интернэт удаан үед зураг ачаалагдаагүй бол оронд нь харагдана;</li>
+        <li>Хайлтын системд тухайн зураг юуны тухай болохыг ойлгуулна.</li>
+      </ul>
+      <p>«Зураг», «Фото» гэж бичих нь тус болохгүй. Юу харагдаж байгааг богиноор бичнэ: «2026 оны их хурлын нээлтэд оролцогчид».</p>
+    </section>
+
+    <!-- 7 -->
+    <section id="s7">
+      <h2><span class="num">07</span><span>Арга хэмжээний бүртгэл</span></h2>
+
+      <p>Оролцогчид сайтаар дамжуулан бүртгүүлэхийн тулд <strong>хоёр нөхцөл</strong> зэрэг хангагдсан байх ёстой:</p>
+
+      <ol class="steps">
+        <li>Арга хэмжээний засварын хуудсанд <strong>Бүртгэл нээх</strong> тэмдэглэгээ тавигдсан;</li>
+        <li>Өнөөдрийн огноо <strong>Бүртгэл нээгдэх</strong> ба <strong>Бүртгэл хаагдах</strong> огноонуудын хооронд байгаа.</li>
+      </ol>
+
+      <p>Хоёрын аль нэг нь дутвал сайт дээр «Бүртгэл хаагдсан» гэж харагдана.</p>
+
+      <h3>Бүртгэл ирэх үед</h3>
+      <ol class="steps">
+        <li>Оролцогч маягт бөглөнө.</li>
+        <li>Систем <strong>лавлах дугаар</strong> үүсгэнэ (жишээ нь <code>MSID-2026-4F7K2Q</code>).</li>
+        <li>Оролцогчид банкны шилжүүлгийн мэдээлэл харагдана. Гүйлгээний утга дээр лавлах дугаараа бичихийг сануулна.</li>
+        <li>Мөнгө орсныг та шалгаад <strong>Бүртгэл</strong> хэсгээс төлбөрийн төлөвийг «Төлсөн» болгоно.</li>
+      </ol>
+
+      <p><strong>Багтаамж</strong> тогтоовол үлдсэн суудлын тоо сайт дээр харагдана. Нэг и-мэйл хаягаар нэг арга хэмжээнд <strong>нэг л удаа</strong> бүртгүүлж болно.</p>
+    </section>
+
+    <!-- 8 -->
+    <section id="s8">
+      <h2><span class="num">08</span><span>Түгээмэл асуулт</span></h2>
+
+      <dl class="faq">
+        <div>
+          <dt>Оруулсан зүйл маань сайт дээр харагдахгүй байна.</dt>
+          <dd>Төлвөө шалгана уу — «Төсөл» хэвээр байвал зөвхөн та харна. «Нийтэлсэн» болгоод хадгална.</dd>
+        </div>
+        <div>
+          <dt>Англи хувилбар дээр монголоор гарч байна.</dt>
+          <dd>Тухайн контентын англи талбар хоосон байна. Систем зориудаар монгол эхийг харуулж, «орчуулагдаагүй» гэж тэмдэглэдэг — хоосон хуудас харуулахаас дээр.</dd>
+        </div>
+        <div>
+          <dt>Гарчгаа зассан ч холбоос хуучнаараа байна.</dt>
+          <dd>Зөв ажиллаж байна. Хаяг нэг л удаа үүсдэг бөгөөд хуучин холбоосыг хуваалцсан хүмүүсийн хувьд эвдрэхгүйн тулд өөрчлөгддөггүй.</dd>
+        </div>
+        <div>
+          <dt>Гишүүн «нэвтэрч чадахгүй байна» гэж байна.</dt>
+          <dd>Гишүүд хэсгээс төлвийг нь шалгана уу. «Хүлээгдэж буй» хэвээр бол «Идэвхтэй» болгоно.</dd>
+        </div>
+        <div>
+          <dt>Арга хэмжээг устгаж чадахгүй байна.</dt>
+          <dd>Тэр арга хэмжээнд бүртгэл байна. Оролцогчдын мэдээллийг хамгаалахын тулд систем устгахыг зөвшөөрөхгүй. Төлвийг нь «Архивласан» болгоно уу.</dd>
+        </div>
+        <div>
+          <dt>Зураг хуулахад алдаа гарлаа.</dt>
+          <dd>Төрөл, хэмжээгээ шалгана уу — JPG, PNG, WebP, AVIF, SVG, PDF, 20 MB хүртэл. iPhone-ы HEIC зураг бол эхлээд JPG болгоно.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <!-- 9 -->
+    <section id="s9">
+      <h2><span class="num">09</span><span>Одоогоор хийгдээгүй зүйлс</span></h2>
+
+      <p>Ил тод байхын тулд бичив. Эдгээр нь эвдэрсэн зүйл биш, харин хараахан хийгээгүй ажил юм.</p>
+
+      <ul>
+        <li><strong>Автомат и-мэйл байхгүй.</strong> Гишүүнчлэл батлах, бүртгэл баталгаажуулах, төлбөр хүлээн авах — бүгд дээр систем и-мэйл илгээхгүй. Одоогоор та өөрөө холбогдоно.</li>
+        <li><strong>Нууц үг сэргээх боломжгүй.</strong> Мартвал хөгжүүлэгчээр дамжина.</li>
+        <li><strong>Онлайн төлбөр (QPay)</strong> холбогдоогүй. Одоогоор банкны шилжүүлгээр ажиллана.</li>
+      </ul>
+
+      <h3>Тусламж</h3>
+      <p>Техникийн асуудал гарвал дараах мэдээллийг бэлдэж холбогдоно уу:</p>
+      <ul>
+        <li>Ямар хуудсан дээр байсан (хаягийг нь хуулж авна уу);</li>
+        <li>Юу хийхийг оролдсон;</li>
+        <li>Дэлгэцийн зураг.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг · Удирдлагын гарын авлага · 2026.08.01</p>
+    </footer>
+
+  </article>
+</div>

@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "demo": "node --env-file-if-exists=.env.local scripts/demo.mts",
     "demo:clear": "node --env-file-if-exists=.env.local scripts/demo.mts --clear",
-    "admin": "node --env-file-if-exists=.env.local scripts/add-admin.mts"
+    "admin": "node --env-file-if-exists=.env.local scripts/add-admin.mts",
+    "guide:pdf": "node scripts/guide-pdf.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

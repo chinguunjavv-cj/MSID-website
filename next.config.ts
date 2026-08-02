@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  /*
+    Enables React's <ViewTransition>, which the site layout uses to crossfade page
+    content instead of hard-cutting it. Still flagged experimental by Next 16, but it
+    degrades to the browser default — an instant swap — wherever it is unsupported, so
+    nothing depends on it working.
+  */
+  experimental: { viewTransition: true },
+
   images: {
     /*
       Uploaded images are stored as absolute URLs when Vercel Blob is the storage

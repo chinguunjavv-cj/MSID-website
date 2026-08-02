@@ -582,6 +582,85 @@
   }
 }
 
+/* ==========================================================================
+   Navigation: loading placeholders and the transition between pages
+   ========================================================================== */
+
+@layer components {
+  /*
+    A placeholder block, used by the route-level loading files. It breathes rather than
+    sweeping a highlight across itself: a shimmer draws the eye to the waiting, which is
+    the opposite of what it is for.
+  */
+  .skeleton {
+    background-color: var(--color-ink-100);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+
+  .on-dark .skeleton {
+    background-color: color-mix(in oklab, var(--color-ink-200) 16%, transparent);
+  }
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/*
+  The page crossfade.
+
+  Deliberately small: this is a medical society's register of guidelines and congresses,
+  and a visitor moving from one guideline to the next should feel the page settle, not
+  watch it travel. The old page leaves quickly so it stops competing for attention; the
+  new one arrives a little more slowly, and only after the old has gone.
+
+  Directional slides were considered and rejected. They encode "forward" and "back",
+  which is a claim about hierarchy this site's navigation does not make — every section
+  is a sibling reachable from the masthead.
+*/
+/* Leading dot: these are the `enter`/`exit` class names from the template, not a
+   `view-transition-name`. */
+::view-transition-old(.page-exit) {
+  animation: 130ms var(--ease-out-quart) both page-fade-out;
+}
+
+::view-transition-new(.page-enter) {
+  animation: 220ms var(--ease-out-quart) 100ms both page-fade-in;
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+  The masthead and footer are the visitor's fixed reference points. Snapshotting them
+  would fade them along with the content — and because the masthead is sticky, the
+  browser would lift it out of the page for the duration and it would appear to jump.
+*/
+header,
+footer {
+  view-transition-name: none;
+}
+
 /*
   Reduced motion is not an afterthought. Every animation here collapses to an instant
   state change; nothing in the site gates content visibility on a transition, so a
@@ -599,6 +678,17 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /*
+    View transition pseudo-elements live outside the document tree, so the rule above
+    does not reach them.
+  */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
   }
 }
 
