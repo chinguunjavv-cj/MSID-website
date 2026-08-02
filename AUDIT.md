@@ -120,9 +120,10 @@ in plain language. Everyone else still gets a 404, which was verified both ways.
 
 ## Open
 
-### 1. Nothing sends email — high, needs a decision
+### 1. Nothing sends email except password resets — high, needs a decision
 
-There is no mail integration anywhere in the codebase. That means:
+There is now an SMTP mailer (`src/lib/email/mailer.ts`), used by the password reset flow.
+Nothing else uses it yet, so:
 
 - A membership application is silently queued. The applicant is told, in MSID's own
   words, "Батлагдмагц и-мэйлээр мэдэгдэнэ" — and no email is ever sent.
@@ -132,18 +133,19 @@ There is no mail integration anywhere in the codebase. That means:
 - MSID is not notified of a new application or registration; someone has to remember to
   open the admin and look.
 
-This is the largest gap between what the site promises and what it does. It also blocks
-item 2.
+This is the largest gap between what the site promises and what it does.
 
-**Decision needed:** a transactional email provider (Resend and Postmark both work from
-Vercel with a few lines) and a `From` domain MSID controls. Roughly half a day's work
-once that exists.
+The plumbing is no longer the obstacle — `sendMail()` exists and is configured. What
+remains is writing each message and choosing where it fires. Membership approval is the
+one to do first: it is the only place the site makes a promise in writing that it then
+does not keep.
 
-### 2. No way to reset a forgotten password — high, depends on 1
+### 2. No way to reset a forgotten password — CLOSED
 
-There is no reset flow. Recovery today means running `npm run admin` from a laptop that
-has the production database credentials. For a two-person society, one forgotten password
-is a locked admin panel until a developer is available.
+Built. `/mn/forgot-password` sends a one-hour, single-use link; only the token's SHA-256
+is stored; completing a reset cuts every session on the account. Requires `SMTP_*` to be
+configured — see "Email and password resets" in the README. Until it is, the page says so
+and points at the Society's address rather than accepting a request that goes nowhere.
 
 ### 3. The public forms have no anti-abuse limit — medium, needs a decision
 
