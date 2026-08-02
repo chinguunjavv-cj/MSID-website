@@ -11,6 +11,8 @@ import { getEventBySlug, getEventFee, registrationState } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { formatDateRange, formatMnt, todayIso } from "@/lib/format";
 import { tr } from "@/lib/db/types";
+import { checkFormThrottle, recordFormSubmission } from "@/lib/auth/throttle";
+import { looksAutomated } from "@/lib/forms/guard";
 import { notify } from "@/lib/email/mailer";
 import {
   newRegistrationNotice,
@@ -58,6 +60,17 @@ export async function registerForEventAction(
 ): Promise<FormState> {
   const locale = localeSchema.parse(formData.get("locale"));
   const t = getDictionary(locale);
+
+  if (await checkFormThrottle("register")) {
+    return { errors: [t.errors.tooManySubmissions] };
+  }
+  // Counted before the automation checks — see the note in applyForMembershipAction.
+  await recordFormSubmission("register");
+
+  if (looksAutomated(formData)) {
+    console.warn("Event registration refused: automated submission.");
+    return { errors: [t.errors.submissionRefused] };
+  }
 
   const parsed = schema.safeParse({
     slug: formData.get("slug"),

@@ -346,6 +346,10 @@ const mn = {
     serverTitle: "Алдаа гарлаа",
     serverLead: "Хүсэлтийг боловсруулах явцад алдаа гарлаа. Дахин оролдоно уу.",
     retry: "Дахин оролдох",
+    submissionRefused:
+      "Хүсэлтийг хүлээн авах боломжгүй байна. Хуудсыг дахин ачаалж, дахин оролдоно уу.",
+    tooManySubmissions:
+      "Энэ сүлжээнээс хэт олон хүсэлт ирлээ. Нэг цагийн дараа дахин оролдоно уу.",
     formHasErrors: "Маягтад алдаа байна. Доорх талбаруудыг шалгана уу.",
     fieldRequired: "Энэ талбарыг бөглөнө үү.",
     invalidEmail: "И-мэйл хаяг буруу байна.",
@@ -689,6 +693,10 @@ const en: Dictionary = {
     serverTitle: "Something went wrong",
     serverLead: "An error occurred while handling your request. Please try again.",
     retry: "Try again",
+    submissionRefused:
+      "We could not accept this submission. Please reload the page and try again.",
+    tooManySubmissions:
+      "Too many submissions from this network. Please try again in an hour.",
     formHasErrors: "The form has errors. Please check the fields below.",
     fieldRequired: "This field is required.",
     invalidEmail: "Please enter a valid email address.",

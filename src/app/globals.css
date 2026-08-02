@@ -583,6 +583,44 @@
 }
 
 /* ==========================================================================
+   Which mobile navigation a visitor gets
+   ==========================================================================
+
+   Width alone is the wrong test. A desktop window dragged narrow has the same
+   *space* as a phone but not the same *hand* — a bottom bar pinned to the edge of a
+   window, reached with a mouse, reads as a phone layout leaking onto a desktop.
+
+   So the switch is on pointer type. A coarse pointer is a finger, and a finger wants
+   the bar at the bottom of the screen. Anything else keeps the menu button in the
+   header, where a mouse already is.
+
+   The header button is the default and the tab bar is opt-in, deliberately: a browser
+   too old to understand `pointer` falls through to the button, and the failure mode of
+   getting that wrong is a page with no navigation at all.
+*/
+.tab-bar {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .tab-bar {
+    display: block;
+  }
+
+  .masthead-menu-button {
+    display: none;
+  }
+}
+
+/* Above the breakpoint the full horizontal nav takes over and neither is wanted. */
+@media (width >= 68rem) {
+  .tab-bar,
+  .masthead-menu-button {
+    display: none;
+  }
+}
+
+/* ==========================================================================
    Navigation: loading placeholders and the transition between pages
    ========================================================================== */
 

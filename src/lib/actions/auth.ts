@@ -12,10 +12,12 @@ import {
   pruneSessions,
 } from "@/lib/auth/session";
 import {
+  checkFormThrottle,
   checkResetThrottle,
   checkSignInThrottle,
   clearSignInAttempts,
   recordFailedSignIn,
+  recordFormSubmission,
   recordResetRequest,
 } from "@/lib/auth/throttle";
 import {
@@ -25,6 +27,7 @@ import {
   pruneResetTokens,
   resolveResetToken,
 } from "@/lib/auth/reset";
+import { looksAutomated } from "@/lib/forms/guard";
 import { isMailConfigured, notify, sendMail } from "@/lib/email/mailer";
 import { newApplicationNotice, passwordResetMessage } from "@/lib/email/messages";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -138,6 +141,26 @@ export async function applyForMembershipAction(
 ): Promise<FormState> {
   const locale = localeSchema.parse(formData.get("locale"));
   const t = getDictionary(locale);
+
+  /*
+    Checked before anything is validated or written. Every accepted application now
+    sends mail from MSID's own address, so a script working through this form does not
+    just fill the members list — it spends the Society's sending reputation.
+  */
+  if (await checkFormThrottle("apply")) {
+    return { errors: [t.errors.tooManySubmissions] };
+  }
+  /*
+    Recorded before the automation checks, not after. A bot that trips the honeypot on
+    every attempt would otherwise never count towards the limit and could keep knocking
+    forever — refused each time, but at MSID's expense.
+  */
+  await recordFormSubmission("apply");
+
+  if (looksAutomated(formData)) {
+    console.warn("Membership application refused: automated submission.");
+    return { errors: [t.errors.submissionRefused] };
+  }
 
   const parsed = applicationSchema.safeParse({
     name: formData.get("name"),

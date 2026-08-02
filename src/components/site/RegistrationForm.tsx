@@ -24,6 +24,7 @@ export function RegistrationForm({
   isMember,
   defaults,
   labels,
+  guard,
 }: {
   locale: Locale;
   slug: string;
@@ -32,6 +33,8 @@ export function RegistrationForm({
   isMember: boolean;
   defaults: { fullName: string; email: string; phone: string; institution: string; position: string };
   labels: Record<string, string>;
+  /** Hidden spam-guard fields, minted on the server. */
+  guard?: React.ReactNode;
 }) {
   const [state, action] = useActionState(registerForEventAction, INITIAL);
   const [feeId, setFeeId] = useState(fees[0]?.id ?? "");
@@ -42,6 +45,7 @@ export function RegistrationForm({
   return (
     <form action={action} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
+      {guard}
       <input type="hidden" name="slug" value={slug} />
 
       <FormErrorSummary title={labels.errorTitle} errors={state.errors} />

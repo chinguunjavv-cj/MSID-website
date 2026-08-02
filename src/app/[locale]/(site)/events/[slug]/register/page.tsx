@@ -16,6 +16,7 @@ import { formatDateRange, formatMnt, todayIso } from "@/lib/format";
 import { qpayConfigured } from "@/lib/payments/qpay";
 import { PageHeader } from "@/components/ui/Primitives";
 import { RegistrationForm, type FeeOption } from "@/components/site/RegistrationForm";
+import { FormGuard } from "@/components/ui/FormGuard";
 
 export async function generateMetadata({
   params,
@@ -125,6 +126,7 @@ export default async function RegisterPage({
       <div className="shell py-14 md:py-20">
         <div className="max-w-2xl">
           <RegistrationForm
+          guard={<FormGuard />}
             locale={locale}
             slug={event.slug}
             fees={fees}

@@ -290,10 +290,9 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
               type="button"
               onClick={() => setSheetOpen(true)}
               aria-expanded={sheetOpen}
-              /* Hidden entirely — the tab bar at the bottom of the screen is the way
-                 into the menu on a phone, and two buttons for one drawer is the kind of
-                 duplication that makes people hesitate. */
-              className="hidden"
+              /* Shown on a mouse-driven narrow window; hidden on touch, where the tab
+                 bar owns navigation. globals.css decides, on pointer type. */
+              className="masthead-menu-button btn btn-secondary shrink-0 cursor-pointer px-3 py-2"
             >
               <svg aria-hidden viewBox="0 0 18 12" className="h-3 w-4.5" fill="currentColor">
                 <rect width="18" height="1.8" y="0" />
@@ -387,7 +386,7 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
       */}
       <nav
         aria-label={labels.menu}
-        className="fixed inset-x-0 bottom-0 z-sticky border-t border-ink-200 bg-paper pb-[env(safe-area-inset-bottom)] nav:hidden"
+        className="tab-bar fixed inset-x-0 bottom-0 z-sticky border-t border-ink-200 bg-paper pb-[env(safe-area-inset-bottom)]"
       >
         {/*
           Capped and centred. The bar itself spans the width, but on an iPad the five

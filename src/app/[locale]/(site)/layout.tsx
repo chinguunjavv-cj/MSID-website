@@ -64,7 +64,7 @@ export default async function SiteLayout({
       */}
       <div
         aria-hidden
-        className="h-[calc(3.25rem+env(safe-area-inset-bottom))] shrink-0 nav:hidden"
+        className="tab-bar h-[calc(3.25rem+env(safe-area-inset-bottom))] shrink-0"
       />
     </>
   );

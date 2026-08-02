@@ -13,10 +13,16 @@ export function MembershipForm({
   locale,
   labels,
   membershipTypes,
+  guard,
 }: {
   locale: Locale;
   labels: Record<string, string>;
   membershipTypes: { value: string; label: string }[];
+  /**
+   * The spam guard's hidden fields. Passed in rather than imported: it mints a signed
+   * token on the server, and this component runs on the client.
+   */
+  guard?: React.ReactNode;
 }) {
   const [state, action] = useActionState(applyForMembershipAction, INITIAL);
   const fieldError = (name: string) => state.fieldErrors?.[name];
@@ -24,6 +30,7 @@ export function MembershipForm({
   return (
     <form action={action} className="space-y-6">
       <input type="hidden" name="locale" value={locale} />
+      {guard}
       <FormErrorSummary title={labels.errorTitle} errors={state.errors} />
 
       <fieldset className="space-y-5">

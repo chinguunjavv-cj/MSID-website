@@ -103,6 +103,51 @@ export async function checkResetThrottle(email: string): Promise<boolean> {
   return byEmail >= MAX_RESETS_PER_EMAIL || byAddress >= MAX_RESETS_PER_IP;
 }
 
+/* -------------------------------------------------------------------------- */
+/* Public form submissions                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Per-address limits for the two forms anyone can submit.
+ *
+ * Generous on purpose. A Mongolian hospital puts its whole staff behind one address, so
+ * a limit tight enough to stop a determined script would also stop the third colleague
+ * signing up for the same congress. These numbers stop a machine writing thousands of
+ * rows and sending thousands of notifications, and leave any plausible human alone.
+ */
+const FORM_WINDOW_MINUTES = 60;
+const MAX_APPLICATIONS_PER_HOUR = 10;
+const MAX_REGISTRATIONS_PER_HOUR = 20;
+
+async function recentInWindow(identity: string, minutes: number): Promise<number> {
+  return count(
+    `SELECT COUNT(*) AS n FROM login_attempts
+     WHERE identity = ? AND attempted_at > datetime('now', ?)`,
+    identity,
+    `-${minutes} minutes`,
+  );
+}
+
+export type PublicForm = "apply" | "register";
+
+export async function checkFormThrottle(form: PublicForm): Promise<boolean> {
+  const limit = form === "apply" ? MAX_APPLICATIONS_PER_HOUR : MAX_REGISTRATIONS_PER_HOUR;
+  const seen = await recentInWindow(
+    `${form}:${await clientAddress()}`,
+    FORM_WINDOW_MINUTES,
+  );
+  return seen >= limit;
+}
+
+/** Recorded on every submission, accepted or not — a rejected attempt still cost work. */
+export async function recordFormSubmission(form: PublicForm): Promise<void> {
+  await run(
+    "INSERT INTO login_attempts (id, identity) VALUES (?, ?)",
+    newId(),
+    `${form}:${await clientAddress()}`,
+  );
+}
+
 /**
  * Recorded for every request, not only the ones that match an account — otherwise the
  * limit would apply to real users and not to someone working through a list of guessed

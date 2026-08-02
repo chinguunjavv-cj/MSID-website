@@ -6,6 +6,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { PageHeader } from "@/components/ui/Primitives";
 import { MembershipForm } from "@/components/site/MembershipForm";
+import { FormGuard } from "@/components/ui/FormGuard";
 
 export async function generateMetadata({
   params,
@@ -43,6 +44,7 @@ export default async function ApplyPage({
       <div className="shell py-14 md:py-20">
         <div className="max-w-2xl">
           <MembershipForm
+          guard={<FormGuard />}
             locale={locale}
             membershipTypes={[
               { value: "full", label: t.membership.type.full },
