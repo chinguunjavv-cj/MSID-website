@@ -16,6 +16,9 @@ import { currentUser, isStaff, type SessionUser } from "@/lib/auth/session";
 import { hashPassword, MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { getResource, type FieldDef, type ResourceDef } from "@/lib/admin/resources";
 import { deletionBlockedReason } from "@/lib/admin/deletion";
+import { notify } from "@/lib/email/mailer";
+import { membershipApprovedMessage } from "@/lib/email/messages";
+import { siteUrl } from "@/lib/site";
 import { setSettings, type SiteSettings } from "@/lib/settings";
 import { localePath } from "@/lib/i18n/config";
 import type { FormState } from "@/lib/actions/types";
@@ -409,6 +412,20 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
   const notes = formData.get("notes");
   if (notes !== null) patch.notes = String(notes).slice(0, 2000);
 
+  /*
+    Read before the write, so the email fires on the transition into `active` and not
+    on every later save. An administrator correcting a typo in an active member's
+    institution should not send them a second welcome.
+  */
+  const before = await get<{ email: string; name_mn: string; name_en: string; membership_status: string }>(
+    `SELECT u.email, u.name_mn, u.name_en, m.membership_status
+     FROM users u LEFT JOIN member_profiles m ON m.user_id = u.id
+     WHERE u.id = ?`,
+    userId,
+  );
+  const newlyApproved =
+    status.success && status.data === "active" && before?.membership_status !== "active";
+
   await transaction(async (tx) => {
     const { sql, params } = setClause(patch);
     if (sql) {
@@ -436,8 +453,38 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
       }
     }
 
-    await audit(user.id, "member.update", "user", userId, JSON.stringify(patch));
+    /*
+      `auditTx`, not `audit`. The module-level helper takes a fresh connection, and a
+      second connection writing while this transaction holds the write lock deadlocks —
+      SQLITE_BUSY on a file, and the same contention against a hosted libSQL server.
+      This is the mistake `Tx`'s own doc comment warns about, and it made approving a
+      membership fail outright.
+    */
+    await auditTx(tx, user.id, "member.update", "user", userId, JSON.stringify(patch));
   });
+
+  /*
+    After the commit, never inside it. A send that took two seconds would hold the
+    transaction open for two seconds, and a send that threw would roll back an approval
+    the board had already made.
+  */
+  if (newlyApproved && before) {
+    /*
+      The applicant's language is not recorded, but the application wrote their name to
+      the column for the language they filled the form in — so a Mongolian name means
+      they were reading Mongolian.
+    */
+    const memberLocale = before.name_mn.trim() ? "mn" : "en";
+    await notify(
+      membershipApprovedMessage(
+        before.email,
+        memberLocale === "mn" ? before.name_mn : before.name_en,
+        `${siteUrl()}${localePath(memberLocale, "/login")}`,
+        memberLocale,
+      ),
+      "membership approval",
+    );
+  }
 
   revalidatePath("/", "layout");
 }

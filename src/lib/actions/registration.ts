@@ -9,7 +9,14 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localePath } from "@/lib/i18n/config";
 import { getEventBySlug, getEventFee, registrationState } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
-import { todayIso } from "@/lib/format";
+import { formatDateRange, formatMnt, todayIso } from "@/lib/format";
+import { tr } from "@/lib/db/types";
+import { notify } from "@/lib/email/mailer";
+import {
+  newRegistrationNotice,
+  registrationConfirmationMessage,
+} from "@/lib/email/messages";
+import { siteUrl } from "@/lib/site";
 import { createQpayInvoice, qpayConfigured } from "@/lib/payments/qpay";
 import type { FormState } from "@/lib/actions/types";
 
@@ -195,6 +202,51 @@ export async function registerForEventAction(
       );
     }
   }
+
+  /*
+    Both sent after the registration is committed and after any QPay attempt, so the
+    confirmation reflects what actually happened — including the fall back to bank
+    transfer when QPay fails.
+  */
+  const registrationUrl = `${siteUrl()}${localePath(locale, `/registration/${reference}`)}`;
+  const amountLabel = amount > 0 ? formatMnt(amount, locale) : "";
+  const eventTitle = tr(event, "title", locale);
+
+  await Promise.all([
+    notify(
+      registrationConfirmationMessage(
+        data.email,
+        data.fullName,
+        {
+          reference,
+          eventTitle,
+          eventDates: formatDateRange(event.starts_on, event.ends_on, locale),
+          amount: amountLabel,
+          bankName: locale === "mn" ? settings.bank_name_mn : settings.bank_name_en,
+          bankAccountNumber: settings.bank_account_number,
+          bankAccountName: settings.bank_account_name,
+          contactEmail: settings.contact_email,
+          registrationUrl,
+        },
+        locale,
+      ),
+      "registration confirmation",
+    ),
+    settings.contact_email
+      ? notify(
+          newRegistrationNotice(
+            settings.contact_email,
+            data.fullName,
+            data.email,
+            tr(event, "title", "mn"),
+            reference,
+            amountLabel,
+            `${siteUrl()}${localePath("mn", "/admin/registrations")}`,
+          ),
+          "new registration notice",
+        )
+      : Promise.resolve(),
+  ]);
 
   redirect(localePath(locale, `/registration/${reference}`));
 }

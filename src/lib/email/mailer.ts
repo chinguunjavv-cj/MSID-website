@@ -97,3 +97,33 @@ export async function sendMail(message: MailMessage): Promise<void> {
     html: message.html,
   });
 }
+
+/**
+ * Sends a message that must not be able to break what triggered it.
+ *
+ * A congress registration that fails because Gmail was briefly unreachable would be a
+ * far worse outcome than a registration whose confirmation email is missing — the row
+ * is already committed, the participant already has their reference on screen, and the
+ * Society can resend by hand. So the failure is logged with enough context to find the
+ * record afterwards, and swallowed.
+ *
+ * Password resets do NOT use this. There the email *is* the feature, and a silent
+ * failure would leave someone waiting forever for a link that was never sent.
+ */
+export async function notify(message: MailMessage, context: string): Promise<void> {
+  if (!isMailConfigured()) {
+    console.warn(`Mail not configured; skipped ${context} to ${message.to}`);
+    return;
+  }
+  try {
+    await sendMail(message);
+    /*
+      Logged on success too. This site has no other observability, and "did the approval
+      email actually go out?" is a question MSID will ask — the deployment log is the
+      only place that can answer it.
+    */
+    console.log(`Sent ${context} to ${message.to}`);
+  } catch (error) {
+    console.error(`Failed to send ${context} to ${message.to}`, error);
+  }
+}

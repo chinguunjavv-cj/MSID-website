@@ -25,10 +25,11 @@ import {
   pruneResetTokens,
   resolveResetToken,
 } from "@/lib/auth/reset";
-import { isMailConfigured, sendMail } from "@/lib/email/mailer";
-import { passwordResetMessage } from "@/lib/email/messages";
+import { isMailConfigured, notify, sendMail } from "@/lib/email/mailer";
+import { newApplicationNotice, passwordResetMessage } from "@/lib/email/messages";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localePath } from "@/lib/i18n/config";
+import { getSettings } from "@/lib/settings";
 import { siteUrl } from "@/lib/site";
 import type { FormState } from "@/lib/actions/types";
 
@@ -217,6 +218,24 @@ export async function applyForMembershipAction(
       userId,
     );
   });
+
+  /*
+    MSID is told an application is waiting. Without this, a doctor's application sits
+    unread until somebody happens to open the admin — and the applicant cannot sign in
+    until it is approved, so the silence is the whole delay.
+  */
+  const settings = await getSettings();
+  if (settings.contact_email) {
+    await notify(
+      newApplicationNotice(
+        settings.contact_email,
+        data.name,
+        data.email,
+        `${siteUrl()}${localePath("mn", "/admin/members")}`,
+      ),
+      "new application notice",
+    );
+  }
 
   redirect(localePath(locale, "/membership/received"));
 }
