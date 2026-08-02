@@ -56,6 +56,16 @@ export default async function SiteLayout({
       <Suspense fallback={<div className="mt-24 border-t-2 border-copper-600" />}>
         <Footer locale={locale} />
       </Suspense>
+
+      {/*
+        Clearance for the fixed tab bar. A spacer here rather than padding on `body`,
+        because `body` is shared with the admin — which has its own shell, no tab bar,
+        and would just get 3.25rem of dead space at the bottom of every page.
+      */}
+      <div
+        aria-hidden
+        className="h-[calc(3.25rem+env(safe-area-inset-bottom))] shrink-0 nav:hidden"
+      />
     </>
   );
 }

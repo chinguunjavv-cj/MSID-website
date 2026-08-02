@@ -7,6 +7,13 @@ import type { Locale } from "@/lib/db/types";
 import { LOCALE_LABELS, localePath, otherLocale, swapLocaleInPath } from "@/lib/i18n/config";
 import type { NavItem } from "@/lib/nav";
 import { MsidMark } from "@/components/site/Mark";
+import {
+  CalendarIcon,
+  DocumentIcon,
+  HomeIcon,
+  MenuIcon,
+  PersonIcon,
+} from "@/components/site/TabBarIcons";
 import { rememberLocale } from "@/lib/i18n/client";
 
 interface Props {
@@ -85,6 +92,58 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
     locale,
     isStaff ? "/admin" : signedIn ? "/portal" : "/login",
   );
+
+  /*
+    The tab bar's five destinations. Not the top-level menu in miniature — that has
+    Танилцуулга and Хамтын ажиллагаа at the front, which nobody opens a society's site
+    on a phone to read. These are what a clinician came for, plus a way to everything
+    else.
+  */
+  const tabs = [
+    {
+      key: "home",
+      href: localePath(locale, "/"),
+      /*
+        Exact match. The home href is `/mn`, and every other path on the site begins
+        with it — so the prefix test used by the other tabs marks Home active on every
+        page, including the ones that light up their own tab at the same time.
+      */
+      exact: true,
+      label: locale === "mn" ? "Нүүр" : "Home",
+      icon: <HomeIcon />,
+    },
+    {
+      key: "events",
+      exact: false,
+      href: localePath(locale, "/events"),
+      label: locale === "mn" ? "Арга хэмжээ" : "Events",
+      icon: <CalendarIcon />,
+    },
+    {
+      key: "guidelines",
+      exact: false,
+      href: localePath(locale, "/guidelines"),
+      label: locale === "mn" ? "Заавар" : "Guidelines",
+      icon: <DocumentIcon />,
+    },
+    {
+      key: "account",
+      exact: false,
+      href: accountHref,
+      label: isStaff
+        ? locale === "mn"
+          ? "Удирдлага"
+          : "Admin"
+        : signedIn
+          ? locale === "mn"
+            ? "Гишүүн"
+            : "Member"
+          : labels.login,
+      icon: <PersonIcon />,
+    },
+    // No href: this one opens the drawer that already exists above.
+    { key: "menu", href: null, exact: false, label: labels.menu, icon: <MenuIcon /> },
+  ];
 
   return (
     <>
@@ -231,7 +290,10 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
               type="button"
               onClick={() => setSheetOpen(true)}
               aria-expanded={sheetOpen}
-              className="btn btn-secondary shrink-0 cursor-pointer px-3 py-2 nav:hidden"
+              /* Hidden entirely — the tab bar at the bottom of the screen is the way
+                 into the menu on a phone, and two buttons for one drawer is the kind of
+                 duplication that makes people hesitate. */
+              className="hidden"
             >
               <svg aria-hidden viewBox="0 0 18 12" className="h-3 w-4.5" fill="currentColor">
                 <rect width="18" height="1.8" y="0" />
@@ -313,6 +375,81 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
           </div>
         </div>
       )}
+
+      {/*
+        Mobile tab bar.
+
+        A phone's reachable area is the bottom of the screen, and the four things a
+        clinician actually opens the site for — what is coming up, the guidelines, their
+        membership, everything else — now sit under the thumb instead of behind a menu
+        button in the top corner. The header's own menu button is hidden at these widths
+        so there is one way in, not two.
+      */}
+      <nav
+        aria-label={labels.menu}
+        className="fixed inset-x-0 bottom-0 z-sticky border-t border-ink-200 bg-paper pb-[env(safe-area-inset-bottom)] nav:hidden"
+      >
+        {/*
+          Capped and centred. The bar itself spans the width, but on an iPad the five
+          tabs stretched to 150px apiece and read as a stretched phone layout rather
+          than a deliberate one. Below 28rem the cap does nothing, so a phone is
+          unchanged.
+        */}
+        <ul className="mx-auto grid max-w-md grid-cols-5">
+          {tabs.map((tab) => {
+            const active = tab.href
+              ? tab.exact
+                ? pathname === tab.href
+                : isActive(tab.href)
+              : false;
+            const content = (
+              <>
+                {tab.icon}
+                {/*
+                  Scales with the viewport and never wraps. "Арга хэмжээ" is two words
+                  and the honest label for what that section holds — at 320px it broke
+                  onto a second line and threw that tab out of line with the other four.
+                */}
+                <span className="text-[clamp(0.625rem,2.9vw,0.6875rem)] leading-none font-medium whitespace-nowrap">
+                  {tab.label}
+                </span>
+              </>
+            );
+            // A 3.25rem target clears the 44px minimum with the label inside it.
+            const shared = `relative flex h-[3.25rem] w-full flex-col items-center justify-center gap-1 ${
+              active ? "text-copper-700" : "text-ink-600"
+            }`;
+
+            return (
+              <li key={tab.key} className="contents">
+                {tab.href ? (
+                  <Link
+                    href={tab.href}
+                    aria-current={active ? "page" : undefined}
+                    className={shared}
+                  >
+                    {/* The rule repeats the colour change, so the active tab is not
+                        signalled by hue alone. */}
+                    {active && (
+                      <span aria-hidden className="absolute inset-x-3 top-0 h-0.5 bg-copper-600" />
+                    )}
+                    {content}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setSheetOpen(true)}
+                    aria-expanded={sheetOpen}
+                    className={`${shared} cursor-pointer`}
+                  >
+                    {content}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </>
   );
 }
