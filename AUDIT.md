@@ -1,6 +1,8 @@
 # MSID website — audit
 
 Reviewed on 1 August 2026, against the code as deployed to `msidwebsite.vercel.app`.
+Findings closed on 2 August are marked **CLOSED** in place rather than deleted, so the
+record of what was wrong survives alongside what was done about it.
 Covers security, the server, the browser, and the experience of using the site and the
 admin. Roughly 13,000 lines of TypeScript across 84 files.
 
@@ -120,25 +122,30 @@ in plain language. Everyone else still gets a 404, which was verified both ways.
 
 ## Open
 
-### 1. Nothing sends email except password resets — high, needs a decision
+### 1. Nothing sends email — CLOSED
 
-There is now an SMTP mailer (`src/lib/email/mailer.ts`), used by the password reset flow.
-Nothing else uses it yet, so:
+Was the largest gap between what the site promised and what it did: an applicant read
+"Батлагдмагц и-мэйлээр мэдэгдэнэ", was approved, and heard nothing.
 
-- A membership application is silently queued. The applicant is told, in MSID's own
-  words, "Батлагдмагц и-мэйлээр мэдэгдэнэ" — and no email is ever sent.
-- Approving a member sends nothing. The applicant has no way to know they can sign in.
-- A congress registration produces a reference number on screen and nothing else. If the
-  participant closes the tab, their payment reference is gone.
-- MSID is not notified of a new application or registration; someone has to remember to
-  open the admin and look.
+`src/lib/email/` now holds an SMTP mailer and the message text. Five messages go out —
+password reset, membership approval, registration confirmation, and a notice to MSID on
+each new application and registration. All but the reset go through `notify()`, which
+logs and swallows: a registration that failed because Gmail was briefly unreachable
+would be worse than one whose confirmation is missing.
 
-This is the largest gap between what the site promises and what it does.
+Deliberately still not sent: a rejection email, and a payment-received email. The first
+is a conversation, not a notification; the second waits on somebody confirming the money
+arrived, which is manual until QPay exists.
 
-The plumbing is no longer the obstacle — `sendMail()` exists and is configured. What
-remains is writing each message and choosing where it fires. Membership approval is the
-one to do first: it is the only place the site makes a promise in writing that it then
-does not keep.
+Needs `SMTP_*` configured — see the README. Until then every send is skipped with a line
+in the log and nothing breaks.
+
+**Found while testing this:** approving a membership was broken outright.
+`updateMemberAction` called the module-level `audit()` from inside its transaction,
+which opens a second connection and deadlocks against the write lock the transaction
+holds. The admin got "Алдаа гарлаа" and the approval never committed — the single most
+important action in the panel for a membership organisation, broken since the libSQL
+migration in `60df511`. Now uses `auditTx`.
 
 ### 2. No way to reset a forgotten password — CLOSED
 
@@ -147,16 +154,22 @@ is stored; completing a reset cuts every session on the account. Requires `SMTP_
 configured — see "Email and password resets" in the README. Until it is, the page says so
 and points at the Society's address rather than accepting a request that goes nowhere.
 
-### 3. The public forms have no anti-abuse limit — medium, needs a decision
+### 3. The public forms have no anti-abuse limit — CLOSED
 
-The membership application and the event registration form are both open to the internet
-with no throttle and no challenge. A script can create unlimited pending member accounts
-and registrations. Nothing is destroyed — everything lands in the admin as pending — but
-the members list and the registrations table become unusable, and each application runs
-one password hash.
+Wiring the emails raised the stakes: every submission now also sends mail from MSID's
+own address, so a script working through these forms spends the Society's sending
+reputation and would take the password-reset emails down with it.
 
-The sign-in throttle's table works for these too, keyed by address. The alternative — an
-emailed confirmation link before the record becomes visible — is better but depends on 1.
+Three checks, none visible to an honest applicant and none needing a third-party
+service: a generous per-address limit (10 applications, 20 registrations an hour — a
+hospital puts its whole staff behind one address), an off-screen honeypot field, and a
+signed minimum fill time.
+
+A trip returns an ordinary "please try again" rather than a silent fake success, because
+a false positive that leaves a doctor believing they applied is the worse failure.
+
+Honest about the weakest of the three: the timing check only catches a bot that fetches
+the page and posts within three seconds.
 
 ### 4. The registration page shows personal data to anyone with the reference — medium
 
@@ -209,12 +222,11 @@ page causes queries to a database in another region. Since `revalidatePath("/", 
 already runs on every admin save, adding `revalidate` to the public pages would make them
 near-instant with no risk of stale content. Worth doing before any real traffic.
 
-### 9. Navigation has no loading state — low
+### 9. Navigation has no loading state — CLOSED
 
-There is no `loading.tsx` anywhere. Clicking a link does nothing visible until the server
-has finished its queries. On a Mongolian mobile connection to a database in another
-region, that pause is the most noticeable thing about the site's speed — and a skeleton
-is a few lines per route group.
+`loading.tsx` for the public site and for the admin, shaped like the real layout so the
+page settles rather than jumps. The footer streams instead of blocking the whole layout
+on its settings query, and the page body crossfades between routes.
 
 ### 10. Notes, no action required
 
