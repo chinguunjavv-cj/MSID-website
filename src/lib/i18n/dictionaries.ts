@@ -301,6 +301,22 @@ const mn = {
     memberArea: "Гишүүний хэсэг",
     tooManyAttempts:
       "Нэвтрэх оролдлого хэт олон удаа амжилтгүй боллоо. 15 минутын дараа дахин оролдоно уу.",
+    forgotPassword: "Нууц үгээ мартсан уу?",
+    resetTitle: "Нууц үг сэргээх",
+    resetLead:
+      "Бүртгэлтэй и-мэйл хаягаа оруулна уу. Хэрэв тухайн хаягаар бүртгэл байгаа бол нууц үг сэргээх холбоос илгээнэ.",
+    resetSubmit: "Холбоос илгээх",
+    resetSent:
+      "Хүсэлтийг хүлээн авлаа. Хэрэв тухайн хаягаар бүртгэл байвал нууц үг сэргээх холбоос очих болно. Ирсэн захидлаа шалгана уу — спам хавтас руу орсон эсэхийг бас хараарай.",
+    resetUnavailable:
+      "И-мэйл илгээх үйлчилгээ тохируулагдаагүй байгаа тул нууц үгийг өөрөө сэргээх боломжгүй байна. Нийгэмлэгтэй холбогдоно уу.",
+    resetLinkInvalid:
+      "Энэ холбоос хүчингүй, эсвэл хугацаа нь дууссан байна. Шинээр хүсэлт илгээнэ үү.",
+    resetChooseTitle: "Шинэ нууц үг тохируулах",
+    resetChooseLead: "Шинэ нууц үгээ оруулна уу. Хадгалсны дараа дахин нэвтэрнэ.",
+    resetSubmitNew: "Нууц үг хадгалах",
+    resetDone: "Нууц үг амжилттай солигдлоо. Шинэ нууц үгээрээ нэвтэрнэ үү.",
+    backToLogin: "Нэвтрэх хуудас руу буцах",
     serverMisconfigured:
       "Серверийн тохиргоо дутуу байгаа тул нэвтрэх боломжгүй байна. Системийн администратортай холбогдоно уу.",
   },
@@ -629,6 +645,21 @@ const en: Dictionary = {
     memberArea: "Member area",
     tooManyAttempts:
       "Too many failed sign-in attempts. Please try again in 15 minutes.",
+    forgotPassword: "Forgotten your password?",
+    resetTitle: "Reset your password",
+    resetLead:
+      "Enter the email address on your account. If it has one, we will send a link to set a new password.",
+    resetSubmit: "Send the link",
+    resetSent:
+      "Request received. If that address has an account, a reset link is on its way. Check your inbox, and your spam folder as well.",
+    resetUnavailable:
+      "Email is not configured on this site, so passwords cannot be reset here yet. Please contact the Society.",
+    resetLinkInvalid: "This link is not valid, or it has expired. Please request a new one.",
+    resetChooseTitle: "Choose a new password",
+    resetChooseLead: "Enter your new password. You will sign in again once it is saved.",
+    resetSubmitNew: "Save password",
+    resetDone: "Your password has been changed. Please sign in with your new password.",
+    backToLogin: "Back to sign in",
     serverMisconfigured:
       "Sign-in is unavailable because the server is not fully configured. Please contact the site administrator.",
   },

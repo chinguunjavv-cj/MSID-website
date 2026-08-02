@@ -86,6 +86,18 @@ CREATE TABLE IF NOT EXISTS login_attempts (
 
 CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(identity, attempted_at);
 
+-- Password reset links. Only the SHA-256 of the token is stored, so a copy of this
+-- table is not a set of working reset links.
+CREATE TABLE IF NOT EXISTS password_resets (
+  token_hash TEXT PRIMARY KEY,
+  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at TEXT NOT NULL,
+  used_at    TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+
 -- ---------------------------------------------------------------------------
 -- Events and programmes
 -- ---------------------------------------------------------------------------

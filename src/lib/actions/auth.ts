@@ -12,12 +12,24 @@ import {
   pruneSessions,
 } from "@/lib/auth/session";
 import {
+  checkResetThrottle,
   checkSignInThrottle,
   clearSignInAttempts,
   recordFailedSignIn,
+  recordResetRequest,
 } from "@/lib/auth/throttle";
+import {
+  RESET_TOKEN_MINUTES,
+  consumeResetToken,
+  issueResetToken,
+  pruneResetTokens,
+  resolveResetToken,
+} from "@/lib/auth/reset";
+import { isMailConfigured, sendMail } from "@/lib/email/mailer";
+import { passwordResetMessage } from "@/lib/email/messages";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { localePath } from "@/lib/i18n/config";
+import { siteUrl } from "@/lib/site";
 import type { FormState } from "@/lib/actions/types";
 
 const localeSchema = z.enum(["mn", "en"]).catch("mn");
@@ -322,4 +334,125 @@ export async function changePasswordAction(
   await createSession(user.id);
 
   return { errors: [], ok: true };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Password reset                                                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Step one: ask for a link.
+ *
+ * The reply is the same whether or not the address has an account. A form that says
+ * "no such account" is a way to find out who is a member of a gastroenterology
+ * society, which is not ours to disclose.
+ */
+export async function requestPasswordResetAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const locale = localeSchema.parse(formData.get("locale"));
+  const t = getDictionary(locale);
+
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    return { errors: [t.errors.invalidEmail], fieldErrors: { email: t.errors.invalidEmail } };
+  }
+
+  if (!isMailConfigured()) {
+    console.error("Password reset requested but SMTP is not configured.");
+    return { errors: [t.auth.resetUnavailable] };
+  }
+
+  // Throttled before the lookup, so the timing of the reply says nothing either.
+  if (await checkResetThrottle(email)) return { errors: [t.auth.tooManyAttempts] };
+  await recordResetRequest(email);
+
+  const user = await get<{ id: string; status: string }>(
+    "SELECT id, status FROM users WHERE email = ?",
+    email,
+  );
+
+  /*
+    A suspended account is not resettable — letting someone regain access to an account
+    the board closed would undo the closing.
+  */
+  if (user && user.status !== "suspended") {
+    try {
+      await pruneResetTokens();
+      const { token } = await issueResetToken(user.id);
+      const url = `${siteUrl()}${localePath(locale, `/reset-password/${token}`)}`;
+      await sendMail(passwordResetMessage(email, url, locale, RESET_TOKEN_MINUTES));
+    } catch (error) {
+      /*
+        Logged, not shown. Telling this caller that sending failed would also tell them
+        the address exists, and the person who can act on it is whoever reads the
+        deployment logs.
+      */
+      console.error("Password reset email failed", error);
+    }
+  }
+
+  return { errors: [], ok: true };
+}
+
+/**
+ * Step two: set the new password.
+ *
+ * On success every session for the account is cut, including any the attacker may hold
+ * if the reset was prompted by a suspected compromise, and the person signs in again
+ * with the password they just chose.
+ */
+export async function resetPasswordAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const locale = localeSchema.parse(formData.get("locale"));
+  const t = getDictionary(locale);
+
+  const token = String(formData.get("token") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const passwordConfirm = String(formData.get("passwordConfirm") ?? "");
+
+  const userId = await resolveResetToken(token);
+  if (!userId) return { errors: [t.auth.resetLinkInvalid] };
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    return { errors: [t.auth.passwordTooShort], fieldErrors: { password: t.auth.passwordTooShort } };
+  }
+  if (password !== passwordConfirm) {
+    return {
+      errors: [t.auth.passwordMismatch],
+      fieldErrors: { passwordConfirm: t.auth.passwordMismatch },
+    };
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  await transaction(async (tx) => {
+    await tx.run(
+      "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
+      passwordHash,
+      userId,
+    );
+    await tx.run("DELETE FROM sessions WHERE user_id = ?", userId);
+    await tx.run(
+      `INSERT INTO audit_log (id, user_id, action, entity, entity_id)
+       VALUES (?, ?, 'password.reset', 'user', ?)`,
+      newId(),
+      userId,
+      userId,
+    );
+  });
+
+  await consumeResetToken(token);
+
+  // The account is usable again, so any sign-in lockout on it should lift.
+  const account = await get<{ email: string }>("SELECT email FROM users WHERE id = ?", userId);
+  if (account) await clearSignInAttempts(account.email);
+
+  redirect(`${localePath(locale, "/login")}?reset=1`);
 }

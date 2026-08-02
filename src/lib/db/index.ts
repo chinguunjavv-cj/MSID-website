@@ -78,6 +78,19 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       CREATE INDEX IF NOT EXISTS idx_login_attempts ON login_attempts(identity, attempted_at);
     `,
   },
+  {
+    id: "2026-08-02-password-resets",
+    sql: `
+      CREATE TABLE IF NOT EXISTS password_resets (
+        token_hash TEXT PRIMARY KEY,
+        user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TEXT NOT NULL,
+        used_at    TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

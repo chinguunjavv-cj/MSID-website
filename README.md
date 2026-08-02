@@ -272,6 +272,7 @@ npm start                      # port 3000; put nginx or Caddy in front for TLS
 | `MSID_UPLOAD_DIR` | e.g. `/var/lib/msid/uploads` |
 | `MSID_SITE_URL` | `https://msid.mn` — canonical URLs, sitemap, QPay callbacks |
 | `MSID_NOINDEX` | `0` to allow search engines. Preview hosts are hidden automatically |
+| `SMTP_*` | Password reset email. See below |
 | `QPAY_*` | Only once QPay credentials exist |
 
 With the filesystem backend, uploads are served by a route handler
@@ -281,6 +282,33 @@ the upload directory.
 
 **Backup.** On Turso, use its managed backups. On a file database,
 `sqlite3 msid.db ".backup backup.db"` (safe while running) plus the uploads directory.
+
+### Email and password resets
+
+A member or administrator who forgets their password resets it themselves at
+`/mn/forgot-password`. The link is a 32-byte random token, valid for one hour, usable
+once; only its SHA-256 is stored, so a copy of the database is not a set of working
+reset links. Completing a reset signs out every other session on the account.
+
+Sending is plain SMTP, configured entirely by environment variable, so Gmail today and
+a provider on MSID's own domain later is a change of variables and not of code.
+
+MSID has `ibdmsid@gmail.com` and no domain of its own, so start with Gmail:
+
+1. On that Google account, turn on **2-Step Verification** — app passwords are not
+   offered without it.
+2. **Google Account → Security → App passwords**, create one for "MSID website".
+   Google shows a 16-character password once.
+3. Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER=ibdmsid@gmail.com` and
+   `SMTP_PASSWORD=` that app password. Add them in Vercel under Settings →
+   Environment Variables, then redeploy.
+
+Gmail allows a few hundred messages a day, well beyond what a society this size sends.
+If MSID later takes a domain, move to a transactional provider — deliverability from a
+verified domain is better, and Gmail is not meant for bulk sending.
+
+**Until this is configured** the reset page says so and gives the Society's contact
+address, rather than accepting a request that silently goes nowhere.
 
 ### Search engine visibility
 

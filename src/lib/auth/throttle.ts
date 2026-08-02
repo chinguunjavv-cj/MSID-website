@@ -82,3 +82,36 @@ export async function recordFailedSignIn(email: string): Promise<void> {
 export async function clearSignInAttempts(email: string): Promise<void> {
   await run("DELETE FROM login_attempts WHERE identity = ?", `email:${email}`);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Password reset requests                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Tighter than sign-in, because every request here sends real mail. Without a limit,
+ * the form is a way to have MSID's own address deliver a stranger a hundred messages —
+ * which is how a sending address gets a spam reputation it cannot easily shed.
+ */
+const MAX_RESETS_PER_EMAIL = 3;
+const MAX_RESETS_PER_IP = 10;
+
+export async function checkResetThrottle(email: string): Promise<boolean> {
+  const [byEmail, byAddress] = await Promise.all([
+    recentFailures(`reset:${email}`),
+    recentFailures(`reset-ip:${await clientAddress()}`),
+  ]);
+  return byEmail >= MAX_RESETS_PER_EMAIL || byAddress >= MAX_RESETS_PER_IP;
+}
+
+/**
+ * Recorded for every request, not only the ones that match an account — otherwise the
+ * limit would apply to real users and not to someone working through a list of guessed
+ * addresses.
+ */
+export async function recordResetRequest(email: string): Promise<void> {
+  const address = await clientAddress();
+  await Promise.all([
+    run("INSERT INTO login_attempts (id, identity) VALUES (?, ?)", newId(), `reset:${email}`),
+    run("INSERT INTO login_attempts (id, identity) VALUES (?, ?)", newId(), `reset-ip:${address}`),
+  ]);
+}
