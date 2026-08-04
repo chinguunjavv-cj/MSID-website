@@ -61,7 +61,8 @@ npm run import:assets -- --guideline "/path/to/Заавар UC.pdf"
 
 npm run import:events -- \
   --aocc "/path/to/aocc-delegation.JPG" \
-  --ddweek "/path/to/ddweek-session.jpg"
+  --ddweek "/path/to/ddweek-session.jpg" \
+  --taiwan "/path/to/IMG_1519.jpg"
 ```
 
 `BLOB_READ_WRITE_TOKEN` is not optional here. Without it the photographs are written to

@@ -1,7 +1,7 @@
 /**
  * Imports past events, with their cover photographs.
  *
- *   npm run import:events -- --aocc <cover.jpg> --ddweek <cover.jpg>
+ *   npm run import:events -- --aocc <cover.jpg> --ddweek <cover.jpg> --taiwan <cover.jpg>
  *
  * Idempotent on the slug, so a corrected title or date can simply be re-run. A cover is
  * only replaced when a new file is supplied.
@@ -89,6 +89,40 @@ const EVENTS: PastEvent[] = [
     coverAltEn:
       "A speaker presenting on ulcerative colitis to an audience in a conference hall.",
     coverFlag: "ddweek",
+  },
+  {
+    /*
+      Everything here is printed on the banner the delegates were photographed against:
+      the title, the three sessions, the date, the hours and the floor. The Zoom title
+      bar in a second photograph — "IBD Joint meeting FCHM and NTUH" — is where the
+      hybrid format comes from, and NTUH's own International Medical Service Center is
+      one of the tiles on that call.
+
+      This is the event the President's greeting already refers to as the joint training
+      with professors from National Taiwan University. The greeting asserts it; this page
+      is the dated record behind it.
+    */
+    slug: "taiwan-mongolia-ibd-2024",
+    kind: "conference",
+    titleMn: "Тайвань–Монголын хамтарсан хурал: гэдэсний үрэвсэлт эмгэг",
+    titleEn: "Taiwan–Mongolian Joint Conference for Inflammatory Bowel Disease",
+    summaryMn:
+      "Тайваний Үндэсний Их Сургуулийн эмнэлгийн профессоруудтай хамтарсан хурлыг Улсын Нэгдүгээр Төв Эмнэлэгт зохион байгууллаа.",
+    summaryEn:
+      "A joint conference with professors from National Taiwan University Hospital, held at the First Central Hospital of Mongolia.",
+    bodyMn:
+      "Тайвань–Монголын хамтарсан хурал 2024 оны 9 дүгээр сарын 11-ний өдрийн 09:00–13:00 цагт Улсын Нэгдүгээр Төв Эмнэлгийн 4 дүгээр давхрын хурлын танхимд болов.\n\nХурлаар гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээ; уг эмгэгийг оношлоход дүрс оношилгооны эмчийн гүйцэтгэх үүрэг; эмгэг судлалын шинжилгээг өдөр тутмын дадалд хэрэглэх гэсэн гурван сэдвийг хэлэлцэв.\n\nХурлыг Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг, Тайваний Үндэсний Их Сургуулийн Эмнэлэг (NTUH), Улсын Нэгдүгээр Төв Эмнэлэг, Анагаахын Шинжлэх Ухааны Үндэсний Их Сургууль, Дүрс Оношилгооны Төв хамтран зохион байгуулав. Оролцогчид танхимаар болон цахимаар хосолсон хэлбэрээр оролцлоо.",
+    bodyEn:
+      "The Taiwan–Mongolian Joint Conference was held on 11 September 2024, from 09:00 to 13:00, in the 4th-floor conference hall of the First Central Hospital of Mongolia.\n\nThree topics were covered: the diagnosis and treatment of inflammatory bowel disease, the role of the radiologist in diagnosing it, and the pathologic approach in daily practice.\n\nThe conference was organised jointly by the Mongolian Society for the Study of Intestinal Diseases, National Taiwan University Hospital, the First Central Hospital of Mongolia, the Mongolian National University of Medical Sciences and the Diagnostic Imaging Center. Participants attended both in the hall and online.",
+    startsOn: "2024-09-11",
+    endsOn: null,
+    cityMn: "Улаанбаатар",
+    cityEn: "Ulaanbaatar",
+    coverAltMn:
+      "Хурлын дөрвөн оролцогч Тайвань–Монголын хамтарсан хурлын хоёр самбарын хооронд зогсож байна.",
+    coverAltEn:
+      "Four participants standing between the two banners of the Taiwan–Mongolian Joint Conference.",
+    coverFlag: "taiwan",
   },
 ];
 
