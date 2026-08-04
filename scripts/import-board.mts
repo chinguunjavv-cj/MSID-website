@@ -18,6 +18,21 @@
  */
 
 import { get, newId, run } from "../src/lib/db/index.ts";
+import { mimeFor, storeFile } from "./lib/store-file.mts";
+
+/**
+ * Portraits, keyed by the English name so a photograph can be handed in for anyone on
+ * the list without changing the script:
+ *
+ *   npm run import:board -- --photo "Bayarmaa O.=/path/portrait.jpg" --photo "Bat-Ulzii E.=..."
+ */
+const photoArgs = process.argv
+  .map((arg, i) => (arg === "--photo" ? process.argv[i + 1] : null))
+  .filter((value): value is string => Boolean(value))
+  .map((pair) => {
+    const at = pair.indexOf("=");
+    return [pair.slice(0, at), pair.slice(at + 1)] as const;
+  });
 
 interface Member {
   nameMn: string;
@@ -300,6 +315,18 @@ for (const [index, member] of BOARD.entries()) {
 const { changes: placeholders } = await run(
   "DELETE FROM board_members WHERE name_mn = 'Нэр оруулаагүй'",
 );
+
+for (const [name, path] of photoArgs) {
+  const stored = await storeFile(path, mimeFor(path), "portrait");
+  const { changes } = await run(
+    "UPDATE board_members SET photo = ? WHERE name_en = ?",
+    stored,
+    name,
+  );
+  console.log(
+    changes ? `  Portrait for ${name}: ${stored}` : `  No board member named "${name}"`,
+  );
+}
 
 console.log(`  Board: ${created} created, ${updated} updated, ${placeholders} placeholders removed.`);
 

@@ -28,7 +28,7 @@ const guidelinePath = flag("guideline");
 /* -------------------------------------------------------------------------- */
 
 if (photoPath) {
-  const stored = await storeFile(photoPath, mimeFor(photoPath));
+  const stored = await storeFile(photoPath, mimeFor(photoPath), "portrait");
   const { changes } = await run(
     "UPDATE board_members SET photo = ? WHERE name_en = ?",
     stored,
@@ -52,7 +52,7 @@ const GREETING_MN = `Та бүхэнд манай сайтаар зочлон б
 
 Хүн амын өсөлт, хотжилт, байгаль, нийгмийн уур амьсгал, амьдралын ба хооллолтын хэв маягийн өөрчлөлт болон гэдэсний эмгэгийн оношилгооны олон арга, технологиуд эмнэлзүйн практикт нэвтэрснээр гэдэсний үрэвсэлт эмгэг, хавдрын илрүүлэлт нэмэгдэж, Монгол Улс 2019 оноос дэлхийн эрүүл мэндийн статистик үзүүлэлтийн тайланд 100.000 хүн амд 50–75 тохиолдол бүртгэгддэг улс орны тоонд орох болсон.
 
-Гэсэн хэдий ч манай улсад гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээ бүрэн шийдэгдээгүй, эрүүл мэндийн тулгамдсан асуудлын нэг хэвээр байсаар байна. Тиймээс гэдэсний үрэвсэлт эмгэгийн талаарх судалгаа, шинжилгээний ажлыг хөгжүүлэх, бүртгэлийг сайжруулах, оношилгоо, эмчилгээг олон улсын жишигт хүргэх, гадаад, дотоод хамтын ажиллагаагаа өргөжүүлэх зорилгоор бид нийгэмлэгээ үүсгэн байгуулж, гастроэнтеролог, хүүхдийн гастроэнтеролог, бүдүүн шулуун гэдэсний мэс засал, эмнэлзүйн эмгэг судлал, дүрс оношилгоо, лабораторийн эмч, багш нараас бүрдсэн удирдах зөвлөлийн бүрэлдэхүүнтэйгээр үйл ажиллагаагаа эхлүүлээд байна.
+Гэсэн хэдий ч манай улсад гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээ бүрэн шийдэгдээгүй, эрүүл мэндийн тулгамдсан асуудлын нэг хэвээр байсаар байна. Тиймээс гэдэсний үрэвсэлт эмгэгийн талаарх судалгаа, шинжилгээний ажлыг хөгжүүлэх, бүртгэлийг сайжруулах, оношилгоо, эмчилгээг олон улсын жишигт хүргэх, гадаад, дотоод хамтын ажиллагаагаа өргөжүүлэх зорилгоор бид нийгэмлэгээ 2023 оны 10 дугаар сард үүсгэн байгуулж, 2024 оны 3 дугаар сарын 5-нд төрийн бус байгууллагаар албан ёсоор бүртгүүлэн, гастроэнтеролог, хүүхдийн гастроэнтеролог, бүдүүн шулуун гэдэсний мэс засал, эмнэлзүйн эмгэг судлал, дүрс оношилгоо, лабораторийн эмч, багш нараас бүрдсэн удирдах зөвлөлийн бүрэлдэхүүнтэйгээр үйл ажиллагаагаа эхлүүлээд байна.
 
 Бид энэ хугацаанд 2023, 2024 оны Азийн Крон, колитын байгууллага (AOCC), Солонгосын гэдэсний эмгэг судлалын холбоо (KASID)-ны олон улсын хуралд оролцож, МГХ-ны Хоол боловсруулахын долоо хоног (DDWeek) 2024 олон улсын хурлын үеэр гэдэсний үрэвсэлт эмгэгийн хуралдаан, Тайваний Үндэсний Их Сургуулийн профессоруудтай хамтарсан сургалтыг тус тус зохион байгууллаа.
 
@@ -72,7 +72,7 @@ const GREETING_EN = `Welcome, and thank you for visiting our website.
 
 Population growth, urbanisation, environmental and social change, shifting diets and ways of living, together with the many new methods and technologies now used to diagnose intestinal disease, have all increased the detection of inflammatory bowel disease and of cancer. Since 2019 Mongolia has appeared in world health statistics among the countries recording 50–75 cases per 100,000 people.
 
-Even so, the diagnosis and treatment of inflammatory bowel disease in Mongolia is not yet resolved, and it remains one of the country's pressing health problems. The Society was founded to develop research into inflammatory bowel disease, improve its registration, bring diagnosis and treatment to international standards, and widen collaboration at home and abroad. Our board brings together gastroenterologists, paediatric gastroenterologists, colorectal surgeons, clinical pathologists, radiologists, laboratory physicians and teachers.
+Even so, the diagnosis and treatment of inflammatory bowel disease in Mongolia is not yet resolved, and it remains one of the country's pressing health problems. We founded the Society in October 2023, and registered it as a non-governmental organisation on 5 March 2024, to develop research into inflammatory bowel disease, improve its registration, bring diagnosis and treatment to international standards, and widen collaboration at home and abroad. Our board brings together gastroenterologists, paediatric gastroenterologists, colorectal surgeons, clinical pathologists, radiologists, laboratory physicians and teachers.
 
 In that time we have taken part in the international congresses of the Asian Organization for Crohn's and Colitis (AOCC) and the Korean Association for the Study of Intestinal Diseases (KASID) in 2023 and 2024, held a session on inflammatory bowel disease during Digestive Disease Week 2024, and run joint training with professors from National Taiwan University.
 

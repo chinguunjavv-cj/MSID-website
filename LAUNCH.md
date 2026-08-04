@@ -5,7 +5,7 @@ has to happen. Everything here is either a step you take or a thing MSID has to 
 no code is outstanding for any of it.
 
 The site is currently live at `msidwebsite.vercel.app`, seeded, and **deliberately
-hidden from search engines**. That is not an oversight; see step 4.
+hidden from search engines**. That is not an oversight; see step 5.
 
 ---
 
@@ -17,7 +17,7 @@ Chase these first. They are the long poles, and nothing below finishes without t
 | --- | --- | --- |
 | ☐ | **Gmail app password** for `ibdmsid@gmail.com` | Every email the site sends. Until it exists, sends are skipped with a log line and the password-reset page says so. See "Email and password resets" in the README for the steps to give them. |
 | ☐ | **Real content** — board members, guidelines, congress dates, publications | The site currently shows sample content with invented guideline codes and a placeholder congress. This is the single reason it must stay hidden from search engines. |
-| ☐ | **A domain** | Everything in step 4. |
+| ☐ | **A domain** | Everything in step 5. |
 | ☐ | **Bank details** — bank, account number, account holder | Until these are in Тохиргоо → Төлбөр, a participant registering for a paid event is told the Society will send payment details separately, rather than being shown where to transfer. |
 
 ---
@@ -43,10 +43,36 @@ first few messages.
 it; the point they will care about is that approving a membership emails the applicant
 immediately, so they no longer need to ring people.
 
-## 2. Replace the sample content
+## 2. Load MSID's real content
 
-☐ Work through the admin with MSID: Удирдах зөвлөл, Түүхэн замнал, Эмнэлзүйн заавар,
-Эрдэм шинжилгээ, Түншүүд, and the Хуудсууд text.
+The imports are idempotent and take the **original** files — they resize as they go — so
+they can be re-run after any correction. Export the credentials once, then run all three:
+
+```bash
+export TURSO_DATABASE_URL='libsql://…'
+export TURSO_AUTH_TOKEN='…'
+export BLOB_READ_WRITE_TOKEN='vercel_blob_rw_…'
+
+npm run import:board -- \
+  --photo "Bayarmaa O.=/path/to/president.jpeg" \
+  --photo "Bat-Ulzii E.=/path/to/vice-president.jpg"
+
+npm run import:assets -- --guideline "/path/to/Заавар UC.pdf"
+
+npm run import:events -- \
+  --aocc "/path/to/aocc-delegation.JPG" \
+  --ddweek "/path/to/ddweek-session.jpg"
+```
+
+`BLOB_READ_WRITE_TOKEN` is not optional here. Without it the photographs are written to
+a local disk that Vercel cannot read, and the database ends up holding `/uploads/…`
+paths that resolve to nothing in production.
+
+## 3. Replace the remaining sample content
+
+☐ The board, the President's greeting, the UC guideline and two past events arrive with
+the imports above. Still to write with MSID: Түүхэн замнал, further Эмнэлзүйн заавар,
+Эрдэм шинжилгээ, Түншүүд, and the remaining Хуудсууд text.
 
 ☐ Delete or archive the demo records. They are recognisable by their slugs —
 `demo-msid-congress`, `demo-endoscopy-course`, `demo-news-congress-open`. An event with
@@ -54,7 +80,7 @@ registrations cannot be deleted; archive it instead.
 
 ☐ Set the home page hero in Тохиргоо → Нүүр хуудас.
 
-## 3. Accounts, before the domain
+## 4. Accounts, before the domain
 
 ☐ Add `ibdmsid@gmail.com` as an owner on the **Vercel** project and the **Turso**
 database.
@@ -67,7 +93,7 @@ database nobody can restore into is a file. It costs nothing and takes five minu
 ☐ Create a second administrator account for MSID's own person, in Хэрэглэгчид, so the
 site is not administered from one login.
 
-## 4. Domain and going public
+## 5. Domain and going public
 
 Do these together, in this order.
 
@@ -91,7 +117,7 @@ while the site is hidden, so this cannot be forgotten silently.
 
 ☐ Submit the domain to Google Search Console.
 
-## 5. Once there is real data
+## 6. Once there is real data
 
 Not before — there is nothing to lose today, and a backup of demo content is ceremony.
 

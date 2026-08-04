@@ -97,7 +97,9 @@ let updated = 0;
 
 for (const event of EVENTS) {
   const coverPath = flag(event.coverFlag);
-  const cover = coverPath ? await storeFile(coverPath, mimeFor(coverPath)) : undefined;
+  const cover = coverPath
+    ? await storeFile(coverPath, mimeFor(coverPath), "cover")
+    : undefined;
 
   const columns: Record<string, string | number | null> = {
     slug: event.slug,

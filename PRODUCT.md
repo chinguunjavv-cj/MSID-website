@@ -34,9 +34,9 @@ without touching code and without a training course.
 
 ## Product Purpose
 
-MSID (Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг) was founded on 5 March 2024 by the
-initiative of specialist physicians, to develop the study of intestinal disease in
-Mongolia systematically. It is a young NGO building a national standard where one did not
+MSID (Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг) was founded in October 2023 by the
+initiative of specialist physicians, and registered as a non-governmental organisation
+on 5 March 2024, to develop the study of intestinal disease in Mongolia systematically. It is a young NGO building a national standard where one did not
 previously exist in organised form.
 
 The site exists to do three things:
