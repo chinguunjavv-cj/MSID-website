@@ -13,8 +13,9 @@
  * the given name with no space: "О.Баярмаа". Both forms are stored, one per column, so
  * each language shows the convention its readers expect.
  *
- * Transliterations marked REVIEW below are the ones a native speaker should check
- * before this goes public — see the list printed at the end of a run.
+ * All sixteen Cyrillic spellings were confirmed by a native speaker on 4 August 2026,
+ * including the three that were originally guesses: Л.Саяамаа, Б.Цэвэлноров and
+ * Б.Түвшинтөр.
  */
 
 import { get, newId, run } from "../src/lib/db/index.ts";
@@ -37,8 +38,6 @@ const photoArgs = process.argv
 interface Member {
   nameMn: string;
   nameEn: string;
-  /** true when the Cyrillic spelling is a best guess and wants a native eye. */
-  review?: boolean;
   degree: string;
   roleMn: string;
   roleEn: string;
@@ -214,7 +213,6 @@ const BOARD: Member[] = [
   {
     nameMn: "Л.Саяамаа",
     nameEn: "Sayamaa L.",
-    review: true,
     degree: "PhD, Associate Professor",
     roleMn: MEMBER.mn,
     roleEn: MEMBER.en,
@@ -227,7 +225,6 @@ const BOARD: Member[] = [
   {
     nameMn: "Б.Цэвэлноров",
     nameEn: "Tsevelnorov B.",
-    review: true,
     degree: "MD, PhD",
     roleMn: MEMBER.mn,
     roleEn: MEMBER.en,
@@ -241,7 +238,6 @@ const BOARD: Member[] = [
   {
     nameMn: "Б.Түвшинтөр",
     nameEn: "Tuvshintur B.",
-    review: true,
     degree: "MD, MSc",
     roleMn: MEMBER.mn,
     roleEn: MEMBER.en,
@@ -330,10 +326,5 @@ for (const [name, path] of photoArgs) {
 
 console.log(`  Board: ${created} created, ${updated} updated, ${placeholders} placeholders removed.`);
 
-const needsReview = BOARD.filter((m) => m.review);
-if (needsReview.length) {
-  console.log("\n  Cyrillic spellings to confirm with a native speaker:");
-  for (const m of needsReview) console.log(`    ${m.nameEn.padEnd(18)} → ${m.nameMn}`);
-}
 
 process.exit(0);

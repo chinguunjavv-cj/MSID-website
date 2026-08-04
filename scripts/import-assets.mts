@@ -100,6 +100,37 @@ await run(
 console.log("  Welcome page replaced with the President's greeting.");
 
 /* -------------------------------------------------------------------------- */
+/* Membership fee                                                              */
+/* -------------------------------------------------------------------------- */
+
+/*
+  50,000₮, confirmed by MSID — their own application form still prints the older
+  100,000₮. Appended only when it is not already there, because this script is meant to
+  be re-run.
+
+  This lives in a script rather than a one-off edit to the database. It was a one-off
+  edit at first, which meant it existed on a laptop and nowhere else — the sort of change
+  that is only discovered missing when somebody asks why production says something
+  different.
+*/
+{
+  const page = await get<{ body_mn: string; body_en: string }>(
+    "SELECT body_mn, body_en FROM pages WHERE key = 'membership.intro'",
+  );
+  if (page && !page.body_mn.includes("50,000₮")) {
+    await run(
+      `UPDATE pages SET body_mn = ?, body_en = ?, updated_at = datetime('now')
+       WHERE key = 'membership.intro'`,
+      `${page.body_mn}\n\nГишүүнчлэлийн жилийн татвар 50,000₮.`,
+      `${page.body_en}\n\nThe annual membership fee is 50,000₮.`,
+    );
+    console.log("  Membership fee stated on the membership page.");
+  } else {
+    console.log("  Membership fee already stated.");
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* The ulcerative colitis guideline                                            */
 /* -------------------------------------------------------------------------- */
 
