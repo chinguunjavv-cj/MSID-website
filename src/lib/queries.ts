@@ -503,3 +503,20 @@ export async function dashboardStats(): Promise<DashboardStats> {
     draftContent,
   };
 }
+
+/**
+ * Events carrying a cover photograph, newest first, for the hero.
+ *
+ * Deliberately not restricted to past events. A congress that has been announced with a
+ * photograph belongs in the hero as much as one that has happened — the point is to show
+ * the Society is active, and an upcoming date says that at least as well.
+ */
+export async function listEventsWithCovers(limit = 4): Promise<EventRow[]> {
+  return all<EventRow>(
+    `SELECT * FROM events
+     WHERE status = 'published' AND cover_image != ''
+     ORDER BY starts_on IS NULL, starts_on DESC
+     LIMIT ?`,
+    limit,
+  );
+}

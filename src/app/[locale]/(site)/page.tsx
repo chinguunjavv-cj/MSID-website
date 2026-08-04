@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
@@ -11,9 +10,15 @@ import {
   listPublishedGuidelines,
   listPublishedNews,
   listUpcomingEvents,
+  listEventsWithCovers,
 } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
-import { formatDate, formatDateNumeric, formatDateRange, daysUntil } from "@/lib/format";
+import {
+  formatDate,
+  formatDateNumeric,
+  formatDateRange,
+  daysUntil,
+} from "@/lib/format";
 import {
   EmptyState,
   Prose,
@@ -22,6 +27,7 @@ import {
 } from "@/components/ui/Primitives";
 import { EventRow_, GuidelineRow, NewsRow } from "@/components/site/records";
 import { MsidMark } from "@/components/site/Mark";
+import { HeroCarousel, type HeroSlide } from "@/components/site/HeroCarousel";
 import { safeExternalLink } from "@/lib/video";
 
 export default async function HomePage({
@@ -41,16 +47,25 @@ export default async function HomePage({
     a network round trip, so awaiting them in sequence would make the home page seven
     round trips deep for no reason — none of them depend on each other.
   */
-  const [allGuidelines, upcoming, featured, news, partners, aboutPage, benefits] =
-    await Promise.all([
-      listPublishedGuidelines(),
-      listUpcomingEvents(4),
-      featuredEvent(),
-      listPublishedNews(4),
-      listPartners(),
-      getPage("home.about"),
-      getPage("membership.benefits"),
-    ]);
+  const [
+    allGuidelines,
+    upcoming,
+    featured,
+    news,
+    partners,
+    aboutPage,
+    benefits,
+    heroEvents,
+  ] = await Promise.all([
+    listPublishedGuidelines(),
+    listUpcomingEvents(4),
+    featuredEvent(),
+    listPublishedNews(4),
+    listPartners(),
+    getPage("home.about"),
+    getPage("membership.benefits"),
+    listEventsWithCovers(4),
+  ]);
 
   const guidelines = allGuidelines.slice(0, 6);
 
@@ -58,12 +73,70 @@ export default async function HomePage({
     (locale === "mn" ? settings.hero_headline_mn : settings.hero_headline_en) ||
     t.org.name;
   const heroLead =
-    (locale === "mn" ? settings.hero_lead_mn : settings.hero_lead_en) || t.org.tagline;
+    (locale === "mn" ? settings.hero_lead_mn : settings.hero_lead_en) ||
+    t.org.tagline;
   const heroAlt =
-    (locale === "mn" ? settings.hero_image_alt_mn : settings.hero_image_alt_en) || "";
+    (locale === "mn"
+      ? settings.hero_image_alt_mn
+      : settings.hero_image_alt_en) || "";
+
+  /*
+    The hero's photographs. A dedicated hero image, if the administrator has set one,
+    leads; the rest are events they have already published with a cover. Nothing new to
+    maintain — an event with a photograph is a slide.
+  */
+  const heroSlides: HeroSlide[] = [
+    ...(settings.hero_image
+      ? [{ image: settings.hero_image, alt: heroAlt }]
+      : []),
+    ...heroEvents.map((event) => ({
+      image: event.cover_image,
+      alt: tr(event, "cover_alt", locale) || tr(event, "title", locale),
+      label: tr(event, "title", locale),
+      meta: [
+        formatDateRange(event.starts_on, event.ends_on, locale),
+        tr(event, "city", locale),
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      href: p(`/events/${event.slug}`),
+    })),
+  ];
 
   const next = featured ?? upcoming[0];
   const nextDays = next ? daysUntil(next.starts_on) : null;
+
+  /*
+    The hero's message. Held in one place because it renders identically whether or not
+    there are photographs behind it — with slides it becomes the carousel's children, so
+    that the slide caption lays out beneath it rather than on top of it.
+  */
+  const heroContent = (
+    <div className="shell relative py-16 md:py-24 lg:py-28">
+      <h1 className="animate-settle max-w-[15ch] text-display font-extrabold text-paper">
+        {heroHeadline}
+      </h1>
+
+      <p
+        className="animate-settle mt-7 max-w-[46ch] text-lg leading-relaxed md:text-xl"
+        style={{ animationDelay: "90ms" }}
+      >
+        {heroLead}
+      </p>
+
+      <div
+        className="animate-settle mt-9 flex flex-wrap gap-3"
+        style={{ animationDelay: "180ms" }}
+      >
+        <Link href={p("/membership")} className="btn btn-on-dark">
+          {t.home.joinCta}
+        </Link>
+        <Link href={p("/guidelines")} className="btn btn-outline-light">
+          {t.nav.guidelines}
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -71,55 +144,41 @@ export default async function HomePage({
       {/* Hero — copper-drenched, with MSID's own mark as the art direction */}
       {/* ---------------------------------------------------------------- */}
       <section className="on-copper relative overflow-hidden">
-        {settings.hero_image ? (
-          <>
-            <Image
-              src={settings.hero_image}
-              alt={heroAlt}
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div aria-hidden className="absolute inset-0 bg-ink-950/72" />
-          </>
-        ) : (
-          /*
-            No photograph uploaded yet: the society's own mark carries the panel.
-            Held at low opacity so it reads as a watermark behind the type rather than
-            as a picture competing with it — the headline still clears 4.5:1 over the
-            darkest part of the mark.
-          */
-          <MsidMark
-            priority
-            className="pointer-events-none absolute -top-20 -right-28 w-[46rem] max-w-none md:-right-16 md:w-[58rem]"
-            imageClassName="opacity-[0.17]"
-          />
-        )}
-
-        <div className="shell relative py-16 md:py-24 lg:py-28">
-          <h1 className="animate-settle max-w-[15ch] text-display font-extrabold text-paper">
-            {heroHeadline}
-          </h1>
-
-          <p
-            className="animate-settle mt-7 max-w-[46ch] text-lg leading-relaxed md:text-xl"
-            style={{ animationDelay: "90ms" }}
-          >
-            {heroLead}
-          </p>
-
-          <div
-            className="animate-settle mt-9 flex flex-wrap gap-3"
-            style={{ animationDelay: "180ms" }}
-          >
-            <Link href={p("/membership")} className="btn btn-on-dark">
-              {t.home.joinCta}
-            </Link>
-            <Link href={p("/guidelines")} className="btn btn-outline-light">
-              {t.nav.guidelines}
-            </Link>
-          </div>
+        {/*
+          The photographs cover this panel only. Scoped to the whole section they also
+          ran under the "what is next" strip below, and the slide's caption landed on top
+          of the congress date — two different facts in the same 56 pixels.
+        */}
+        <div className="relative">
+          {heroSlides.length > 0 ? (
+            <HeroCarousel
+              slides={heroSlides}
+              labels={{
+                region:
+                  locale === "mn"
+                    ? "Нийгэмлэгийн үйл ажиллагаа"
+                    : "The Society at work",
+                showSlide: locale === "mn" ? "Зураг харуулах" : "Show",
+              }}
+            >
+              {heroContent}
+            </HeroCarousel>
+          ) : (
+            <>
+              {/*
+                No photograph uploaded yet: the society's own mark carries the panel.
+                Held at low opacity so it reads as a watermark behind the type rather
+                than as a picture competing with it — the headline still clears 4.5:1
+                over the darkest part of the mark.
+              */}
+              <MsidMark
+                priority
+                className="pointer-events-none absolute -top-20 -right-28 w-[46rem] max-w-none md:-right-16 md:w-[58rem]"
+                imageClassName="opacity-[0.17]"
+              />
+              {heroContent}
+            </>
+          )}
         </div>
 
         {/* What is next — a live fact, not a metric row */}
@@ -130,7 +189,9 @@ export default async function HomePage({
                 href={p(`/events/${next.slug}`)}
                 className="group flex flex-wrap items-baseline gap-x-3 gap-y-1 text-small"
               >
-                <span className="font-semibold text-paper">{t.events.upcoming}</span>
+                <span className="font-semibold text-paper">
+                  {t.events.upcoming}
+                </span>
                 <span aria-hidden className="text-paper/75">
                   →
                 </span>
@@ -141,7 +202,9 @@ export default async function HomePage({
                   {formatDateRange(next.starts_on, next.ends_on, locale)}
                 </span>
                 {tr(next, "city", locale) && (
-                  <span className="text-paper/75">· {tr(next, "city", locale)}</span>
+                  <span className="text-paper/75">
+                    · {tr(next, "city", locale)}
+                  </span>
                 )}
                 {nextDays !== null && nextDays > 0 && (
                   <span className="tabular text-paper/75">
@@ -171,7 +234,9 @@ export default async function HomePage({
 
           <dl className="self-start border-t border-ink-200 pt-6 md:border-t-2 md:border-ink-900">
             <div className="border-b border-ink-200 py-3">
-              <dt className="text-label font-semibold text-ink-600">{t.about.founded}</dt>
+              <dt className="text-label font-semibold text-ink-600">
+                {t.about.founded}
+              </dt>
               <dd className="tabular mt-1 text-[1.0625rem] font-semibold text-ink-900">
                 {formatDate(settings.founded_on, locale)}
               </dd>
@@ -216,12 +281,19 @@ export default async function HomePage({
           {guidelines.length > 0 ? (
             <div className="register mt-8">
               {guidelines.map((guideline) => (
-                <GuidelineRow key={guideline.id} guideline={guideline} locale={locale} />
+                <GuidelineRow
+                  key={guideline.id}
+                  guideline={guideline}
+                  locale={locale}
+                />
               ))}
             </div>
           ) : (
             <div className="mt-8">
-              <EmptyState title={t.guidelines.empty} hint={t.guidelines.emptyHint} />
+              <EmptyState
+                title={t.guidelines.empty}
+                hint={t.guidelines.emptyHint}
+              />
             </div>
           )}
         </div>
@@ -299,7 +371,10 @@ export default async function HomePage({
             )}
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href={p(`/events/${featured.slug}`)} className="btn btn-primary">
+              <Link
+                href={p(`/events/${featured.slug}`)}
+                className="btn btn-primary"
+              >
                 {t.common.readMore}
               </Link>
               {featured.registration_open === 1 && (
@@ -369,7 +444,9 @@ export default async function HomePage({
         <div className="shell grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-16">
           <div>
             <h2 className="text-h2 font-bold">{t.home.membershipTitle}</h2>
-            <p className="mt-5 max-w-[46ch] text-ink-700">{t.home.membershipLead}</p>
+            <p className="mt-5 max-w-[46ch] text-ink-700">
+              {t.home.membershipLead}
+            </p>
             <Link href={p("/membership")} className="btn btn-primary mt-7">
               {t.home.joinCta}
             </Link>
@@ -391,7 +468,9 @@ export default async function HomePage({
       {/* ---------------------------------------------------------------- */}
       {partners.length > 0 && (
         <section className="shell py-14 md:py-16">
-          <h2 className="text-label font-semibold text-ink-600">{t.footer.partners}</h2>
+          <h2 className="text-label font-semibold text-ink-600">
+            {t.footer.partners}
+          </h2>
           <ul className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
             {partners.map((partner) => (
               <li key={partner.id}>

@@ -114,6 +114,22 @@
     }
   }
 
+  /*
+    The hero indicator's fill. Its duration is tied to the carousel's interval in
+    HeroCarousel.tsx — change one and change the other, or the bar finishes early and
+    sits full while the photograph has not moved.
+  */
+  --animate-hero-progress: hero-progress 7s linear both;
+
+  @keyframes hero-progress {
+    from {
+      width: 0%;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
   @keyframes fade-up {
     from {
       opacity: 0;
