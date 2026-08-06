@@ -174,7 +174,14 @@ export default async function HomePage({
           />
         )}
 
-        <div className="shell relative grid items-center gap-10 py-16 md:py-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-16 lg:py-24">
+        {/*
+          The photograph's column is sized against the display headline — at 26rem the
+          type visibly outweighed the picture and the panel read as copper with a stamp
+          in the corner. The caption stays quiet: one semibold line for the record's
+          name, the date in a smaller hand beneath, so it labels the photograph instead
+          of competing with the lead.
+        */}
+        <div className="shell relative grid items-center gap-10 py-14 md:py-16 lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-16 lg:py-20">
           {heroContent}
 
           {lead && (
@@ -188,21 +195,25 @@ export default async function HomePage({
                 className="h-auto w-full"
               />
               {(lead.label || lead.meta) && (
-                <figcaption className="mt-3 text-small">
+                <figcaption className="mt-3 max-w-[52ch] text-small">
                   {lead.href && lead.label ? (
                     <Link
                       href={lead.href}
-                      className="font-semibold text-paper hover:underline"
+                      className="font-semibold text-paper text-pretty hover:underline"
                     >
                       {lead.label}
                     </Link>
                   ) : (
                     lead.label && (
-                      <span className="font-semibold text-paper">{lead.label}</span>
+                      <span className="font-semibold text-paper text-pretty">
+                        {lead.label}
+                      </span>
                     )
                   )}
                   {lead.meta && (
-                    <span className="mt-0.5 block text-paper/80">{lead.meta}</span>
+                    <span className="tabular mt-1 block text-[0.8125rem] text-paper/75">
+                      {lead.meta}
+                    </span>
                   )}
                 </figcaption>
               )}

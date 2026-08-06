@@ -1,10 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { Locale } from "@/lib/db/types";
-import { tr } from "@/lib/db/types";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { localePath } from "@/lib/i18n/config";
-import { listPartners } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { formatDate } from "@/lib/format";
 import { safeExternalLink } from "@/lib/video";
@@ -12,8 +8,6 @@ import { safeExternalLink } from "@/lib/video";
 export async function Footer({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   const settings = await getSettings();
-  const partners = await listPartners();
-  const p = (path: string) => localePath(locale, path);
   const year = new Date().getFullYear();
 
   const address =
@@ -22,17 +16,13 @@ export async function Footer({ locale }: { locale: Locale }) {
   return (
     <footer className="on-dark mt-24 border-t-2 border-copper-600">
       {/*
-        Partners are a column of their own, beside the quick links rather than stacked
-        beneath them. On mid-width screens the four columns wrap into a 2×2; the wide
-        template only exists when there are partners to fill it.
+        Two columns: who we are, how to reach us. No quick links — the masthead is
+        sticky and already carries the navigation — and no partners, because the pages
+        that owe the partners a mention (the homepage, Хамтын ажиллагаа) name them in
+        full, with their long names, right above this. A footer that repeats the page
+        is longer, not more useful.
       */}
-      <div
-        className={`shell grid gap-12 py-14 md:grid-cols-2 md:gap-16 md:py-16 ${
-          partners.length > 0
-            ? "lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
-            : "lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)]"
-        }`}
-      >
+      <div className="shell grid gap-12 py-14 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:gap-16 md:py-16">
         <div>
           <div className="flex items-center gap-3">
             {/* The mark is a copper logo on white; a paper tile keeps it legible on ink. */}
@@ -92,51 +82,6 @@ export async function Footer({ locale }: { locale: Locale }) {
           )}
         </div>
 
-        <div>
-          <h2 className="text-label font-semibold text-paper">{t.footer.quickLinks}</h2>
-          <ul className="mt-4 space-y-2.5 text-small">
-            {[
-              { href: p("/about"), label: t.nav.about },
-              { href: p("/events"), label: t.nav.events },
-              { href: p("/guidelines"), label: t.nav.guidelines },
-              { href: p("/publications"), label: t.nav.publications },
-              { href: p("/membership"), label: t.eventsNav.membership },
-              { href: p("/about/contact"), label: t.aboutNav.contact },
-            ].map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="text-ink-300 transition-colors duration-100 hover:text-paper"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {partners.length > 0 && (
-          <div>
-            <h2 className="text-label font-semibold text-paper">
-              {t.footer.partners}
-            </h2>
-            <ul className="mt-4 space-y-2.5 text-small">
-              {partners.map((partner) => (
-                <li key={partner.id}>
-                  <a
-                    href={safeExternalLink(partner.url) ?? "#"}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="text-ink-300 transition-colors duration-100 hover:text-paper"
-                    title={tr(partner, "name", locale)}
-                  >
-                    {partner.acronym || tr(partner, "name", locale)}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       <div className="border-t border-white/10">
