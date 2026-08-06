@@ -1,7 +1,8 @@
 # Handover
 
-Written 4 August 2026, at commit `92d296e`. Working tree clean, `main` in sync with
-`origin/main`, Vercel deploys `main` automatically.
+Written 6 August 2026, at commit `9cc5c06`, **plus one uncommitted change** — see "The
+homepage in the working tree" below before doing anything else. `main` is what Vercel
+deploys automatically.
 
 This is the state of the work and the things that are not written down anywhere else.
 For the ordered list of what still has to happen before launch, read
@@ -10,195 +11,138 @@ This document does not repeat either.
 
 ---
 
-## Where things stand
+## Do this first
 
-The site is live at `msidwebsite.vercel.app`, running on Vercel with a Turso database and
-Vercel Blob for uploads. It is **deliberately hidden from search engines** and should stay
-that way until it has a real domain — see "Going public" below.
+1. **Delete `.env.production.local`.** It is sitting in the repo root (gitignored, but
+   on disk) and holds every production secret in plaintext — SMTP password, admin
+   password, session secret, both database tokens. It was pulled with `vercel env pull`
+   on 5 August to run imports. If the imports you need are done, it has no reason to
+   exist: `rm .env.production.local`.
 
-MSID has now supplied real content, and it is in production: sixteen board members, the
-President's greeting, the ulcerative colitis guideline (ЭМС-ын тушаал А/703), the reduced
-50,000₮ membership fee, and photographs. The invented placeholder content that the earlier
-notes worried about is gone from production — though see the next section for a surprise
-about what production actually contained.
+2. **Decide the fate of `fwdhi/`** — 27 MB of the original photographs MSID sent
+   (Taiwan ×4, DD Week ×4, the President's portrait, the unattributed endoscopy group
+   photo), currently untracked in the repo root. The import scripts are built to take
+   originals, so "the imports are re-runnable" is only true while these files exist
+   somewhere durable. Either commit them deliberately (27 MB of never-changing JPEGs is
+   fine in git) or move them somewhere the next person can reach. Do not leave them
+   untracked on one laptop, and do not let a reflexive `git add .` sweep them in
+   undecided.
 
-**Production never had the demo records.** The demo rows (`demo-msid-congress`,
-`demo-endoscopy-course`, `demo-news-congress-open`) only ever existed on the local
-machine. When the production database was first inspected during the deploy it held the
-seeded skeleton — 11 pages, 21 settings, 3 partners, 1 history entry, 1 admin user — and
-**zero** board members, events, guidelines or news. So the content import was purely
-additive, and LAUNCH.md's "delete or archive the demo records" step does not apply to
-production. It still applies to any local database that has had `npm run demo` run
-against it.
+3. **Review the uncommitted homepage** — next section.
 
 ---
 
-## Do this first: rotate two credentials
+## The homepage in the working tree
 
-To run the production imports, these were pasted into a chat session on 4 August 2026:
+`src/app/[locale]/(site)/page.tsx` carries an uncommitted redesign (+229/−126) that
+**Chinguun has not yet approved**. It is the fourth iteration of the hero in one day,
+and the history matters more than the diff:
 
-- the **Turso auth token** for `database-chestnut-marble-vercel-…`
-- the **Vercel Blob read-write token** `vercel_blob_rw_8aRqNP4nEWmg8bAx_…`
+1. Copper-drenched split hero (photo beside type) — *"not aesthetic"*.
+2. Flat white, display-size headline — *"Not good"*.
+3. White with an ink-50 band, headline shrunk to h1 — *"worse"*.
+4. **Current, unreviewed:** the hero is one rounded photographic card, inset from the
+   page, message set over a left scrim (caps society name in copper, tagline as the
+   big line, two buttons); a slim copper next-event banner under it; a four-card
+   quick-links grid with small hand-drawn stroke icons; About facts in a card; soft
+   ambient shadows throughout.
 
-They were never written to a file in this repository and are not in git history. They
-have still left the machine they belong on, so treat them as exposed and rotate both:
-Vercel → Storage → the store → rotate the token → update the environment variable →
-redeploy. The Turso token can also be rotated from the Turso dashboard or `turso db
-tokens invalidate`.
+Version 4 deliberately copies the composition of a Stitch mock Chinguun supplied twice
+as his reference ("think of yourself as a senior UI designer of Dribbble") — its
+structure and polish, **not** its navy/teal palette (he explicitly chose "lighten, keep
+copper" when asked directly) and not its invented content. What was refused from the
+mock and why: CME tracking, fellowships and annual congresses do not exist for this
+society and nothing on this site is invented; "full text access to *Intestinal
+Research*" is KASID's journal and **might actually be true** under the KASID
+agreement — ask MSID, and if confirmed it is excellent membership-benefit copy.
 
-Nothing breaks while they are rotated; the imports are re-runnable.
+What his reactions taught, for whoever designs next: he judges from screenshots, in
+few words, and against polished consumer references. Flat hairline austerity — the
+documented "clinical standards register" look — reads to him as unfinished, not as
+restrained. Rounded corners (xl/2xl), soft shadows, card surfaces and small functional
+icons are now deliberately in, on his instruction.
 
-The Gmail app password for `ibdmsid@gmail.com` has **not** been created yet, and when it
-is, MSID should paste it straight into Vercel. It should not be sent through chat, and it
-does not belong in this repository.
-
----
-
-## Content is imported by script, not typed into the admin
-
-This is the single most important convention to preserve, and it is easy to break by
-accident because the admin interface works perfectly well.
-
-The 50,000₮ membership fee was originally a hand-edit against the local database. That
-meant it existed on one laptop and nowhere else, and would have been discovered missing
-the first time somebody compared the live site to what MSID had been told. It is now in
-`import-assets.mts`, guarded so a re-run does not append it twice.
-
-Three scripts own the content MSID supplied, and each is idempotent, so a correction is
-just a re-run:
-
-| Script | Owns | Takes |
-| --- | --- | --- |
-| `npm run import:board` | The sixteen board members | `--photo "Name En=/path.jpg"`, repeatable |
-| `npm run import:assets` | President's greeting, membership fee, UC guideline | `--guideline "/path.pdf"` |
-| `npm run import:events` | The three past events and their covers | `--aocc`, `--ddweek`, `--taiwan` |
-
-They resize images themselves via `scripts/lib/store-file.mts` (sharp — portraits to
-960×1200, covers to 1600×900), so they take the **original** file MSID sent. That is
-deliberate: a pre-resized copy in a temp directory will not exist the next time these run.
-
-To run any of them against production, export the three variables first — without
-`BLOB_READ_WRITE_TOKEN` the photographs are written to a local disk Vercel cannot read
-and the database ends up holding `/uploads/…` paths that resolve to nothing:
-
-```bash
-export TURSO_DATABASE_URL='libsql://…'
-export TURSO_AUTH_TOKEN='…'
-export BLOB_READ_WRITE_TOKEN='vercel_blob_rw_…'
-```
-
-**One import has not been run against production yet.** The Taiwan–Mongolian conference
-was added in `92d296e` but the live database does not have it:
-
-```bash
-npm run import:events -- --taiwan "/Users/chinbold/Downloads/fwdhi/IMG_1519.jpg"
-```
+**DESIGN.md is now stale where it disagrees with this**: its hero clause (drenched
+copper), shape rules (radius stops at 10px), elevation rules (no shadows), and the
+"rules over cards" doctrine. If version 4 survives his review and ships, update
+DESIGN.md to match reality; if he rejects it, `git checkout -- src/app/[locale]/(site)/page.tsx`
+returns to the committed light split hero and DESIGN.md needs only the hero clause
+revisited.
 
 ---
 
-## The rule the content follows
+## What shipped this session (commits `c91c97c`…`9cc5c06`)
 
-Nothing on this site is inferred. Every fact came from a document MSID sent, a banner in
-a photograph, or a slide on a screen — and where a detail could not be read, the field
-was left empty rather than filled with something plausible. This is a clinical standards
-body's public record; a confidently wrong date is worse than a missing one.
+- **Membership page**: three grounds (paper → ink-50 → copper CTA band), category
+  descriptions moved from hardcoded JSX into the dictionary.
+- **President's letter**: portrait beside a three-line sign-off at the foot (the
+  KASID-letter convention); `Prose` now preserves single newlines site-wide
+  (`whitespace-pre-line`) — that fix is what un-collapsed the signature.
+- **History**: the year no longer prints twice per row (`formatDayMonth` in
+  `src/lib/format.ts`).
+- **Guidelines register**: capped at `max-w-4xl` so the status pill sits with its
+  record instead of stranded at the page edge.
+- **Event galleries**: `EventGallery` is a crossfade carousel in the hero's dialect
+  (7s, segments with elapsed-time fill, pause on hover/dialog, reduced-motion),
+  no visible heading, click-to-enlarge dialog kept.
+- **Event pages**: an event with no body/photos/programme shows an EmptyState instead
+  of a void beside the registration sidebar.
+- **Footer**: brand + contact only. Quick links duplicated the sticky masthead;
+  partners duplicated the homepage section directly above. Chinguun's explicit call.
+- **Import safety** (`scripts/import-event-photos.mts`): re-runs no longer overwrite
+  alt text/captions unless flags are passed, and `sort` appends after the event's
+  current highest instead of restarting at 1. Both fixes exist so a future admin
+  editor's corrections survive re-imports.
 
-Three examples, so the rule is concrete rather than decorative:
+## Production state — partly unverified
 
-- **Board term dates were removed.** They had been derived from the founding date, which
-  is a guess wearing a fact's clothes. A date printed under a real person's name should
-  be one somebody supplied.
-- **The DDWeek venue is blank.** The photograph identified the session and the date; it
-  did not identify the hall.
-- **The whole Taiwan event came off a banner.** Title, three session topics, date, hours
-  and floor are all printed in `IMG_1519`; the hybrid format comes from a Zoom title bar
-  reading "IBD Joint meeting FCHM and NTUH" in `IMG_1505`.
+Done and confirmed on 5 August: **both leaked credentials rotated** (Blob and Turso,
+via Vercel's managed rotation, zero-delay expiry — the handover item from 4 August is
+closed). The Gmail app password still does not exist.
 
-The one place the President's own words were altered: the greeting named October 2023 as
-the founding, while the state registration is 5 March 2024. Both are true — founded as an
-initiative, registered as an NGO the following March — and Chinguun agreed to reconcile
-them into one sentence rather than pick one. That was raised explicitly rather than done
-quietly, and any future edit to a named person's words deserves the same.
+Done by Chinguun, **never verified from this machine** (the sandbox blocked curl and
+deploys): the `vercel --prod` redeploy after rotation, and the Taiwan event import
+against production. Before trusting either, check: the live site loads at all (proves
+the redeploy), and `msidwebsite.vercel.app/en/events` lists `taiwan-mongolia-ibd-2024`
+(proves the import). The board-portrait import for the President
+(`npm run import:board -- --photo "Bayarmaa O.=fwdhi/IMG_7477.jpeg"`) was prepared but
+never confirmed run — the greeting page shows her portrait only if production has it.
 
----
+**Event photos exist only locally.** Production `event_photos` is empty. The local
+database has Taiwan (IMG_1505/1496/1515) and DD Week (IMG_9547/9542) galleries — but
+two rows carry colliding `sort=1` values from before the append fix, so clear and
+re-import locally (or renumber) before treating local as the rehearsal for the
+production run. Local also still has the demo rows — `npm run demo:clear` — which is
+why screenshots keep showing a 2027 congress that does not exist.
 
-## Waiting on MSID
+## Mongolian pending Chinguun's review
 
-| | What | What it blocks |
-| --- | --- | --- |
-| ☐ | Gmail app password for `ibdmsid@gmail.com` | Every email the site sends. Until it exists, sends are skipped with a log line and the reset page says so. |
-| ☐ | A domain | Search engines, canonical URLs, links inside emails. |
-| ☐ | Bank details — bank, account number, holder | A participant registering for a paid event is told the Society will send payment details separately. |
-| ☐ | 14 remaining board portraits | Two of sixteen have photographs. |
-| ☐ | Remaining page text | Түүхэн замнал, further Эмнэлзүйн заавар, Эрдэм шинжилгээ, Түншүүд. |
+- `Дэлгэрэнгүй мэдээлэл хараахан нийтлэгдээгүй байна.` (events.noDetails — composed
+  from already-reviewed patterns, still new).
+- The six photo alt texts written into the local gallery import (read off the
+  photographs; the DD Week slide one names Э.Бат-Өлзий from the slide itself).
 
----
+## Facts learned from the photographs, not yet acted on
 
-## Open questions for MSID
+- `Taiwan/IMG_1515` (auditorium group photo) is provably the Taiwan venue: its wall
+  motto `ХҮН ЧАНАР БОЛ ДОТООД НЭР ТӨР` pairs with `НЭР ТӨР БОЛ ГАДААД ХҮН ЧАНАР`
+  behind the banners in IMG_1519.
+- `DD week/IMG_9547`: the slide names Bat-Ulzii E. (FCHM colorectal surgery head)
+  presenting — a fact off the slide, safe to use.
+- The 11 September front row: unconfirmed observation, the woman in the tan suit in
+  IMG_1519 resembles the President's portrait and the same person sits at the chairs'
+  table in IMG_9551. **Do not ship this** — it is face-recognition inference; ask MSID,
+  who should also be asked the panel name plates (CHEIN-CHIH TUNG, O.ANAR,
+  …URNULTSAIKHAN).
+- The endoscopy group photo (`fwdhi/International_event.JPG`) remains unattributed —
+  still nowhere honest to put it.
 
-- **Who is who in the 11 September front row?** The event is identified beyond doubt, but
-  the four people photographed against the banner are not. Worth asking, because the hero
-  caption could credit them. The panel name plates read CHEIN-CHIH TUNG, O.ANAR and a
-  third ending `…URNULTSAIKHAN`.
-- **The endoscopy suite group photograph is still unattributed.** No banner, no slide, no
-  date on anything visible. It is a good photograph with nowhere honest to put it.
+## Still missing, still true from last time
 
----
-
-## Things that will bite you
-
-- **Migrations are an array, not files.** `MIGRATIONS` in `src/lib/db/index.ts`, applied
-  on connect. Three entries so far, all confirmed applied to production. Adding a column
-  means adding an entry, not writing SQL by hand against Turso.
-- **Never call `audit()` inside a transaction.** The module-level helper takes a fresh
-  connection, which deadlocks against the open transaction with `SQLITE_BUSY`. This broke
-  membership approval outright and silently for several commits. Use `auditTx(tx, …)` —
-  see [src/lib/actions/admin.ts:457](src/lib/actions/admin.ts:457), where the reason is
-  written down next to the call.
-- **`MSID_SITE_URL`, never `NEXT_PUBLIC_SITE_URL`.** Next.js freezes `NEXT_PUBLIC_*` into
-  the bundle at build time, so a value set in the runtime environment is silently ignored
-  and the site reports whatever the build machine had. The un-prefixed name is settable
-  after the build. `NEXT_PUBLIC_SITE_URL` is still honoured as a fallback.
-- **Do not export anything from a `"use server"` module that is not meant to be an
-  endpoint.** Every export becomes callable over the network. `relationOptions()` was
-  moved to `src/lib/admin/options.ts` for exactly this reason.
-- **The admin guide has one source.** `docs/admin-guide.html` is canonical; the PDF is
-  generated from it with `npm run guide:pdf` (headless Chrome). Editing `ГАРЫН-АВЛАГА.md`
-  or the PDF directly will be overwritten.
-- **Mongolian is reviewed by Chinguun, not by me.** Corrections already applied include
-  контентийг (not контентыг — a front-vowel loanword takes -ийг) and "хуудсан дээр шууд
-  харагдана" in place of "хуудсанд шууд тусна". Propose Mongolian copy; do not consider it
-  settled until he has read it.
-
----
-
-## Going public
-
-The mechanism is better than it looks. `isNoIndex()` in
-[src/lib/site.ts:70](src/lib/site.ts:70) refuses indexing for any `*.vercel.app` origin.
-**Adding a real domain in Vercel flips indexing on by itself** — Vercel starts reporting
-the custom domain as the production URL, the `.vercel.app` test stops matching, and
-`robots.txt` opens up.
-
-Set `MSID_SITE_URL` anyway, to pin the origin so canonical tags, the sitemap, Open Graph
-images and the links inside emails cannot drift onto a deployment hash. `MSID_NOINDEX=0`
-is belt and braces.
-
-What not to do: set `MSID_NOINDEX=0` while still on `msidwebsite.vercel.app`. It works —
-the explicit value beats the domain rule — but it teaches Google that a Mongolian medical
-society lives at a vercel.app subdomain, and then moves. Get the domain first.
-
----
-
-## Also worth doing, nobody blocked
-
-- **Add `ibdmsid@gmail.com` as an owner on Vercel and on Turso.** Both accounts are
-  currently personal to Chinguun. If he is unreachable for a fortnight the site cannot be
-  redeployed and the database cannot be reached, and no backup helps — a backup of a
-  database nobody can restore into is a file. Five minutes, and it is step 4 of
-  [LAUNCH.md](LAUNCH.md).
-- **Backups from the first real member or registration, not before.** A backup of seeded
-  content is ceremony. A scheduled `turso db dump` into a private repository is about
-  twenty lines of GitHub Action.
-- The three remaining audit findings, in [AUDIT.md](AUDIT.md): the unauthenticated
-  registration lookup, on-demand rendering of every public page, and SVG uploads.
+The event-photo admin editor (alt text and captions are script-only until it exists —
+follow the fees/sessions pattern on the event edit page, **not** the resource
+registry); the Gmail app password; a domain; bank details; 14 of 16 board portraits;
+the remaining page text. The "Things that will bite you" and "Going public" sections
+of the 4 August handover remain accurate — MIGRATIONS array, `auditTx` inside
+transactions, `MSID_SITE_URL`, no stray exports from `"use server"` modules, admin
+guide sourced from `docs/admin-guide.html`, and the noindex mechanism.
