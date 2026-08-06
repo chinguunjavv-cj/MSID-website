@@ -21,7 +21,18 @@ export async function Footer({ locale }: { locale: Locale }) {
 
   return (
     <footer className="on-dark mt-24 border-t-2 border-copper-600">
-      <div className="shell grid gap-12 py-14 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)] md:gap-16 md:py-16">
+      {/*
+        Partners are a column of their own, beside the quick links rather than stacked
+        beneath them. On mid-width screens the four columns wrap into a 2×2; the wide
+        template only exists when there are partners to fill it.
+      */}
+      <div
+        className={`shell grid gap-12 py-14 md:grid-cols-2 md:gap-16 md:py-16 ${
+          partners.length > 0
+            ? "lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
+            : "lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)]"
+        }`}
+      >
         <div>
           <div className="flex items-center gap-3">
             {/* The mark is a copper logo on white; a paper tile keeps it legible on ink. */}
@@ -102,30 +113,30 @@ export async function Footer({ locale }: { locale: Locale }) {
               </li>
             ))}
           </ul>
-
-          {partners.length > 0 && (
-            <>
-              <h2 className="mt-8 text-label font-semibold text-paper">
-                {t.footer.partners}
-              </h2>
-              <ul className="mt-4 space-y-2.5 text-small">
-                {partners.map((partner) => (
-                  <li key={partner.id}>
-                    <a
-                      href={safeExternalLink(partner.url) ?? "#"}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      className="text-ink-300 transition-colors duration-100 hover:text-paper"
-                      title={tr(partner, "name", locale)}
-                    >
-                      {partner.acronym || tr(partner, "name", locale)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
         </div>
+
+        {partners.length > 0 && (
+          <div>
+            <h2 className="text-label font-semibold text-paper">
+              {t.footer.partners}
+            </h2>
+            <ul className="mt-4 space-y-2.5 text-small">
+              {partners.map((partner) => (
+                <li key={partner.id}>
+                  <a
+                    href={safeExternalLink(partner.url) ?? "#"}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                    className="text-ink-300 transition-colors duration-100 hover:text-paper"
+                    title={tr(partner, "name", locale)}
+                  >
+                    {partner.acronym || tr(partner, "name", locale)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-white/10">
