@@ -9,9 +9,11 @@ import {
   countEventRegistrations,
   getEventBySlug,
   listEventFees,
+  listEventPhotos,
   listEventSessions,
   registrationState,
 } from "@/lib/queries";
+import { EventGallery } from "@/components/site/EventGallery";
 import {
   daysUntil,
   formatDate,
@@ -63,10 +65,11 @@ export default async function EventPage({
 
   const t = getDictionary(locale);
   // Independent of each other; one round trip's worth of latency, not three.
-  const [fees, sessions, taken] = await Promise.all([
+  const [fees, sessions, taken, photos] = await Promise.all([
     listEventFees(event.id),
     listEventSessions(event.id),
     countEventRegistrations(event.id),
+    listEventPhotos(event.id),
   ]);
   const state = registrationState(event);
   const remaining = event.capacity ? Math.max(0, event.capacity - taken) : null;
@@ -124,14 +127,20 @@ export default async function EventPage({
         }
       />
 
+      {/*
+        Shown whole, at its own aspect ratio, rather than cropped to a 16:9 band. These
+        are group photographs taken at banners — the crop that makes a tidy header band
+        is the crop that takes the delegates' heads off. Capped in width so a 4:3 frame
+        does not occupy the entire screen before a word of the record is read.
+      */}
       {event.cover_image && (
         <div className="shell -mt-px pt-10">
           <Image
             src={event.cover_image}
             alt={tr(event, "cover_alt", locale)}
             width={1600}
-            height={900}
-            className="aspect-video w-full object-cover"
+            height={1200}
+            className="h-auto w-full max-w-4xl"
             priority
           />
         </div>
@@ -145,6 +154,20 @@ export default async function EventPage({
             )}
 
             <Prose body={tr(event, "body", locale)} />
+
+            <EventGallery
+              photos={photos.map((photo) => ({
+                id: photo.id,
+                image: photo.image,
+                alt: tr(photo, "alt", locale) || tr(event, "title", locale),
+                caption: tr(photo, "caption", locale),
+              }))}
+              labels={{
+                heading: t.events.gallery,
+                enlarge: t.events.enlarge,
+                close: t.events.close,
+              }}
+            />
 
             {event.video_url && (
               <VideoEmbed

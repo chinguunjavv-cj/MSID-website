@@ -101,6 +101,10 @@ export function SectionHead({
 /**
  * Renders admin-authored plain text as paragraphs. Content is stored as text and never
  * as HTML, so there is nothing to sanitise and no injection surface.
+ *
+ * Single newlines inside a paragraph are preserved as line breaks. Blank lines separate
+ * paragraphs; a single newline is a deliberate break by whoever wrote the text, and
+ * collapsing it ran the President's three-line sign-off together into one sentence.
  */
 export function Prose({
   body,
@@ -115,7 +119,9 @@ export function Prose({
   return (
     <div className={`reading measure ${className}`}>
       {paragraphs.map((paragraph, index) => (
-        <p key={index}>{paragraph}</p>
+        <p key={index} className="whitespace-pre-line">
+          {paragraph}
+        </p>
       ))}
     </div>
   );

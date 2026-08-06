@@ -49,7 +49,14 @@ export default async function GuidelinesPage({
                 <h2 className="text-label font-semibold text-ink-600">
                   {t.guidelines.status.published}
                 </h2>
-                <div className="register mt-4">
+                {/*
+                  Capped rather than run to the full 1200px shell. The title column is
+                  limited to 62ch, so across a full-width row the status pill and version
+                  ended up stranded at the far right edge, a hand's width from the record
+                  they describe. Left-aligned, not centred, so it still lines up with the
+                  page title above.
+                */}
+                <div className="register mt-4 max-w-4xl">
                   {inForce.map((guideline) => (
                     <GuidelineRow
                       key={guideline.id}
@@ -66,7 +73,14 @@ export default async function GuidelinesPage({
                 <h2 className="text-label font-semibold text-ink-600">
                   {t.guidelines.status.superseded}
                 </h2>
-                <div className="register mt-4">
+                {/*
+                  Capped rather than run to the full 1200px shell. The title column is
+                  limited to 62ch, so across a full-width row the status pill and version
+                  ended up stranded at the far right edge, a hand's width from the record
+                  they describe. Left-aligned, not centred, so it still lines up with the
+                  page title above.
+                */}
+                <div className="register mt-4 max-w-4xl">
                   {superseded.map((guideline) => (
                     <GuidelineRow
                       key={guideline.id}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
@@ -27,7 +28,7 @@ import {
 } from "@/components/ui/Primitives";
 import { EventRow_, GuidelineRow, NewsRow } from "@/components/site/records";
 import { MsidMark } from "@/components/site/Mark";
-import { HeroCarousel, type HeroSlide } from "@/components/site/HeroCarousel";
+import type { HeroSlide } from "@/components/site/HeroCarousel";
 import { safeExternalLink } from "@/lib/video";
 
 export default async function HomePage({
@@ -107,12 +108,15 @@ export default async function HomePage({
   const nextDays = next ? daysUntil(next.starts_on) : null;
 
   /*
-    The hero's message. Held in one place because it renders identically whether or not
-    there are photographs behind it — with slides it becomes the carousel's children, so
-    that the slide caption lays out beneath it rather than on top of it.
+    The photograph that leads the hero. One, not a rotation: the rest of the Society's
+    photographs now live on the events they document, captioned and shown whole, which is
+    a better home for a record than a panel that slides away after four seconds.
   */
+  const lead = heroSlides[0];
+
+  /* The hero's message. Sits in its own column beside the photograph, never on top of it. */
   const heroContent = (
-    <div className="shell relative py-16 md:py-24 lg:py-28">
+    <div className="relative">
       <h1 className="animate-settle max-w-[15ch] text-display font-extrabold text-paper">
         {heroHeadline}
       </h1>
@@ -141,43 +145,68 @@ export default async function HomePage({
   return (
     <>
       {/* ---------------------------------------------------------------- */}
-      {/* Hero — copper-drenched, with MSID's own mark as the art direction */}
+      {/* Hero — copper-drenched, the photograph beside the type            */}
       {/* ---------------------------------------------------------------- */}
+      {/*
+        The photograph used to run full-bleed behind the headline. It cannot: DESIGN.md
+        requires an ink multiply overlay so overlaid type clears 4.5:1, and these are
+        record photographs whose entire value is that the banner, the slide and the faces
+        can be read. The overlay that makes the headline legible is the thing that
+        destroys the evidence underneath it. Side by side, both are legible and neither is
+        cropped.
+      */}
       <section className="on-copper relative overflow-hidden">
         {/*
           The photographs cover this panel only. Scoped to the whole section they also
           ran under the "what is next" strip below, and the slide's caption landed on top
           of the congress date — two different facts in the same 56 pixels.
         */}
-        <div className="relative">
-          {heroSlides.length > 0 ? (
-            <HeroCarousel
-              slides={heroSlides}
-              labels={{
-                region:
-                  locale === "mn"
-                    ? "Нийгэмлэгийн үйл ажиллагаа"
-                    : "The Society at work",
-                showSlide: locale === "mn" ? "Зураг харуулах" : "Show",
-              }}
-            >
-              {heroContent}
-            </HeroCarousel>
-          ) : (
-            <>
-              {/*
-                No photograph uploaded yet: the society's own mark carries the panel.
-                Held at low opacity so it reads as a watermark behind the type rather
-                than as a picture competing with it — the headline still clears 4.5:1
-                over the darkest part of the mark.
-              */}
-              <MsidMark
+        {/*
+          No photograph uploaded yet: the society's own mark carries the panel. Held at
+          low opacity so it reads as a watermark behind the type rather than as a picture
+          competing with it — the headline still clears 4.5:1 over its darkest part.
+        */}
+        {!lead && (
+          <MsidMark
+            priority
+            className="pointer-events-none absolute -top-20 -right-28 w-[46rem] max-w-none md:-right-16 md:w-[58rem]"
+            imageClassName="opacity-[0.17]"
+          />
+        )}
+
+        <div className="shell relative grid items-center gap-10 py-16 md:py-20 lg:grid-cols-[minmax(0,1fr)_26rem] lg:gap-16 lg:py-24">
+          {heroContent}
+
+          {lead && (
+            <figure className="animate-settle" style={{ animationDelay: "120ms" }}>
+              <Image
+                src={lead.image}
+                alt={lead.alt}
+                width={1200}
+                height={900}
                 priority
-                className="pointer-events-none absolute -top-20 -right-28 w-[46rem] max-w-none md:-right-16 md:w-[58rem]"
-                imageClassName="opacity-[0.17]"
+                className="h-auto w-full"
               />
-              {heroContent}
-            </>
+              {(lead.label || lead.meta) && (
+                <figcaption className="mt-3 text-small">
+                  {lead.href && lead.label ? (
+                    <Link
+                      href={lead.href}
+                      className="font-semibold text-paper hover:underline"
+                    >
+                      {lead.label}
+                    </Link>
+                  ) : (
+                    lead.label && (
+                      <span className="font-semibold text-paper">{lead.label}</span>
+                    )
+                  )}
+                  {lead.meta && (
+                    <span className="mt-0.5 block text-paper/80">{lead.meta}</span>
+                  )}
+                </figcaption>
+              )}
+            </figure>
           )}
         </div>
 

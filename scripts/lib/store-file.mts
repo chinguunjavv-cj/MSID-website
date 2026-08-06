@@ -29,12 +29,27 @@ const EXTENSIONS: Record<string, string> = {
   "application/pdf": ".pdf",
 };
 
-/** Target shapes, matching the boxes the pages actually render them in, at 2×. */
+/**
+ * Target shapes.
+ *
+ * Only portraits are cropped. Everything else is resized to fit inside a box with its
+ * aspect ratio intact, because these photographs are the Society's record of its own
+ * activity and the stored file should be the photograph, not one page's opinion of it.
+ *
+ * `cover` used to crop to 1600×900. Every photograph MSID sends is 4:3 off a phone, so
+ * that discarded a quarter of the frame — and `position: "attention"` picks the
+ * highest-entropy region, which on a group-standing-at-a-banner shot is the printed
+ * banner rather than the faces. The delegates lost their heads before the file was ever
+ * written, and no amount of CSS could get them back. Pages that want 16:9 now crop in
+ * CSS, where the choice is reversible.
+ */
 const SHAPES = {
-  /** Board portraits — the grid is aspect-4/5 at 480×600. */
-  portrait: { width: 960, height: 1200 },
-  /** Event and hero covers — aspect-video at 1600×900. */
-  cover: { width: 1600, height: 900 },
+  /** Board portraits — the grid is aspect-4/5 at 480×600, and a face crop is the point. */
+  portrait: { width: 960, height: 1200, crop: true },
+  /** Event and hero covers — long edge 1600, aspect ratio preserved. */
+  cover: { width: 1600, height: 1600, crop: false },
+  /** Gallery photographs — shown whole and enlargeable, so they keep more resolution. */
+  photo: { width: 2200, height: 2200, crop: false },
 } as const;
 
 export type Shape = keyof typeof SHAPES;
@@ -56,7 +71,15 @@ export async function storeFile(
   const reshape = shape && mime.startsWith("image/") && mime !== "image/svg+xml";
   const bytes = reshape
     ? await sharp(original)
-        .resize({ ...SHAPES[shape], fit: "cover", position: "attention" })
+        .resize({
+          width: SHAPES[shape].width,
+          height: SHAPES[shape].height,
+          ...(SHAPES[shape].crop
+            ? { fit: "cover" as const, position: "attention" }
+            : // Never enlarge: a small original stays its own size rather than being
+              // upscaled into softness.
+              { fit: "inside" as const, withoutEnlargement: true }),
+        })
         .jpeg({ quality: 82, mozjpeg: true })
         .toBuffer()
     : original;

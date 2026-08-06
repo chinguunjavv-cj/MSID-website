@@ -260,6 +260,19 @@ export interface BoardMember {
   sort: number;
 }
 
+/** A photograph documenting an event. Shown whole; the event supplies its date and place. */
+export interface EventPhoto {
+  id: string;
+  event_id: string;
+  image: string;
+  alt_mn: string;
+  alt_en: string;
+  caption_mn: string;
+  caption_en: string;
+  sort: number;
+  created_at: string;
+}
+
 export interface Partner {
   id: string;
   name_mn: string;

@@ -91,6 +91,29 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id);
     `,
   },
+  {
+    /*
+      Photographs belong to the event they document, not to a gallery of their own.
+      Attached this way each one inherits that event's date, place and name, so a
+      caption never has to assert something nobody can verify — which is the whole
+      difficulty with the Society's photographs.
+    */
+    id: "2026-08-05-event-photos",
+    sql: `
+      CREATE TABLE IF NOT EXISTS event_photos (
+        id         TEXT PRIMARY KEY,
+        event_id   TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        image      TEXT NOT NULL DEFAULT '',
+        alt_mn     TEXT NOT NULL DEFAULT '',
+        alt_en     TEXT NOT NULL DEFAULT '',
+        caption_mn TEXT NOT NULL DEFAULT '',
+        caption_en TEXT NOT NULL DEFAULT '',
+        sort       INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_event_photos_event ON event_photos(event_id, sort);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

@@ -14,7 +14,8 @@
     "guide:pdf": "node scripts/guide-pdf.mjs",
     "import:board": "node --env-file-if-exists=.env.local scripts/import-board.mts",
     "import:assets": "node --env-file-if-exists=.env.local scripts/import-assets.mts",
-    "import:events": "node --env-file-if-exists=.env.local scripts/import-events.mts"
+    "import:events": "node --env-file-if-exists=.env.local scripts/import-events.mts",
+    "import:photos": "node --env-file-if-exists=.env.local scripts/import-event-photos.mts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

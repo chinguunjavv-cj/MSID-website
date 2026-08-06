@@ -3,6 +3,7 @@ import { all, get, count } from "@/lib/db";
 import type {
   BoardMember,
   EventFee,
+  EventPhoto,
   EventRow,
   EventSession,
   Guideline,
@@ -374,6 +375,13 @@ export async function listBoardMembers(currentOnly = true): Promise<BoardMember[
 
 export async function getBoardMemberById(id: string): Promise<BoardMember | undefined> {
   return get<BoardMember>("SELECT * FROM board_members WHERE id = ?", id);
+}
+
+export async function listEventPhotos(eventId: string): Promise<EventPhoto[]> {
+  return all<EventPhoto>(
+    "SELECT * FROM event_photos WHERE event_id = ? ORDER BY sort, created_at",
+    eventId,
+  );
 }
 
 export async function listHistoryEntries(): Promise<HistoryEntry[]> {

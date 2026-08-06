@@ -4,7 +4,7 @@ import { tr } from "@/lib/db/types";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listHistoryEntries } from "@/lib/queries";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatDayMonth, parseDate } from "@/lib/format";
 import { EmptyState, PageHeader, Prose } from "@/components/ui/Primitives";
 
 export async function generateMetadata({
@@ -50,12 +50,20 @@ export default async function HistoryPage({
                   <p className="tabular text-h3 font-bold text-copper-700">
                     {entry.year}
                   </p>
+                  {/*
+                    The year already has a column of its own, so the date beneath it drops
+                    the year rather than printing "2024" twice within one row. It is only
+                    kept in full on the rare entry whose exact date falls in a different
+                    year from the one it is filed under.
+                  */}
                   {entry.happened_on && (
                     <time
                       dateTime={entry.happened_on}
                       className="tabular mt-1 block text-[0.8125rem] text-ink-600"
                     >
-                      {formatDate(entry.happened_on, locale)}
+                      {parseDate(entry.happened_on)?.getFullYear() === entry.year
+                        ? formatDayMonth(entry.happened_on, locale)
+                        : formatDate(entry.happened_on, locale)}
                     </time>
                   )}
                 </div>

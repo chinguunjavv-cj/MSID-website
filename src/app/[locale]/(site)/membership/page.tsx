@@ -5,7 +5,7 @@ import { tr } from "@/lib/db/types";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage } from "@/lib/queries";
-import { PageHeader, Prose, ProseList } from "@/components/ui/Primitives";
+import { PageHeader, ProseList } from "@/components/ui/Primitives";
 
 export async function generateMetadata({
   params,
@@ -44,64 +44,99 @@ export default async function MembershipPage({
         lead={tr(intro, "body", locale) || t.membership.lead}
       />
 
-      <div className="shell py-14 md:py-20">
-        <div className={`grid gap-14 md:gap-20 ${benefitsBody ? "md:grid-cols-2" : ""}`}>
-          {/* Only rendered when there is something to list — a heading with nothing
-              under it reads as a broken page, not as an empty one. */}
-          {benefitsBody && (
-            <section>
-              <h2 className="text-h3 font-bold">{t.membership.benefits}</h2>
-              <ProseList body={benefitsBody} />
-            </section>
-          )}
+      {/*
+        The page reads as one decision, top to bottom: what membership gives you, which
+        category you fall into, then how to apply. The three steps deliberately sit on
+        three different grounds — paper, ink-50, copper — so the eye can tell them apart
+        without a single decorative mark. Two equal columns of hairline rows was the old
+        shape, and it gave a persuasive list and a definitional register the same weight.
+      */}
 
-          <section>
-            <h2 className="text-h3 font-bold">{t.membership.types}</h2>
-            <dl className="register mt-6">
-              {types.map((type) => (
-                <div key={type} className="register-row md:grid-cols-[12rem_minmax(0,1fr)]">
-                  <dt className="font-semibold text-ink-900">
-                    {t.membership.type[type]}
-                  </dt>
-                  <dd className="text-ink-700">
-                    {
-                      {
-                        full: locale === "mn"
-                          ? "Гэдэсний эмгэгийн чиглэлээр ажилладаг мэргэжлийн эмч, эрдэмтэн."
-                          : "Physicians and researchers practising in intestinal disease.",
-                        associate: locale === "mn"
-                          ? "Холбогдох салбарын эмч, эрүүл мэндийн бусад мэргэжилтэн."
-                          : "Clinicians and health professionals in related fields.",
-                        trainee: locale === "mn"
-                          ? "Резидент эмч, магистр, докторант."
-                          : "Residents and postgraduate students.",
-                        honorary: locale === "mn"
-                          ? "Удирдах зөвлөлийн шийдвэрээр олгоно."
-                          : "Conferred by decision of the executive board.",
-                      }[type]
-                    }
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        </div>
+      {/* ---------------------------------------------------------------- */}
+      {/* What membership gives you                                         */}
+      {/* ---------------------------------------------------------------- */}
+      {/* A heading with nothing under it reads as a broken page, not an empty one. */}
+      {benefitsBody && (
+        <section className="shell py-14 md:py-20">
+          <h2 className="max-w-[20ch] text-h2 font-bold text-balance">
+            {t.membership.benefits}
+          </h2>
+          <div className="max-w-[64ch]">
+            <ProseList body={benefitsBody} />
+          </div>
+        </section>
+      )}
 
-        <div className="mt-16 border-t border-ink-200 pt-10">
-          <Link href={localePath(locale, "/membership/apply")} className="btn btn-primary">
-            {t.membership.apply}
-          </Link>
-          <p className="mt-4 text-small text-ink-600">
-            {t.auth.hasAccount}{" "}
-            <Link
-              href={localePath(locale, "/login")}
-              className="font-semibold text-copper-700 underline underline-offset-2"
-            >
-              {t.auth.login}
-            </Link>
-          </p>
+      {/* ---------------------------------------------------------------- */}
+      {/* Which category you fall into                                      */}
+      {/* ---------------------------------------------------------------- */}
+      {/*
+        The register is the signature component and this is what it is for: four defined
+        terms, aligned on one column, read down rather than across. On a tinted ground so
+        it separates from the benefits above without needing a card.
+      */}
+      <section className="bg-ink-50">
+        <div className="shell py-14 md:py-20">
+          <h2 className="max-w-[20ch] text-h2 font-bold text-balance">
+            {t.membership.types}
+          </h2>
+
+          <dl className="register mt-8">
+            {types.map((type) => (
+              <div
+                key={type}
+                className="register-row md:grid-cols-[minmax(11rem,15rem)_minmax(0,1fr)]"
+              >
+                <dt className="font-semibold text-ink-900">
+                  {t.membership.type[type]}
+                </dt>
+                <dd className="max-w-[56ch] text-ink-700 text-pretty">
+                  {t.membership.typeWho[type]}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
-      </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Apply                                                             */}
+      {/* ---------------------------------------------------------------- */}
+      {/*
+        The one primary action on the page, given a drenched ground of its own rather
+        than a lone button under a rule.
+
+        No supporting sentence here on purpose: what happens after you apply is already
+        stated in the admin-authored intro at the top. Restating it beside the button put
+        two near-identical Mongolian sentences on one screen.
+      */}
+      <section className="on-copper">
+        <div className="shell py-16 md:py-20">
+          <div className="flex flex-wrap items-center justify-between gap-x-12 gap-y-8">
+            <h2 className="max-w-[20ch] text-h2 font-bold text-balance">
+              {t.membership.applyTitle}
+            </h2>
+
+            <div className="shrink-0 md:text-right">
+              <Link
+                href={localePath(locale, "/membership/apply")}
+                className="btn btn-on-dark"
+              >
+                {t.membership.apply}
+              </Link>
+              <p className="mt-4 text-small">
+                {t.auth.hasAccount}{" "}
+                <Link
+                  href={localePath(locale, "/login")}
+                  className="font-semibold text-paper underline underline-offset-2"
+                >
+                  {t.auth.login}
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

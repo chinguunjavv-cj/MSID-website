@@ -46,6 +46,22 @@ export function formatDate(value: string | null | undefined, locale: Locale): st
     : `${d} ${EN_MONTHS[m - 1]} ${y}`;
 }
 
+/**
+ * "6 дугаар сарын 25" / "25 June" — the same date without its year.
+ *
+ * For places where the year is already stated in its own column and repeating it inside
+ * the date says the same thing twice.
+ */
+export function formatDayMonth(value: string | null | undefined, locale: Locale): string {
+  const date = parseDate(value);
+  if (!date) return "";
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  return locale === "mn"
+    ? `${m} ${monthParticle(m)} сарын ${d}`
+    : `${d} ${EN_MONTHS[m - 1]}`;
+}
+
 /** "2026.06.25" in both languages — for tables and register rows. */
 export function formatDateNumeric(value: string | null | undefined): string {
   const date = parseDate(value);

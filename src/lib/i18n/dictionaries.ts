@@ -105,6 +105,9 @@ const mn = {
     noPast: "Өнгөрсөн арга хэмжээний бүртгэл хараахан нэмэгдээгүй байна.",
     noNews: "Мэдээ хараахан нийтлэгдээгүй байна.",
     programme: "Хөтөлбөр",
+    gallery: "Гэрэл зураг",
+    enlarge: "Томруулах",
+    close: "Хаах",
     fees: "Оролцооны төлбөр",
     deadlines: "Чухал хугацаа",
     register: "Бүртгүүлэх",
@@ -263,6 +266,15 @@ const mn = {
       trainee: "Резидент, суралцагч",
       honorary: "Хүндэт гишүүн",
     },
+    /* Who each category is for. Lived inline in the page component until now, which put
+       two languages of content into JSX where the administrator could never reach it. */
+    typeWho: {
+      full: "Гэдэсний эмгэгийн чиглэлээр ажилладаг мэргэжлийн эмч, эрдэмтэн.",
+      associate: "Холбогдох салбарын эмч, эрүүл мэндийн бусад мэргэжилтэн.",
+      trainee: "Резидент эмч, магистр, докторант.",
+      honorary: "Удирдах зөвлөлийн шийдвэрээр олгоно.",
+    },
+    applyTitle: "Гишүүнээр элсэх",
     status: {
       pending: "Хүлээгдэж буй",
       active: "Хүчинтэй",
@@ -456,6 +468,9 @@ const en: Dictionary = {
     noPast: "No past events have been recorded yet.",
     noNews: "No news has been published yet.",
     programme: "Programme",
+    gallery: "Photographs",
+    enlarge: "Enlarge",
+    close: "Close",
     fees: "Registration fees",
     deadlines: "Key dates",
     register: "Register",
@@ -611,6 +626,13 @@ const en: Dictionary = {
       trainee: "Resident / trainee",
       honorary: "Honorary member",
     },
+    typeWho: {
+      full: "Physicians and researchers practising in intestinal disease.",
+      associate: "Clinicians and health professionals in related fields.",
+      trainee: "Residents and postgraduate students.",
+      honorary: "Conferred by decision of the executive board.",
+    },
+    applyTitle: "Become a member",
     status: {
       pending: "Pending",
       active: "Active",
