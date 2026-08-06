@@ -25,12 +25,19 @@ import { basename } from "node:path";
 import { get, newId, run } from "../src/lib/db/index.ts";
 import { mimeFor, storeFile } from "./lib/store-file.mts";
 
+/*
+  Alt text and captions are optional on a re-run, and that is the whole point. Once the
+  event editor can reach these fields, an administrator's correction has to survive the
+  next import — otherwise adding a ninth photograph silently reverts the typo somebody
+  fixed last week. Pass --alt-mn to overwrite deliberately; omit it to leave the words
+  as they are and replace only the image.
+*/
 interface Incoming {
   source: string;
-  altMn: string;
-  altEn: string;
-  captionMn: string;
-  captionEn: string;
+  altMn?: string;
+  altEn?: string;
+  captionMn?: string;
+  captionEn?: string;
 }
 
 /* Walks argv in order so each --photo collects the flags that follow it. */
@@ -46,13 +53,7 @@ function parse(argv: string[]): { slug: string; photos: Incoming[] } {
         i++;
         break;
       case "--photo":
-        photos.push({
-          source: value,
-          altMn: "",
-          altEn: "",
-          captionMn: "",
-          captionEn: "",
-        });
+        photos.push({ source: value });
         i++;
         break;
       case "--alt-mn":
@@ -93,7 +94,14 @@ if (!event) throw new Error(`No event with slug ${slug}`);
 let created = 0;
 let replaced = 0;
 
-for (const [index, photo] of photos.entries()) {
+/* Where the event's gallery currently ends, so new photographs append rather than collide. */
+const highest = await get<{ top: number | null }>(
+  "SELECT MAX(sort) AS top FROM event_photos WHERE event_id = ?",
+  event.id,
+);
+let nextSort = (highest?.top ?? 0) + 1;
+
+for (const photo of photos) {
   const source = basename(photo.source);
   const stored = await storeFile(photo.source, mimeFor(photo.source), "photo");
 
@@ -108,15 +116,30 @@ for (const [index, photo] of photos.entries()) {
     `${source}:%`,
   );
 
-  const columns = {
-    image: stored,
-    alt_mn: photo.altMn,
-    alt_en: photo.altEn,
-    caption_mn: photo.captionMn,
-    caption_en: photo.captionEn,
-    sort: index + 1,
-  };
-  const keys = Object.keys(columns) as (keyof typeof columns)[];
+  /* Words only appear here when they were actually supplied on the command line. */
+  const words: Record<string, string> = {};
+  if (photo.altMn !== undefined) words.alt_mn = photo.altMn;
+  if (photo.altEn !== undefined) words.alt_en = photo.altEn;
+  if (photo.captionMn !== undefined) words.caption_mn = photo.captionMn;
+  if (photo.captionEn !== undefined) words.caption_en = photo.captionEn;
+
+  /*
+    A new photograph appends after whatever the event already has; an existing one keeps
+    the position it was given. Numbering from the position in argv restarted at 1 on every
+    run, so a second import collided with the first — two photographs both claiming sort 1,
+    and a gallery order decided by whichever row the database happened to return first.
+  */
+  const columns: Record<string, string | number> = existing
+    ? { image: stored, ...words }
+    : {
+        image: stored,
+        alt_mn: photo.altMn ?? "",
+        alt_en: photo.altEn ?? "",
+        caption_mn: photo.captionMn ?? "",
+        caption_en: photo.captionEn ?? "",
+        sort: nextSort++,
+      };
+  const keys = Object.keys(columns);
 
   if (existing) {
     await run(
