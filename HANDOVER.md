@@ -9,30 +9,21 @@ pages error-free in both locales.
 
 ---
 
-## Do this first: the production content sync is READY but NOT RUN
+## The production content sync is DONE (evening, 9 Aug)
 
-Production Turso is missing content that exists locally. The four commands are written,
-verified against the production schema, idempotent, and sitting in the transcript with
-Run buttons. The auto-mode classifier blocks Claude from running them (production
-writes); **Chinguun runs them himself**, or approves each prompt.
+Production now matches local for real content: all three events with corrected covers
+(taiwan-mongolia-ibd-2024 created; AOCC and DDWeek covers re-cut from originals), six
+event photos with reviewed alt text, three partner logos, and the mission-page
+photograph. Verified live in both the database and the served HTML, no error digests.
 
-They are, in order:
-
-1. `import-events.mts` with three `--cover` flags — creates the missing
-   **taiwan-mongolia-ibd-2024** event and replaces both mis-cropped covers
-   (AOCC: sky removed; DDWeek: ceiling removed — both re-cut from originals in
-   `fwdhi/`, anchored to the bottom edge so nobody loses their feet)
-2. `import-event-photos.mts --event taiwan-mongolia-ibd-2024` — 3 photos + alts
-3. `import-event-photos.mts --event ddweek-2024-ibd` — 3 photos incl. the
-   endoscopy-room group photo
-4. `import-partner-logos.mts` — KASID / AOCC / ECCO to Blob + `partners.logo`
-
-After those: the **mission-page photo has no script** — set `pages.image` +
-`image_alt_mn/en` for `about.mission` via storeFile (the local values to copy are in the
-local DB). Then hard-reload (`Cmd+Shift+R`) before judging.
-
-All sources live in `public/uploads/` locally; `.env.production.local` now holds **real**
-Turso + Blob credentials (Chinguun pasted them 9 Aug; file is gitignored).
+It took three failed rounds to get there, and the failure is worth remembering:
+**`@vercel/blob` prefers OIDC over `BLOB_READ_WRITE_TOKEN`, and in a repo linked to
+Vercel (`.vercel/project.json`) it mints itself a fresh OIDC token through the
+logged-in CLI — commenting `VERCEL_OIDC_TOKEN` out of the env file changes nothing.**
+Local runs then die with BlobOidcEnvironmentNotAllowedError. The fix (`9082875`) passes
+`token:` explicitly in `scripts/lib/store-file.mts`; any new script that calls `put()`
+must do the same. Also: the auto-mode classifier blocks Claude from running production
+writes — Chinguun runs the commands in his own terminal.
 
 ### Trap that already bit once
 `db()` **bootstraps an admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` on connect.** With the
