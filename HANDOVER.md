@@ -36,6 +36,14 @@ values. Real admins: chinguunjavv@gmail.com, admin@msid.mn.
 
 ## What shipped today (all on main)
 
+Late additions, reviewed and approved live ("all good"): the homepage gallery fills
+its column (26rem cap removed), the partners sit in an even 4-column grid, and the
+**First Central Hospital of Mongolia (FCHM)** joined the partners in both databases
+with its 1925 seal (`public/brand/partner-fchm.png`, kind `government`, name as the
+site's footer writes it — Chinguun saw the seal's variant spelling and kept ours).
+Commits `b0abf7d`, `17cfba7`.
+
+
 - **`5d67310`** — membership section back on the landing page (Restrained language, not
   the old copper band); `pages.image` + bilingual alt (migration `2026-08-09-page-image`,
   auto-applies — already applied to prod by the live site); partner logos cropped +
