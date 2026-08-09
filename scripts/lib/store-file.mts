@@ -95,6 +95,13 @@ export async function storeFile(
       access: "public",
       contentType: finalMime,
       addRandomSuffix: false,
+      /*
+        Explicit, not ambient. In a repo linked to Vercel (`.vercel/project.json`),
+        the SDK prefers OIDC and will mint itself a token via the logged-in CLI —
+        then fail, because OIDC is not enabled for local runs. Passing the token
+        short-circuits that resolution entirely.
+      */
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
     return blob.url;
   }
