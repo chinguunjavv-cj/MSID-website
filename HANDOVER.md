@@ -1,130 +1,104 @@
-# Handover — 8 August 2026
+# Handover — 9 August 2026
 
-One long design session with Chinguun, working through the public site. **Nothing is
-committed.** 22 modified files, ~785 insertions. Typecheck clean, every public page
-returns 200 in both locales.
-
----
-
-## The decision that governs everything else
-
-The site was running **two visual languages at once** — the flat "register" (hairlines,
-tabular numerals) and a card language (rounded corners, shadows, tinted grounds). Each
-pass had been adding to one or the other, so nothing was wrong on its own and the whole
-read as noise. Chinguun's words: *"The website design is now mess."*
-
-It is now committed to **Restrained**:
-
-- **Paper is the ground.** Structure comes from hairlines and type, not from cards,
-  shadows or tints.
-- **Copper is the only accent.** Ink is reserved for the masthead strip and the footer —
-  the frame around the page, never a section inside it.
-- One radius (`rounded-lg`), **zero shadows** on the public site, one section rhythm
-  (`py-12 md:py-16`).
-
-Measured before → after: 6 tinted surfaces → 1; 3 radii → 1; 2 shadow recipes → 0;
-4 spacing values → 1; 12 text styles → 10.
-
-**DESIGN.md is stale.** It still documents "Strategy: Committed" with copper occupying
-whole surfaces, a drenched hero, square corners and no shadows. None of that is true
-now. Rewriting it is the single highest-value cleanup left.
+The site went **public** today: https://msidwebsite.vercel.app (Vercel project
+`msid_website`). Chinguun switched off Vercel Authentication and deleted the broken
+duplicate project `msid-website` (hyphen) — if a hyphenated URL 404s with
+DEPLOYMENT_NOT_FOUND, that is the deleted duplicate, not a database problem. Everything
+is committed and pushed; `main` == `origin/main` at `c186903`, typecheck clean, live
+pages error-free in both locales.
 
 ---
 
-## What Chinguun decided (do not silently re-litigate)
+## Do this first: the production content sync is READY but NOT RUN
 
-These were argued, some more than once. He reaffirmed each; treat them as settled.
+Production Turso is missing content that exists locally. The four commands are written,
+verified against the production schema, idempotent, and sitting in the transcript with
+Run buttons. The auto-mode classifier blocks Claude from running them (production
+writes); **Chinguun runs them himself**, or approves each prompt.
 
-| Decision | Note |
-|---|---|
-| **No photograph in the hero** | Type only. The photographs moved beside the introduction |
-| **No guidelines register section on the landing page** | His reasoning: the register serves researchers, a narrower audience than the landing page. I argued against this twice — he reaffirmed with audience reasoning I don't have better information on |
-| **No membership section on the landing page** | Reachable from the hero button and the menu |
-| **Both hero buttons stay** | Гишүүнээр элсэх + Эмнэлзүйн заавар |
-| **Commissioner, not Nunito** | Nunito was tried and reverted — rounded terminals read friendly, wrong for a clinical standards body |
-| **Plus Jakarta Sans is impossible** | Ships `cyrillic-ext` but **not** base `cyrillic`, so А–я would fall back to a system font while only Ө/Ү rendered in the brand face. Verified in `node_modules/next/dist/compiled/@next/font/dist/google/font-data.json` — check that file before ever proposing a font |
-| **Filled copper is `copper-600`, not 700** | 700 is a step darker than the logo and reads brown; 600 ≈ the logo body `#A85423`, and passes AA at 5.16:1 |
-| **Bottom tab bar on mobile** | Was gated on `pointer: coarse` so it was invisible in every desktop browser — now width-based |
+They are, in order:
 
-**He notices duplication instantly.** Three separate duplications were caught this
-session (quick-link cards repeating the sections below them verbatim; the empty-events
-notice appearing in both hero and congress section; the mobile menu listing each
-section's landing page twice because every parent's `href` *is* its first child's).
-A DOM sweep for repeated strings now returns empty — worth re-running after any change.
+1. `import-events.mts` with three `--cover` flags — creates the missing
+   **taiwan-mongolia-ibd-2024** event and replaces both mis-cropped covers
+   (AOCC: sky removed; DDWeek: ceiling removed — both re-cut from originals in
+   `fwdhi/`, anchored to the bottom edge so nobody loses their feet)
+2. `import-event-photos.mts --event taiwan-mongolia-ibd-2024` — 3 photos + alts
+3. `import-event-photos.mts --event ddweek-2024-ibd` — 3 photos incl. the
+   endoscopy-room group photo
+4. `import-partner-logos.mts` — KASID / AOCC / ECCO to Blob + `partners.logo`
 
----
+After those: the **mission-page photo has no script** — set `pages.image` +
+`image_alt_mn/en` for `about.mission` via storeFile (the local values to copy are in the
+local DB). Then hard-reload (`Cmd+Shift+R`) before judging.
 
-## Current homepage
+All sources live in `public/uploads/` locally; `.env.production.local` now holds **real**
+Turso + Blob credentials (Chinguun pasted them 9 Aug; file is gitignored).
 
-```
-Hero  →  Нийгэмлэгийн тухай + photo gallery  →  Их хурал, сургалт  →  Түншүүд
-```
-
-The hero is the last thing touched and **is unreviewed**. It got, in response to *"the
-background is just white wall"*:
-
-- an `ink-50` ground with a hairline bottom (the page's only tinted surface)
-- a faint ruled texture (`.ruled` in globals.css) using the same hairline and rhythm as
-  `.register-row`, masked to the **right** half where the emptiness actually is —
-  ruling through the headline read as lined notebook paper; disabled below 48rem
-- a short copper hairline above the headline
-
-Chinguun has not seen this. It may need cutting back.
+### Trap that already bit once
+`db()` **bootstraps an admin from `ADMIN_EMAIL`/`ADMIN_PASSWORD` on connect.** With the
+redacted env file those were the literal string `[SENSITIVE]`, so the first production
+connection created a live admin with a guessable password. It was deleted within minutes
+and the `ADMIN_*` lines are commented out — do not uncomment them with placeholder
+values. Real admins: chinguunjavv@gmail.com, admin@msid.mn.
 
 ---
 
-## Work still open
+## What shipped today (all on main)
 
-1. **Partner logos** — `partners.logo` exists in the schema and is empty for KASID, AOCC
-   and ECCO. Rendering is wired: a logo replaces the acronym, no logo keeps the text, no
-   grey placeholder either way. Needs uploads via admin.
-2. **`unte_logo/` is untracked in the project root** — ~4.5MB of `.ai`/`.eps`/PNG design
-   source. Only `Logo-05.png` was copied to `public/brand/unte-logo.png`. Move it out or
-   gitignore it before committing.
-3. **PRODUCT.md contradicts the site** — it names the primary user job as "find the
-   current MSID position on a clinical question", but the guidelines register is no
-   longer on the landing page.
-4. **Open audit findings**: `aria-haspopup` missing on desktop dropdown triggers; utility
-   strip links are 66×29px and contact `tel:`/`mailto:` links 19px (under 44px); dates
-   built with `padStart` rather than `Intl.DateTimeFormat`; `HeroCarousel.tsx` is dead
-   code with zero importers, and `--animate-hero-progress` exists only for it.
-5. **36 arbitrary `text-[…rem]` values** still bypass existing tokens (`text-[0.8125rem]`
-   ×25 *is* `--text-label`).
-6. **Semantic token layer** — discussed, not done, deliberately. `ink-600` is written 110
-   times, `ink-200` 66, `copper-700` 45. Worth doing when dark mode or another palette
-   change comes up; invisible on screen, so it was not the priority.
+- **`5d67310`** — membership section back on the landing page (Restrained language, not
+  the old copper band); `pages.image` + bilingual alt (migration `2026-08-09-page-image`,
+  auto-applies — already applied to prod by the live site); partner logos cropped +
+  background-flooded in `public/brand/`; three dev-server warnings fixed; demo seeder no
+  longer invents board members and dates content backwards from today; guidelines-audit
+  fixes (`aria-haspopup`, spellcheck off on email/password, placeholder ellipsis)
+- **`41ae276`** (Chinguun's parallel session) — membership section now yields to news
+  *automatically*: it renders only while `news.length === 0`, and its heading no longer
+  repeats its own button
+- **`c186903`** — the reading measure is **76ch** site-wide (was 68ch prose / 62ch
+  summaries / 896px register). Chinguun looked at the live site on a wide screen and
+  said, three pages running, "extend the text and content" — treat the wider measure as
+  settled. Registers run the full shell; event covers max-w-5xl.
 
----
+Web Interface Guidelines audit passed otherwise — the one deliberate deviation is
+hand-rolled dates (Mongolian ordinal particle дугаар/дүгээр needs vowel harmony that
+`Intl` can't do; documented in `src/lib/format.ts`).
 
-## Two traps that cost real time
+## The code/content split — explain it before it confuses again
 
-**`curl` returning 200 does not mean the page works.** Next renders its error boundary
-with a 200 status. A broken SQL query in `listSocietyPhotos` passed every status check
-and only surfaced when the page was opened in a browser. Check for the error boundary
-string, or look.
+Chinguun saw the filled test site, then the empty production site, and asked why.
+**Code travels through git; content lives in each environment's own database.**
+Everything added to the local DB (demo content, photos) stays local. `npm run demo` /
+`npm run demo:clear` manage the local placeholder content — 5 news, 4 publications,
+5 guidelines, 7 events. **Never run `demo.mts` against production.**
 
-**The Browser pane paints stale and blank frames constantly.** Verify through computed
-styles and `getBoundingClientRect` rather than screenshots. Several times a screenshot
-showed a grey headline or an empty page while the DOM was correct. Also: Chinguun spent
-much of the session looking at **cached pages** and reporting "nothing has changed" —
-tell him to hard-reload (`Cmd+Shift+R`), a normal reload keeps Next's hashed CSS chunks.
+## Open work, in order
 
-**JSX comments cannot sit beside a root element or inside a prop expression.** Broke the
-build three times this way. Put them above the `return`.
+1. **Run the sync** (above), then verify the live site shows logos, carousel, mission
+   photo
+2. **Admin audit** (task #5) — queued findings: `publications.cover_image` is uploadable
+   but rendered nowhere; settings ask the admin to hand-paste an uploads path for a hero
+   image that no longer exists; news/event covers show only on detail pages, never lists
+3. **Orphaned uploads** (task #6) — nothing ever deletes a stored file; the `uploads`
+   table is written and never read; import scripts bypass it entirely. On Blob that is
+   billed storage. Two orphaned cover blobs will be created by step 1's cover replacement.
+4. **Preview env shares the production database** — previews are now public;
+   `TURSO_*` + Blob are scoped "Production, Preview". Point Preview at its own DB or
+   remove the vars so previews fail loudly.
+5. **Domain day** (task #8) — add domain, set `MSID_SITE_URL`, `MSID_NOINDEX=0`. The
+   noindex flip is env-driven (`robots.ts` is force-dynamic); NOT a robots.txt edit.
+   Until then the site stays unindexed — Chinguun's explicit decision.
 
----
+## Traps
 
-## Skills
-
-`impeccable` and `design-house-rules` are fully installed and were used throughout.
-
-`ui-ux-pro-max`, `ui-styling`, `design-system`, `brand`, `banner-design` and `slides` all
-arrived as **SKILL.md only** — one file each, no `scripts/`, no `references/`, no data.
-They are pointer skills whose substance did not ship; `ui-ux-pro-max`'s 192 palettes and
-74 font pairings are not queryable. Do not pretend otherwise to the user; he has asked
-about this repeatedly and been told each time. `web-design-guidelines` **is** complete —
-it fetches Vercel's rules live and was used for the UX audit.
-
-House rules that bit this session: *at most 2 font families*; *icons in coloured circles
-→ use a text label, a number, or nothing*; *visible text styles stay limited*; *a silent
-deviation is a bug*.
+- **`curl` 200 ≠ working.** Next serves the error boundary with a 200; grep for
+  `"digest":"` in the HTML. This found production down (`ENOENT mkdir './data'`) while
+  every status probe said fine.
+- Vercel env vars are **sensitive/write-only** — `vercel env pull` yields `[SENSITIVE]`.
+  Real values came from the Turso/Vercel dashboards, via Chinguun.
+- **Two sessions run on this repo simultaneously** (dev server now takes any free port —
+  `1977be9`). Check `git log` before assuming HEAD is where you left it.
+- The Browser pane's console reader replays a stale buffer after edits; trust server-side
+  HTML checks over remembered console errors.
+- DESIGN.md is still stale (pre-Restrained). Rewriting it remains the highest-value
+  cleanup. PRODUCT.md also still describes the guidelines register as the primary
+  landing-page job.
