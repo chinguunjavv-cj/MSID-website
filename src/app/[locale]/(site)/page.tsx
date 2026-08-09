@@ -239,9 +239,11 @@ export default async function HomePage({
 
           {galleryPhotos.length > 0 && (
             <EventGallery
-              /* Capped rather than stretched: at the full column width a 4:3 plate runs
-                 400px tall and outweighs the five lines of text beside it. */
-              className="mt-2 w-full max-w-[26rem] lg:mt-0"
+              /* Fills its column. It was capped at 26rem when the text beside it was
+                 five lines; after the measure widened, the cap left a strip of dead
+                 space on the right and the smaller plate no longer balanced the column
+                 of text (Chinguun, August 2026). */
+              className="mt-2 w-full lg:mt-0"
               /* The frame matches the photographs. Six of the eight are 4:3 off a phone,
                  so a 4:3 frame lets them fill it exactly — a wider box letterboxed them
                  with 150px of dead space on either side. */
@@ -460,7 +462,12 @@ export default async function HomePage({
             in for a missing one is worse than the name set properly, so nothing is
             reserved for an image that may never arrive.
           */}
-          <ul className="mt-6 flex flex-wrap items-start gap-x-10 gap-y-6">
+          {/*
+            A grid, not a wrap: with four partners a wrapped flex row broke the last
+            one onto its own line while a third of the first row sat empty. Columns
+            divide the shell evenly, so every partner fills its share of the width.
+          */}
+          <ul className="mt-6 grid items-start gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
             {partners.map((partner) => (
               <li key={partner.id}>
                 <a
