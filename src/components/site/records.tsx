@@ -48,7 +48,7 @@ export function GuidelineRow({
             Literata added a text style used exactly once, and made guideline rows read
             differently from every other record in the same register. */}
         {tr(guideline, "summary", locale) && (
-          <p className="mt-1.5 max-w-[62ch] text-small text-ink-600">
+          <p className="mt-1.5 max-w-[76ch] text-small text-ink-600">
             {truncate(tr(guideline, "summary", locale), 160)}
           </p>
         )}
@@ -90,7 +90,7 @@ export function EventRow_({ event, locale }: { event: EventRow; locale: Locale }
           {tr(event, "title", locale)}
         </p>
         {tr(event, "summary", locale) && (
-          <p className="mt-1.5 max-w-[62ch] text-small text-ink-600">
+          <p className="mt-1.5 max-w-[76ch] text-small text-ink-600">
             {truncate(tr(event, "summary", locale), 160)}
           </p>
         )}
@@ -175,7 +175,7 @@ export function NewsRow({ post, locale }: { post: NewsPost; locale: Locale }) {
           {tr(post, "title", locale)}
         </p>
         {tr(post, "excerpt", locale) && (
-          <p className="mt-1.5 max-w-[68ch] text-small text-ink-600">
+          <p className="mt-1.5 max-w-[76ch] text-small text-ink-600">
             {truncate(tr(post, "excerpt", locale), 180)}
           </p>
         )}

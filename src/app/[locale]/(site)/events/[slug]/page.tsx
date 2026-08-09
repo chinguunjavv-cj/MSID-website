@@ -255,7 +255,7 @@ export default async function EventPage({
             alt={tr(event, "cover_alt", locale)}
             width={1600}
             height={1200}
-            className="h-auto w-full max-w-4xl"
+            className="h-auto w-full max-w-5xl"
             priority
           />
         </div>

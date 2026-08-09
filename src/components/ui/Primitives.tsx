@@ -57,7 +57,7 @@ export function PageHeader({
         <h1 className="max-w-[24ch] text-h2 font-semibold text-ink-950">{title}</h1>
 
         {lead && (
-          <p className="mt-4 max-w-[62ch] text-ink-600 text-pretty">{lead}</p>
+          <p className="mt-4 max-w-[76ch] text-ink-600 text-pretty">{lead}</p>
         )}
 
         {meta && <div className="mt-5">{meta}</div>}
