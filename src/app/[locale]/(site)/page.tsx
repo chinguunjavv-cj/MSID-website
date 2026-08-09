@@ -412,11 +412,22 @@ export default async function HomePage({
         It returns in the page's own language rather than the copper-tinted band it left
         as. That band was a whole surface of colour for two sentences and a link, which
         is the thing the Restrained pass was undoing.
+
+        That lifecycle is now the condition rather than a note: the moment the
+        administrator publishes a first news post, the section above takes this slot and
+        this one steps aside. Nobody has to remember to remove it.
       */}
+      {news.length === 0 && (
       <section className="border-t border-ink-200 py-12 md:py-16">
         <div className="shell grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-16">
           <div>
-            <h2 className="text-h2 font-semibold">{t.home.membershipTitle}</h2>
+            {/*
+              The noun, not the action. In Mongolian `home.membershipTitle` is the very
+              same string as `home.joinCta` — both "Гишүүнээр элсэх" — so using it here
+              puts identical words in the heading and on the button below it. English
+              keeps them distinct; Mongolian does not.
+            */}
+            <h2 className="text-h2 font-semibold">{t.eventsNav.membership}</h2>
             <p className="mt-5 max-w-[46ch] text-ink-700">{t.home.membershipLead}</p>
             <Link href={p("/membership")} className="btn btn-primary mt-7">
               {t.home.joinCta}
@@ -433,6 +444,7 @@ export default async function HomePage({
           )}
         </div>
       </section>
+      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Partners                                                          */}
