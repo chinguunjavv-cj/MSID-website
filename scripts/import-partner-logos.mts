@@ -19,6 +19,7 @@ const LOGOS: { acronym: string; file: string }[] = [
   { acronym: "KASID", file: "partner-kasid.png" },
   { acronym: "AOCC", file: "partner-aocc.png" },
   { acronym: "ECCO", file: "partner-ecco.png" },
+  { acronym: "FCHM", file: "partner-fchm.png" },
 ];
 
 await db();
