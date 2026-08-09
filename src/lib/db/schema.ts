@@ -310,12 +310,17 @@ CREATE INDEX IF NOT EXISTS idx_news_status ON news_posts(status, published_at);
 -- Fixed-key prose blocks, so About sub-pages and intros are admin-editable without
 -- inventing a page builder. Keys are seeded; the admin edits, never creates.
 CREATE TABLE IF NOT EXISTS pages (
-  key        TEXT PRIMARY KEY,
-  title_mn   TEXT NOT NULL DEFAULT '',
-  title_en   TEXT NOT NULL DEFAULT '',
-  body_mn    TEXT NOT NULL DEFAULT '',
-  body_en    TEXT NOT NULL DEFAULT '',
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  key          TEXT PRIMARY KEY,
+  title_mn     TEXT NOT NULL DEFAULT '',
+  title_en     TEXT NOT NULL DEFAULT '',
+  body_mn      TEXT NOT NULL DEFAULT '',
+  body_en      TEXT NOT NULL DEFAULT '',
+  -- One optional photograph beneath the prose. These pages are the Society describing
+  -- itself, and a page of unbroken text is the one place a photograph earns its room.
+  image        TEXT NOT NULL DEFAULT '',
+  image_alt_mn TEXT NOT NULL DEFAULT '',
+  image_alt_en TEXT NOT NULL DEFAULT '',
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS history_entries (

@@ -60,6 +60,13 @@ export function Field({
         defaultValue={defaultValue}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        /*
+          An address is not prose. Spellcheck underlines every email and password a
+          member types, which on a form that already reports its own errors reads as a
+          second, wrong error. Derived from `type` rather than passed at each call site,
+          so no field can forget it.
+        */
+        spellCheck={type === "email" || type === "password" ? false : undefined}
         aria-invalid={error ? "true" : undefined}
         aria-describedby={[hint ? hintId : null, error ? errorId : null]
           .filter(Boolean)

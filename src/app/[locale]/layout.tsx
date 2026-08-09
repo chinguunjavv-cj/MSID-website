@@ -101,6 +101,14 @@ export default async function LocaleLayout({
   return (
     <html
       lang={LOCALE_HTML_LANG[locale]}
+      /*
+        `scroll-behavior: smooth` in globals.css is there for in-page anchors, but
+        without this attribute Next also animates the jump to the top on every route
+        change — the new page scrolls up under you instead of starting at its head.
+        Declaring it hands route transitions back to an instant scroll and leaves the
+        anchors smooth.
+      */
+      data-scroll-behavior="smooth"
       className={`${commissioner.variable} ${literata.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">{children}</body>

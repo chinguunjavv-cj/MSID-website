@@ -228,6 +228,9 @@ export interface Page {
   title_en: string;
   body_mn: string;
   body_en: string;
+  image: string;
+  image_alt_mn: string;
+  image_alt_en: string;
   updated_at: string;
 }
 

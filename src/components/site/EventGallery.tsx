@@ -127,14 +127,21 @@ export function EventGallery({
               type="button"
               onClick={() => show(photo)}
               tabIndex={position === index ? undefined : -1}
-              className="group block h-full w-full cursor-pointer"
+              /* `relative` only so the filled image measures against the button rather
+                 than skipping a level to the stacked layer above it. Same geometry
+                 either way; without it Next warns on every photograph. */
+              className="group relative block h-full w-full cursor-pointer"
               aria-label={`${labels.enlarge}: ${photo.alt}`}
             >
               <Image
                 src={photo.image}
                 alt={position === index ? photo.alt : ""}
                 fill
-                loading={position === 0 ? undefined : "lazy"}
+                /* The first photograph is the one on screen at mount, and on the
+                   landing page it is the largest thing painted — leaving it lazy made
+                   the browser discover it late. The rest stay lazy; they are behind a
+                   crossfade nobody has asked for yet. */
+                loading={position === 0 ? "eager" : "lazy"}
                 sizes="(min-width: 64rem) 60vw, 100vw"
                 className="object-contain transition-opacity duration-100 group-hover:opacity-95"
               />

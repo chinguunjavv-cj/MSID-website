@@ -52,3 +52,4 @@ next-env.d.ts
 # Only the derived assets actually used by the site are committed, under public/brand.
 /fwdhi
 /unte_logo
+/Logos

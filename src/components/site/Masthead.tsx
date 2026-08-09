@@ -254,6 +254,7 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
                   <div key={item.href} className="relative">
                     <button
                       type="button"
+                      aria-haspopup="menu"
                       aria-expanded={expanded}
                       aria-controls={`${menuId}-${item.href}`}
                       onClick={() => setOpenMenu(expanded ? null : item.href)}

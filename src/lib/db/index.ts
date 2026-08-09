@@ -114,6 +114,21 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       CREATE INDEX IF NOT EXISTS idx_event_photos_event ON event_photos(event_id, sort);
     `,
   },
+  {
+    /*
+      A photograph for the fixed prose pages. "Эрхэм зорилго, алсын хараа" and its
+      siblings are a heading and four paragraphs, and the Society has photographs of
+      the work those paragraphs describe; this puts one under the text without giving
+      the admin a page builder to misuse. Optional everywhere — a page with no image
+      renders exactly as it does now.
+    */
+    id: "2026-08-09-page-image",
+    sql: `
+      ALTER TABLE pages ADD COLUMN image TEXT NOT NULL DEFAULT '';
+      ALTER TABLE pages ADD COLUMN image_alt_mn TEXT NOT NULL DEFAULT '';
+      ALTER TABLE pages ADD COLUMN image_alt_en TEXT NOT NULL DEFAULT '';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

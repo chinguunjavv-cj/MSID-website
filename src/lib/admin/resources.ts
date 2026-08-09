@@ -344,6 +344,27 @@ export const RESOURCES: Record<string, ResourceDef> = {
     fields: [
       { name: "title", label: { mn: "Гарчиг", en: "Title" }, kind: "text", bilingual: true, required: true, section: SECTION_CONTENT },
       { name: "body", label: { mn: "Агуулга", en: "Body" }, kind: "textarea", bilingual: true, section: SECTION_CONTENT },
+      {
+        name: "image",
+        label: { mn: "Зураг", en: "Photograph" },
+        kind: "image",
+        section: SECTION_MEDIA,
+        hint: {
+          mn: "Текстийн доор гарна. Хоосон бол зураггүй харагдана.",
+          en: "Appears beneath the text. Leave empty for no photograph.",
+        },
+      },
+      {
+        name: "image_alt",
+        label: { mn: "Зургийн тайлбар", en: "Photograph alt text" },
+        kind: "text",
+        bilingual: true,
+        section: SECTION_MEDIA,
+        hint: {
+          mn: "Зурган дээр юу байгааг харахгүй хүнд ойлгуулах бичвэр.",
+          en: "Describes the photograph for a reader who cannot see it.",
+        },
+      },
     ],
   },
 };

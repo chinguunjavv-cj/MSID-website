@@ -75,7 +75,7 @@ export function MembershipForm({
             label={labels.degree}
             name="degree"
             optionalLabel={labels.optional}
-            placeholder="MD, PhD"
+            placeholder="MD, PhD…"
             error={fieldError("degree")}
           />
           <Field

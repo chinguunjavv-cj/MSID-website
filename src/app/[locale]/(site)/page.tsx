@@ -18,7 +18,7 @@ import {
   formatDateRange,
   daysUntil,
 } from "@/lib/format";
-import { EmptyState, Prose, SectionHead } from "@/components/ui/Primitives";
+import { EmptyState, Prose, ProseList, SectionHead } from "@/components/ui/Primitives";
 import { EventRow_, NewsRow } from "@/components/site/records";
 import { EventGallery } from "@/components/site/EventGallery";
 import { safeExternalLink } from "@/lib/video";
@@ -47,6 +47,7 @@ export default async function HomePage({
     partners,
     aboutPage,
     societyPhotos,
+    benefits,
   ] = await Promise.all([
     listUpcomingEvents(4),
     featuredEvent(),
@@ -55,6 +56,7 @@ export default async function HomePage({
     getPage("home.about"),
     // The photographs beside the introduction. Eight is two full turns of the gallery.
     listSocietyPhotos(8),
+    getPage("membership.benefits"),
   ]);
 
   const heroHeadline =
@@ -397,6 +399,40 @@ export default async function HomePage({
           </div>
         </section>
       )}
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Membership                                                        */}
+      {/* ---------------------------------------------------------------- */}
+      {/*
+        Back on the landing page while the Society has little else to say here. The
+        intended lifecycle is that news takes this slot over: once the administrator is
+        publishing regularly, the section above carries the page and this one goes back
+        to being reachable from the hero and the menu (Chinguun, August 2026).
+
+        It returns in the page's own language rather than the copper-tinted band it left
+        as. That band was a whole surface of colour for two sentences and a link, which
+        is the thing the Restrained pass was undoing.
+      */}
+      <section className="border-t border-ink-200 py-12 md:py-16">
+        <div className="shell grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-16">
+          <div>
+            <h2 className="text-h2 font-semibold">{t.home.membershipTitle}</h2>
+            <p className="mt-5 max-w-[46ch] text-ink-700">{t.home.membershipLead}</p>
+            <Link href={p("/membership")} className="btn btn-primary mt-7">
+              {t.home.joinCta}
+            </Link>
+          </div>
+
+          {tr(benefits, "body", locale) && (
+            <div>
+              <h3 className="text-label font-semibold text-ink-600">
+                {t.membership.benefits}
+              </h3>
+              <ProseList body={tr(benefits, "body", locale)} />
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* Partners                                                          */}

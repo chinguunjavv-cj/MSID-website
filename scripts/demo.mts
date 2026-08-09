@@ -30,6 +30,20 @@ if (clear) {
 /* -------------------------------------------------------------------------- */
 
 const year = new Date().getFullYear() + 1;
+
+/*
+  Anything already published is dated backwards from today rather than written as a
+  literal against `year` — `year` is *next* year, so `year - 1` is the current one and
+  half of these records first landed in the future, where the list pages correctly
+  refused to show them. Only genuinely forthcoming events are dated off `year`.
+*/
+const monthsAgo = (n: number, time = "10:00:00") => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - n);
+  return `${d.toISOString().slice(0, 10)} ${time}`;
+};
+const dayOnly = (n: number) => monthsAgo(n).slice(0, 10);
+
 const congressSlug = "demo-msid-congress";
 
 let congressId = (
@@ -214,7 +228,7 @@ if (!await get("SELECT id FROM publications WHERE slug = 'demo-ibd-registry'")) 
     "Age, sex, diagnostic distribution and treatment patterns among registered patients. This is a sample record.",
     "Монголын Анагаах Ухаан",
     "Mongolian Journal of Medicine",
-    `${year - 1}-08-15`,
+    dayOnly(7),
   );
 }
 
@@ -256,7 +270,16 @@ const board: [string, string, string, string, number][] = [
   ["Нарийн бичгийн дарга", "Secretary", "Нэр оруулаагүй", "Name not yet published", 3],
 ];
 
-for (const [roleMn, roleEn, nameMn, nameEn, sort] of board) {
+/*
+  Only stand in for a board that has not been entered yet. MSID's real members are
+  in the database now, and adding three invented officers beside them would put
+  fictional people on a page about actual named clinicians.
+*/
+const realBoard = await get<{ n: number }>(
+  "SELECT COUNT(*) AS n FROM board_members WHERE bio_en NOT LIKE 'DEMO%'",
+);
+
+for (const [roleMn, roleEn, nameMn, nameEn, sort] of realBoard?.n ? [] : board) {
   if (await get("SELECT id FROM board_members WHERE role_en = ? AND bio_en LIKE 'DEMO%'", roleEn)) {
     continue;
   }
@@ -274,6 +297,224 @@ for (const [roleMn, roleEn, nameMn, nameEn, sort] of board) {
     "ЖИШЭЭ бичлэг. Удирдлагын хэсгээс жинхэнэ мэдээллээр солино уу.",
     "DEMO record. Replace with the real board member in the admin.",
     sort,
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Volume                                                                      */
+/* -------------------------------------------------------------------------- */
+/*
+  One record per section is enough to prove a page renders and nowhere near enough
+  to judge how it reads. A list of one has no rhythm, no wrapping, no long title
+  pushing against a short one, and no second page of dates to align. What follows
+  fills each section to the depth it would have after a year of use, so the layout
+  can be reviewed as it will actually be seen.
+*/
+
+/* --- News ----------------------------------------------------------------- */
+
+const news: [string, string, string, string, string, string][] = [
+  [
+    "demo-news-guideline-approved",
+    "Шинэ эмнэлзүйн заавар батлагдлаа",
+    "New clinical guideline approved",
+    "Удирдах зөвлөлийн хурлаар үрэвсэлт гэдэсний өвчний оношилгооны заавар батлагдав.",
+    "The executive board has approved the guideline on the diagnosis of inflammatory bowel disease.",
+    monthsAgo(1),
+  ],
+  [
+    "demo-news-training-report",
+    "Дурангийн сургалт амжилттай зохион байгуулагдлаа",
+    "Endoscopy training course completed",
+    "Гурван өдрийн практик сургалтад орон нутгийн 24 эмч хамрагдлаа.",
+    "Twenty-four clinicians from the provinces attended the three-day practical course.",
+    monthsAgo(3, "14:30:00"),
+  ],
+  [
+    "demo-news-partnership",
+    "Гадаад хамтын ажиллагаа өргөжиж байна",
+    "International collaboration expands",
+    "Азийн бүсийн нийгэмлэгүүдтэй хамтран ажиллах санамж бичигт гарын үсэг зурлаа.",
+    "A memorandum of cooperation has been signed with societies in the Asian region.",
+    monthsAgo(6, "09:15:00"),
+  ],
+  [
+    "demo-news-registry",
+    "Өвчтөний бүртгэлийн систем нэвтэрлээ",
+    "Patient registry goes live",
+    "Үрэвсэлт гэдэсний өвчний үндэсний бүртгэл туршилтын журмаар ажиллаж эхлэв.",
+    "The national inflammatory bowel disease registry has begun operating in pilot form.",
+    monthsAgo(11, "11:00:00"),
+  ],
+];
+
+for (const [slug, titleMn, titleEn, exMn, exEn, at] of news) {
+  if (await get("SELECT id FROM news_posts WHERE slug = ?", slug)) continue;
+  await run(
+    `INSERT INTO news_posts
+       (id, slug, status, title_mn, title_en, excerpt_mn, excerpt_en, body_mn, body_en, published_at)
+     VALUES (?, ?, 'published', ?, ?, ?, ?, ?, ?, ?)`,
+    newId(),
+    slug,
+    titleMn,
+    titleEn,
+    exMn,
+    exEn,
+    `${exMn}
+
+Нийгэмлэгийн үйл ажиллагааны талаарх дэлгэрэнгүй мэдээллийг эндээс уншина уу. Энэ хэсэгт мэдээний бүрэн эх орно.
+
+Тайлбар: энэ бол жишээ мэдээ юм.`,
+    `${exEn}
+
+Fuller detail about the Society's activity would appear here, as the body of the news item.
+
+Note: this is a sample news item.`,
+    at,
+  );
+}
+
+/* --- Publications --------------------------------------------------------- */
+
+const pubs: [string, string, string, string, string, string][] = [
+  [
+    "demo-pub-crc-screening",
+    "article",
+    "Бүдүүн гэдэсний хорт хавдрын эрт илрүүлгийн үр дүн",
+    "Outcomes of colorectal cancer screening",
+    "Монголын Анагаах Ухаан",
+    dayOnly(9),
+  ],
+  [
+    "demo-pub-congress-abstracts",
+    "abstract",
+    "Их хурлын илтгэлийн хураангуйн эмхэтгэл",
+    "Congress abstract collection",
+    "",
+    dayOnly(4),
+  ],
+  [
+    "demo-pub-annual-report",
+    "report",
+    "Нийгэмлэгийн жилийн тайлан",
+    "Annual report of the Society",
+    "",
+    dayOnly(2),
+  ],
+];
+
+for (const [slug, kind, titleMn, titleEn, journalMn, on] of pubs) {
+  if (await get("SELECT id FROM publications WHERE slug = ?", slug)) continue;
+  await run(
+    `INSERT INTO publications
+       (id, slug, kind, status, title_mn, title_en, authors_mn, authors_en,
+        abstract_mn, abstract_en, journal_mn, journal_en, published_on)
+     VALUES (?, ?, ?, 'published', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    newId(),
+    slug,
+    kind,
+    titleMn,
+    titleEn,
+    "Судлаачдын нэр (жишээ)",
+    "Author names (sample)",
+    "Энэ бол жишээ бичлэг бөгөөд жинхэнэ судалгааны үр дүн биш болно.",
+    "This is a sample record and not a real research result.",
+    journalMn,
+    journalMn ? "Mongolian Journal of Medicine" : "",
+    on,
+  );
+}
+
+/* --- Guidelines ----------------------------------------------------------- */
+/*
+  Different statuses and versions on purpose: the register is the one component
+  whose whole job is to line up a column of dates, codes and states, and it cannot
+  be judged from rows that all say the same thing.
+*/
+
+const guides: [string, string, string, string, string, string, string][] = [
+  [
+    "demo-cg-endoscopy",
+    `MSID-CG-${year - 1}-03`,
+    "1.2",
+    "published",
+    "Гэдэсний дурангийн шинжилгээний чанарын шалгуур",
+    "Quality standards for intestinal endoscopy",
+    "Дурангийн шинжилгээ",
+  ],
+  [
+    "demo-cg-nutrition",
+    `MSID-CG-${year - 2}-01`,
+    "1.0",
+    "superseded",
+    "Гэдэсний өвчтэй өвчтөний хоол тэжээлийн дэмжлэг",
+    "Nutritional support in intestinal disease",
+    "Хоол тэжээл",
+  ],
+];
+
+for (const [slug, code, version, status, titleMn, titleEn, catMn] of guides) {
+  if (await get("SELECT id FROM guidelines WHERE slug = ?", slug)) continue;
+  await run(
+    `INSERT INTO guidelines
+       (id, slug, code, version, status, title_mn, title_en, summary_mn, summary_en,
+        category_mn, category_en, approved_on, effective_from)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    newId(),
+    slug,
+    code,
+    version,
+    status,
+    titleMn,
+    titleEn,
+    "Ажлын хэсгээс боловсруулсан жишээ заавар. Албан ёсны баримт бичиг биш.",
+    "A sample guideline prepared by the working group. Not an official document.",
+    catMn,
+    titleEn,
+    `${year - 1}-05-14`,
+    `${year - 1}-07-01`,
+  );
+}
+
+/* --- A second upcoming event, and a past one ------------------------------ */
+
+if (!await get("SELECT id FROM events WHERE slug = 'demo-webinar-biologics'")) {
+  await run(
+    `INSERT INTO events
+       (id, slug, kind, status, title_mn, title_en, summary_mn, summary_en,
+        venue_mn, venue_en, city_mn, city_en, starts_on, ends_on, registration_open)
+     VALUES (?, 'demo-webinar-biologics', 'webinar', 'published', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+    newId(),
+    "Биологийн эмчилгээний вебинар",
+    "Webinar on biologic therapy",
+    "Онлайн хэлбэрээр зохион байгуулагдах сарын ээлжит хэлэлцүүлэг.",
+    "The monthly online discussion session.",
+    "Онлайн",
+    "Online",
+    "Улаанбаатар",
+    "Ulaanbaatar",
+    `${year}-10-08`,
+    `${year}-10-08`,
+  );
+}
+
+if (!await get("SELECT id FROM events WHERE slug = 'demo-case-conference-past'")) {
+  await run(
+    `INSERT INTO events
+       (id, slug, kind, status, title_mn, title_en, summary_mn, summary_en,
+        venue_mn, venue_en, city_mn, city_en, starts_on, ends_on, registration_open)
+     VALUES (?, 'demo-case-conference-past', 'case_conference', 'published', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+    newId(),
+    "Кейс хэлэлцүүлэг: хүнд явцтай шархлаат колит",
+    "Case conference: severe ulcerative colitis",
+    "Эмнэлзүйн тохиолдлын хэлэлцүүлэг. Өнгөрсөн арга хэмжээ.",
+    "A clinical case discussion. A past event.",
+    "Улсын клиникийн төв эмнэлэг",
+    "State Central Clinical Hospital",
+    "Улаанбаатар",
+    "Ulaanbaatar",
+    `${year - 1}-05-16`,
+    `${year - 1}-05-16`,
   );
 }
 
