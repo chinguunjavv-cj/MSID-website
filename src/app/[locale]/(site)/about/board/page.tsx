@@ -45,18 +45,24 @@ export default async function BoardPage({
           <ul className="grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => (
               <li key={member.id}>
+                {/*
+                  A portrait, not a poster. `w-full` at three columns made these 390px
+                  wide and nearly 500 tall, which turned every member without a
+                  photograph into a grey slab the size of the text beside it. Capped at
+                  128px the photograph identifies a person and the words stay the point.
+                */}
                 {member.photo ? (
                   <Image
                     src={member.photo}
                     alt={tr(member, "name", locale)}
                     width={480}
                     height={600}
-                    className="mb-4 aspect-4/5 w-full object-cover"
+                    className="mb-4 aspect-4/5 w-32 rounded-lg object-cover"
                   />
                 ) : (
                   <div
                     aria-hidden
-                    className="mb-4 flex aspect-4/5 w-full items-center justify-center bg-ink-100 text-4xl font-bold text-ink-500"
+                    className="mb-4 flex aspect-4/5 w-32 items-center justify-center rounded-lg bg-ink-100 text-xl font-semibold text-ink-500"
                   >
                     {tr(member, "name", locale).trim().charAt(0)}
                   </div>

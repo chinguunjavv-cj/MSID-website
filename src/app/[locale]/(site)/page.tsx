@@ -8,27 +8,19 @@ import {
   featuredEvent,
   getPage,
   listPartners,
-  listPublishedGuidelines,
   listPublishedNews,
   listUpcomingEvents,
-  listEventsWithCovers,
+  listSocietyPhotos,
 } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import {
-  formatDate,
   formatDateNumeric,
   formatDateRange,
   daysUntil,
 } from "@/lib/format";
-import {
-  EmptyState,
-  Prose,
-  ProseList,
-  SectionHead,
-} from "@/components/ui/Primitives";
-import { EventRow_, GuidelineRow, NewsRow } from "@/components/site/records";
-import { MsidMark } from "@/components/site/Mark";
-import type { HeroSlide } from "@/components/site/HeroCarousel";
+import { EmptyState, Prose, SectionHead } from "@/components/ui/Primitives";
+import { EventRow_, NewsRow } from "@/components/site/records";
+import { EventGallery } from "@/components/site/EventGallery";
 import { safeExternalLink } from "@/lib/video";
 
 export default async function HomePage({
@@ -49,26 +41,21 @@ export default async function HomePage({
     round trips deep for no reason — none of them depend on each other.
   */
   const [
-    allGuidelines,
     upcoming,
     featured,
     news,
     partners,
     aboutPage,
-    benefits,
-    heroEvents,
+    societyPhotos,
   ] = await Promise.all([
-    listPublishedGuidelines(),
     listUpcomingEvents(4),
     featuredEvent(),
     listPublishedNews(4),
     listPartners(),
     getPage("home.about"),
-    getPage("membership.benefits"),
-    listEventsWithCovers(4),
+    // The photographs beside the introduction. Eight is two full turns of the gallery.
+    listSocietyPhotos(8),
   ]);
-
-  const guidelines = allGuidelines.slice(0, 6);
 
   const heroHeadline =
     (locale === "mn" ? settings.hero_headline_mn : settings.hero_headline_en) ||
@@ -82,259 +69,189 @@ export default async function HomePage({
       : settings.hero_image_alt_en) || "";
 
   /*
-    The hero's photographs. A dedicated hero image, if the administrator has set one,
-    leads; the rest are events they have already published with a cover. Nothing new to
-    maintain — an event with a photograph is a slide.
+    The photographs beside the introduction. An administrator's dedicated hero image, if
+    one is set, still has a home — it leads the gallery rather than being stranded now
+    that the hero carries no picture.
+
+    Every caption states the event and its date, so a photograph is never shown as
+    decoration: the visitor is told what they are looking at and when it happened.
   */
-  const heroSlides: HeroSlide[] = [
+  const galleryPhotos = [
     ...(settings.hero_image
-      ? [{ image: settings.hero_image, alt: heroAlt }]
+      ? [
+          {
+            id: "hero",
+            image: settings.hero_image,
+            alt: heroAlt,
+            caption: heroAlt,
+          },
+        ]
       : []),
-    ...heroEvents.map((event) => ({
-      image: event.cover_image,
-      alt: tr(event, "cover_alt", locale) || tr(event, "title", locale),
-      label: tr(event, "title", locale),
-      meta: [
-        formatDateRange(event.starts_on, event.ends_on, locale),
-        tr(event, "city", locale),
+    ...societyPhotos.map((photo) => ({
+      id: photo.id,
+      alt: tr(photo, "alt", locale) || tr(photo, "title", locale),
+      image: photo.image,
+      caption: [
+        tr(photo, "caption", locale) || tr(photo, "title", locale),
+        [formatDateRange(photo.starts_on, null, locale), tr(photo, "city", locale)]
+          .filter(Boolean)
+          .join(" · "),
       ]
         .filter(Boolean)
-        .join(" · "),
-      href: p(`/events/${event.slug}`),
+        .join(" — "),
     })),
   ];
 
   const next = featured ?? upcoming[0];
   const nextDays = next ? daysUntil(next.starts_on) : null;
 
+  /* Nothing featured and nothing upcoming — the congress section is a notice, not a list. */
+  const otherUpcoming = upcoming.filter((event) => event.id !== featured?.id);
+  const congressEmpty = !featured && otherUpcoming.length === 0;
+
   /*
-    The photograph that leads the hero. One, not a rotation: the rest of the Society's
-    photographs now live on the events they document, captioned and shown whole, which is
-    a better home for a record than a panel that slides away after four seconds.
+    The hero card reads caps-label → statement, the way an institution's cover does.
+    The caps line is always the Society's name; the statement is the tagline — unless
+    an administrator has written a custom headline, which then takes the big type and
+    pushes the tagline down to a supporting sentence.
   */
-  const lead = heroSlides[0];
-
-  /* The hero's message. Sits in its own column beside the photograph, never on top of it. */
-  const heroContent = (
-    <div className="relative">
-      <h1 className="animate-settle max-w-[15ch] text-display font-extrabold text-paper">
-        {heroHeadline}
-      </h1>
-
-      <p
-        className="animate-settle mt-7 max-w-[46ch] text-lg leading-relaxed md:text-xl"
-        style={{ animationDelay: "90ms" }}
-      >
-        {heroLead}
-      </p>
-
-      <div
-        className="animate-settle mt-9 flex flex-wrap gap-3"
-        style={{ animationDelay: "180ms" }}
-      >
-        <Link href={p("/membership")} className="btn btn-on-dark">
-          {t.home.joinCta}
-        </Link>
-        <Link href={p("/guidelines")} className="btn btn-outline-light">
-          {t.nav.guidelines}
-        </Link>
-      </div>
-    </div>
-  );
+  const customHeadline = heroHeadline !== t.org.name;
+  const heroTitle = customHeadline ? heroHeadline : heroLead;
+  const heroSub = customHeadline ? heroLead : "";
 
   return (
     <>
       {/* ---------------------------------------------------------------- */}
-      {/* Hero — copper-drenched, the photograph beside the type            */}
+      {/* Hero — the Society's purpose, stated                              */}
       {/* ---------------------------------------------------------------- */}
       {/*
-        The photograph used to run full-bleed behind the headline. It cannot: DESIGN.md
-        requires an ink multiply overlay so overlaid type clears 4.5:1, and these are
-        record photographs whose entire value is that the banner, the slide and the faces
-        can be read. The overlay that makes the headline legible is the thing that
-        destroys the evidence underneath it. Side by side, both are legible and neither is
-        cropped.
+        Type only, no photograph (Chinguun's call, August 2026). The Society's
+        photographs moved down to sit beside the introduction, where they document what
+        the text claims; up here a single sentence at display scale says what MSID exists
+        to do. For a body whose product is a written standard, the statement *is* the
+        picture — and nothing has to be scrimmed to stay legible over it.
+
+        The name is not repeated here: it is in the masthead lockup, once.
       */}
-      <section className="on-copper relative overflow-hidden">
-        {/*
-          The photographs cover this panel only. Scoped to the whole section they also
-          ran under the "what is next" strip below, and the slide's caption landed on top
-          of the congress date — two different facts in the same 56 pixels.
-        */}
-        {/*
-          No photograph uploaded yet: the society's own mark carries the panel. Held at
-          low opacity so it reads as a watermark behind the type rather than as a picture
-          competing with it — the headline still clears 4.5:1 over its darkest part.
-        */}
-        {!lead && (
-          <MsidMark
-            priority
-            className="pointer-events-none absolute -top-20 -right-28 w-[46rem] max-w-none md:-right-16 md:w-[58rem]"
-            imageClassName="opacity-[0.17]"
-          />
+      <section className="relative border-b border-ink-200 bg-ink-50">
+        {/* The ruled ground, behind everything and inert to the pointer. */}
+        <div aria-hidden className="ruled pointer-events-none absolute inset-0" />
+
+        <div className="shell relative pt-12 pb-12 md:pt-20 md:pb-16">
+          {/* The Society's colour, one hairline of it, the way a masthead rules a page. */}
+          <span aria-hidden className="animate-settle block h-0.5 w-12 bg-copper-600" />
+
+          <h1 className="animate-settle mt-7 max-w-[18ch] text-display font-bold text-balance text-ink-950">
+            {heroTitle}
+          </h1>
+
+        {heroSub && (
+          <p
+            className="animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed text-ink-700"
+            style={{ animationDelay: "80ms" }}
+          >
+            {heroSub}
+          </p>
         )}
 
         {/*
-          The photograph's column is sized against the display headline — at 26rem the
-          type visibly outweighed the picture and the panel read as copper with a stamp
-          in the corner. The caption stays quiet: one semibold line for the record's
-          name, the date in a smaller hand beneath, so it labels the photograph instead
-          of competing with the lead.
+          Both destinations, because the hero now carries them alone: the guidelines
+          register and the membership pitch are no longer sections further down the page
+          (Chinguun's call, August 2026 — the register speaks to a narrower audience than
+          the landing page serves, and membership is one click from here or the menu).
         */}
-        <div className="shell relative grid items-center gap-10 py-14 md:py-16 lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-16 lg:py-20">
-          {heroContent}
-
-          {lead && (
-            <figure className="animate-settle" style={{ animationDelay: "120ms" }}>
-              <Image
-                src={lead.image}
-                alt={lead.alt}
-                width={1200}
-                height={900}
-                priority
-                className="h-auto w-full"
-              />
-              {(lead.label || lead.meta) && (
-                <figcaption className="mt-3 max-w-[52ch] text-small">
-                  {lead.href && lead.label ? (
-                    <Link
-                      href={lead.href}
-                      className="font-semibold text-paper text-pretty hover:underline"
-                    >
-                      {lead.label}
-                    </Link>
-                  ) : (
-                    lead.label && (
-                      <span className="font-semibold text-paper text-pretty">
-                        {lead.label}
-                      </span>
-                    )
-                  )}
-                  {lead.meta && (
-                    <span className="tabular mt-1 block text-[0.8125rem] text-paper/75">
-                      {lead.meta}
-                    </span>
-                  )}
-                </figcaption>
-              )}
-            </figure>
-          )}
+        {/*
+          One row on a phone, at their natural width. Stretching them to half the row
+          each (`flex-1`) fitted them side by side but made two large slabs of a hero
+          that is meant to be mostly the statement; with the trimmer mobile button both
+          labels fit as they are.
+        */}
+        <div
+          className="animate-settle mt-8 flex gap-2.5 sm:gap-3"
+          style={{ animationDelay: "140ms" }}
+        >
+          <Link href={p("/membership")} className="btn btn-primary">
+            {t.home.joinCta}
+          </Link>
+          <Link href={p("/guidelines")} className="btn btn-secondary">
+            {t.nav.guidelines}
+          </Link>
         </div>
 
-        {/* What is next — a live fact, not a metric row */}
-        <div className="relative border-t border-white/20">
-          <div className="shell py-4">
-            {next ? (
-              <Link
-                href={p(`/events/${next.slug}`)}
-                className="group flex flex-wrap items-baseline gap-x-3 gap-y-1 text-small"
-              >
-                <span className="font-semibold text-paper">
-                  {t.events.upcoming}
-                </span>
-                <span aria-hidden className="text-paper/75">
-                  →
-                </span>
-                <span className="font-medium text-paper group-hover:underline">
-                  {tr(next, "title", locale)}
-                </span>
-                <span className="tabular text-paper/75">
-                  {formatDateRange(next.starts_on, next.ends_on, locale)}
-                </span>
-                {tr(next, "city", locale) && (
-                  <span className="text-paper/75">
-                    · {tr(next, "city", locale)}
-                  </span>
-                )}
-                {nextDays !== null && nextDays > 0 && (
-                  <span className="tabular text-paper/75">
-                    · {nextDays} {t.events.daysUntil}
-                  </span>
-                )}
-              </Link>
-            ) : (
-              <p className="text-small text-paper/75">{t.events.noUpcoming}</p>
+        {/*
+          What is next — and only when there is a next. The empty case used to render
+          "Одоогоор товлогдсон арга хэмжээ байхгүй байна." here, which is word for word
+          what the congress section says further down, where it also explains what will
+          appear and offers a way to hear about it. A strip that announces a live fact
+          has nothing to say when there is no fact.
+        */}
+        {next && (
+          <Link
+            href={p(`/events/${next.slug}`)}
+            className="group mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-copper-200 bg-copper-50 px-5 py-3.5 text-small"
+          >
+            <span className="font-semibold text-copper-800">{t.events.upcoming}</span>
+            <span aria-hidden className="text-copper-700">
+              →
+            </span>
+            <span className="font-medium text-ink-900 group-hover:underline">
+              {tr(next, "title", locale)}
+            </span>
+            <span className="tabular text-ink-600">
+              {formatDateRange(next.starts_on, next.ends_on, locale)}
+            </span>
+            {tr(next, "city", locale) && (
+              <span className="text-ink-600">· {tr(next, "city", locale)}</span>
             )}
-          </div>
+            {nextDays !== null && nextDays > 0 && (
+              <span className="tabular text-ink-600">
+                · {nextDays} {t.events.daysUntil}
+              </span>
+            )}
+            </Link>
+          )}
         </div>
       </section>
 
       {/* ---------------------------------------------------------------- */}
       {/* About                                                             */}
       {/* ---------------------------------------------------------------- */}
-      <section className="shell py-16 md:py-20">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] md:gap-16">
+      {/*
+        The introduction, with the Society's own photographs beside it.
+
+        The paragraph makes claims — that MSID improves diagnosis, develops guidelines,
+        trains specialists — and the photographs are the evidence sitting next to them,
+        each captioned with the event it documents and linked to that event's page. This
+        is where the hero's picture went: the same gallery component the event pages use,
+        so the site turns pages through photographs one way rather than two.
+      */}
+      <section className="shell py-12 md:py-16">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
           <div>
-            <h2 className="text-h2 font-bold">{t.home.aboutTitle}</h2>
+            <h2 className="text-h2 font-semibold">{t.home.aboutTitle}</h2>
             <Prose body={tr(aboutPage, "body", locale)} className="mt-6" />
             <Link href={p("/about")} className="btn btn-ghost mt-6">
               {t.common.readMore} →
             </Link>
           </div>
 
-          <dl className="self-start border-t border-ink-200 pt-6 md:border-t-2 md:border-ink-900">
-            <div className="border-b border-ink-200 py-3">
-              <dt className="text-label font-semibold text-ink-600">
-                {t.about.founded}
-              </dt>
-              <dd className="tabular mt-1 text-[1.0625rem] font-semibold text-ink-900">
-                {formatDate(settings.founded_on, locale)}
-              </dd>
-            </div>
-            <div className="border-b border-ink-200 py-3">
-              <dt className="text-label font-semibold text-ink-600">
-                {locale === "mn" ? "Хэлбэр" : "Type"}
-              </dt>
-              <dd className="mt-1 text-[1.0625rem] font-semibold text-ink-900">
-                {t.footer.ngo}
-              </dd>
-            </div>
-            <div className="border-b border-ink-200 py-3">
-              <dt className="text-label font-semibold text-ink-600">
-                {locale === "mn" ? "Байршил" : "Based in"}
-              </dt>
-              <dd className="mt-1 text-[1.0625rem] font-semibold text-ink-900">
-                {locale === "mn" ? "Улаанбаатар" : "Ulaanbaatar"}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Guidelines register — the signature block                         */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="border-y border-ink-200 bg-ink-50 py-16 md:py-20">
-        <div className="shell">
-          <SectionHead
-            title={t.home.guidelinesTitle}
-            lead={t.home.guidelinesLead}
-            action={
-              guidelines.length > 0 ? (
-                <Link href={p("/guidelines")} className="btn btn-secondary">
-                  {t.common.viewAll}
-                </Link>
-              ) : undefined
-            }
-          />
-
-          {guidelines.length > 0 ? (
-            <div className="register mt-8">
-              {guidelines.map((guideline) => (
-                <GuidelineRow
-                  key={guideline.id}
-                  guideline={guideline}
-                  locale={locale}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="mt-8">
-              <EmptyState
-                title={t.guidelines.empty}
-                hint={t.guidelines.emptyHint}
-              />
-            </div>
+          {galleryPhotos.length > 0 && (
+            <EventGallery
+              /* Capped rather than stretched: at the full column width a 4:3 plate runs
+                 400px tall and outweighs the five lines of text beside it. */
+              className="mt-2 w-full max-w-[26rem] lg:mt-0"
+              /* The frame matches the photographs. Six of the eight are 4:3 off a phone,
+                 so a 4:3 frame lets them fill it exactly — a wider box letterboxed them
+                 with 150px of dead space on either side. */
+              frameClassName="aspect-4/3"
+              photos={galleryPhotos}
+              labels={{
+                heading: t.events.gallery,
+                show: t.events.show,
+                enlarge: t.events.enlarge,
+                close: t.events.close,
+              }}
+            />
           )}
         </div>
       </section>
@@ -342,7 +259,12 @@ export default async function HomePage({
       {/* ---------------------------------------------------------------- */}
       {/* Congress & training                                               */}
       {/* ---------------------------------------------------------------- */}
-      <section className="shell py-16 md:py-20">
+      {/*
+        A section with nothing to list is given less room than one with records in it.
+        MSID has no congress scheduled yet, and holding a full section's height open for
+        a three-line notice is what made this stretch of the page read as empty.
+      */}
+      <section className={`shell ${congressEmpty ? "py-10 md:py-12" : "py-12 md:py-16"}`}>
         <SectionHead
           title={t.home.congressTitle}
           lead={t.home.congressLead}
@@ -355,8 +277,9 @@ export default async function HomePage({
           }
         />
 
+        {/* The congress block keeps copper as its voice — a tint, not a drench. */}
         {featured && (
-          <article className="mt-8 border-2 border-ink-900 p-6 md:p-9">
+          <article className="mt-8 rounded-lg border border-ink-200 bg-paper p-6 md:p-9">
             <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
               <p className="text-label font-semibold text-copper-700">
                 {t.events.kind[featured.kind as keyof typeof t.events.kind]}
@@ -366,7 +289,7 @@ export default async function HomePage({
               </p>
             </div>
 
-            <h3 className="mt-3 max-w-[24ch] text-h2 font-bold">
+            <h3 className="mt-3 max-w-[24ch] text-h2 font-semibold">
               {tr(featured, "title", locale)}
             </h3>
 
@@ -429,17 +352,15 @@ export default async function HomePage({
           </article>
         )}
 
-        {upcoming.filter((event) => event.id !== featured?.id).length > 0 ? (
+        {otherUpcoming.length > 0 ? (
           <div className="register mt-10">
-            {upcoming
-              .filter((event) => event.id !== featured?.id)
-              .map((event) => (
-                <EventRow_ key={event.id} event={event} locale={locale} />
-              ))}
+            {otherUpcoming.map((event) => (
+              <EventRow_ key={event.id} event={event} locale={locale} />
+            ))}
           </div>
         ) : (
           !featured && (
-            <div className="mt-8">
+            <div className="mt-6">
               <EmptyState
                 title={t.events.noUpcoming}
                 hint={t.events.noUpcomingHint}
@@ -458,7 +379,7 @@ export default async function HomePage({
       {/* News                                                              */}
       {/* ---------------------------------------------------------------- */}
       {news.length > 0 && (
-        <section className="border-t border-ink-200 py-16 md:py-20">
+        <section className="border-t border-ink-200 py-12 md:py-16">
           <div className="shell">
             <SectionHead
               title={t.home.newsTitle}
@@ -478,40 +399,20 @@ export default async function HomePage({
       )}
 
       {/* ---------------------------------------------------------------- */}
-      {/* Membership                                                        */}
-      {/* ---------------------------------------------------------------- */}
-      <section className="border-y border-copper-200 bg-copper-50 py-16 md:py-20">
-        <div className="shell grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-16">
-          <div>
-            <h2 className="text-h2 font-bold">{t.home.membershipTitle}</h2>
-            <p className="mt-5 max-w-[46ch] text-ink-700">
-              {t.home.membershipLead}
-            </p>
-            <Link href={p("/membership")} className="btn btn-primary mt-7">
-              {t.home.joinCta}
-            </Link>
-          </div>
-
-          {tr(benefits, "body", locale) && (
-            <div>
-              <h3 className="text-label font-semibold text-ink-700">
-                {t.membership.benefits}
-              </h3>
-              <ProseList body={tr(benefits, "body", locale)} />
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
       {/* Partners                                                          */}
       {/* ---------------------------------------------------------------- */}
       {partners.length > 0 && (
-        <section className="shell py-14 md:py-16">
+        <section className="shell py-12 md:py-16">
           <h2 className="text-label font-semibold text-ink-600">
             {t.footer.partners}
           </h2>
-          <ul className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
+          {/*
+            The mark when the administrator has uploaded one, the acronym when they have
+            not. A partner's logo is their identity and belongs here; a grey box standing
+            in for a missing one is worse than the name set properly, so nothing is
+            reserved for an image that may never arrive.
+          */}
+          <ul className="mt-6 flex flex-wrap items-start gap-x-10 gap-y-6">
             {partners.map((partner) => (
               <li key={partner.id}>
                 <a
@@ -520,10 +421,21 @@ export default async function HomePage({
                   rel="noreferrer noopener"
                   className="group block"
                 >
-                  <span className="block text-xl font-bold tracking-tight text-ink-900 transition-colors duration-100 group-hover:text-copper-700">
-                    {partner.acronym}
-                  </span>
-                  <span className="mt-0.5 block max-w-[30ch] text-[0.8125rem] text-ink-600">
+                  {partner.logo ? (
+                    <Image
+                      src={partner.logo}
+                      alt={partner.acronym}
+                      width={240}
+                      height={96}
+                      sizes="120px"
+                      className="h-12 w-auto max-w-[9rem] object-contain object-left"
+                    />
+                  ) : (
+                    <span className="block text-body font-semibold text-ink-900 transition-colors duration-100 group-hover:text-copper-700">
+                      {partner.acronym}
+                    </span>
+                  )}
+                  <span className="mt-1.5 block max-w-[30ch] text-[0.8125rem] text-ink-600">
                     {tr(partner, "name", locale)}
                   </span>
                 </a>

@@ -48,6 +48,7 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const sheetRef = useRef<HTMLDialogElement>(null);
   const menuId = useId();
 
   // Route change closes everything.
@@ -56,7 +57,21 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
     setOpenMenu(null);
   }, [pathname]);
 
-  // The mobile sheet covers the page; freeze the body behind it.
+  /*
+    The sheet is a real modal, so it is a native <dialog> driven by showModal() — the
+    same choice the photograph lightbox makes, and for the same reasons: the browser
+    puts it in the top layer, makes everything behind it inert, traps Tab inside it, and
+    returns focus to whatever opened it. Hand-rolled, this was a plain fixed div a
+    keyboard could tab straight out of while the backdrop was still up.
+  */
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    if (sheetOpen && !sheet.open) sheet.showModal();
+    if (!sheetOpen && sheet.open) sheet.close();
+  }, [sheetOpen]);
+
+  // showModal() makes the page inert, but iOS still scrolls the body behind it.
   useEffect(() => {
     if (!sheetOpen) return;
     const previous = document.body.style.overflow;
@@ -152,10 +167,10 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
       </a>
 
       <header className="sticky top-0 z-sticky">
-        {/* Utility tier */}
+        {/* Utility tier. Account and language only — the Society's name lives once on
+            this screen, in the lockup below, not here as well. */}
         <div className="on-dark border-b border-white/10">
-          <div className="shell flex h-9 items-center justify-between gap-4 text-[0.8125rem]">
-            <p className="hidden truncate text-ink-300 sm:block">{labels.orgName}</p>
+          <div className="shell flex h-9 items-center justify-end gap-4 text-[0.8125rem]">
             <div className="flex items-center gap-1">
               {/*
                 One account link, not two. An administrator has no use for the member
@@ -196,9 +211,10 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
                 <span className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-ink-950 nav:text-2xl">
                   MSID
                 </span>
-                {/* Wraps to two lines on small tablets otherwise, which pushes the
-                    masthead taller than the nav bar it sits in. */}
-                <span className="mt-1 hidden max-w-[22ch] text-[0.6875rem] leading-tight font-medium text-ink-600 sm:block md:max-w-none">
+                {/* The one place the full name appears on the first screen, so it is
+                    no longer hidden on phones. Capped so it wraps to two tidy lines
+                    inside the bar's height rather than stretching it. */}
+                <span className="mt-1 block max-w-[24ch] text-[0.6875rem] leading-tight font-medium text-ink-600 md:max-w-none">
                   {labels.orgName}
                 </span>
               </span>
@@ -306,15 +322,19 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
       </header>
 
       {/* Mobile sheet — full height, not a cramped dropdown */}
-      {sheetOpen && (
-        <div className="fixed inset-0 z-modal nav:hidden">
-          <button
-            type="button"
-            aria-label={labels.close}
-            onClick={() => setSheetOpen(false)}
-            className="absolute inset-0 cursor-default bg-ink-950/45"
-          />
-          <div className="animate-fade-up absolute inset-y-0 right-0 flex w-full max-w-sm flex-col overflow-y-auto bg-paper">
+      <dialog
+        ref={sheetRef}
+        aria-label={labels.menu}
+        /* Escape and the backdrop both route through the same state, so the dialog and
+           React never disagree about whether it is open. */
+        onClose={() => setSheetOpen(false)}
+        onCancel={() => setSheetOpen(false)}
+        onClick={(event) => {
+          if (event.target === sheetRef.current) setSheetOpen(false);
+        }}
+        className="sheet nav:hidden"
+      >
+        <div className="animate-fade-up absolute inset-y-0 right-0 flex w-full max-w-sm flex-col overflow-y-auto overscroll-contain bg-paper">
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-ink-200 px-5">
               <span className="text-xl font-extrabold tracking-[-0.03em] text-ink-950">
                 MSID
@@ -328,33 +348,77 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
               </button>
             </div>
 
+            {/*
+              Sections fold. Listing every parent with all of its children expanded made
+              the sheet a nineteen-item wall a visitor had to scroll past to reach the
+              one thing they came for (Chinguun, August 2026). `<details>` does this
+              natively: it is keyboard operable, it announces expanded state to a screen
+              reader, and it needs no JavaScript — so the menu still works if the page's
+              scripts never arrive, which on hospital wifi is not hypothetical.
+
+              The section the visitor is currently inside opens on arrival.
+            */}
             <nav aria-label={labels.menu} className="flex-1 px-5 py-2">
-              {nav.map((item) => (
-                <div key={item.href} className="border-b border-ink-200 py-3 last:border-0">
-                  <Link
-                    href={item.href}
-                    className={`block py-1.5 text-[1.0625rem] font-semibold ${
-                      isActive(item.href) ? "text-copper-700" : "text-ink-900"
-                    }`}
+              {nav.map((item) =>
+                item.children ? (
+                  <details
+                    key={item.href}
+                    open={isActive(item.href)}
+                    className="group border-b border-ink-200 last:border-0"
                   >
-                    {item.label}
-                  </Link>
-                  {item.children && (
-                    <ul className="mt-1">
+                    <summary
+                      className={`flex cursor-pointer list-none items-center justify-between py-4 text-body font-semibold marker:content-none ${
+                        isActive(item.href) ? "text-copper-700" : "text-ink-900"
+                      }`}
+                    >
+                      {item.label}
+                      <svg
+                        aria-hidden
+                        viewBox="0 0 12 8"
+                        className="h-2 w-3 shrink-0 text-ink-600 transition-transform duration-150 group-open:rotate-180 motion-reduce:transition-none"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      >
+                        <path d="M1 1.5 6 6.5l5-5" />
+                      </svg>
+                    </summary>
+
+                    {/* No link back to the parent: every section's own href is already
+                        its first child's — Танилцуулга and Мэндчилгээ are both /about —
+                        so repeating it listed the same page twice. */}
+                    <ul className="pb-2">
                       {item.children.map((child) => (
                         <li key={child.href}>
                           <Link
                             href={child.href}
-                            className="block py-1.5 text-[0.9375rem] text-ink-700"
+                            aria-current={pathname === child.href ? "page" : undefined}
+                            className={`block py-2 text-small ${
+                              pathname === child.href
+                                ? "font-medium text-copper-700"
+                                : "text-ink-700"
+                            }`}
                           >
                             {child.label}
                           </Link>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-              ))}
+                  </details>
+                ) : (
+                  <div key={item.href} className="border-b border-ink-200 last:border-0">
+                    <Link
+                      href={item.href}
+                      className={`block py-4 text-body font-semibold ${
+                        isActive(item.href) ? "text-copper-700" : "text-ink-900"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </div>
+                ),
+              )}
             </nav>
 
             <div className="shrink-0 border-t border-ink-200 px-5 py-4">
@@ -371,9 +435,8 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
                 {labels.switchTo}
               </Link>
             </div>
-          </div>
         </div>
-      )}
+      </dialog>
 
       {/*
         Mobile tab bar.

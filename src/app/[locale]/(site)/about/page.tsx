@@ -59,20 +59,27 @@ export default async function WelcomePage({
       <PageHeader
         title={tr(page, "title", locale) || t.aboutNav.welcome}
         meta={
-          <p className="text-small text-ink-400">
+          <p className="text-small text-ink-600">
             {t.about.founded}{" "}
-            <time dateTime={settings.founded_on} className="tabular text-ink-200">
+            <time dateTime={settings.founded_on} className="tabular text-ink-700">
               {formatDate(settings.founded_on, locale)}
             </time>
           </p>
         }
       />
 
-      <div className="shell py-14 md:py-20">
+      <div className="shell py-12 md:py-16">
         <Prose body={letter} />
 
+        {/*
+          The width cap belongs on the letter, not on the signature. `measure` (68ch) on
+          this row was being shared with the portrait, so the honours line — "Монгол
+          Улсын төрийн соёрхолт, Хүний гавьяат эмч" — broke after "Хүний" and the
+          three-line block rendered as four. The block is short and its line breaks are
+          authored; it needs room to keep them.
+        */}
         {signOff && (
-          <div className="measure mt-12 flex items-center gap-6">
+          <div className="mt-10 flex max-w-3xl items-center gap-6">
             {president?.photo && (
               <Image
                 src={president.photo}
@@ -82,7 +89,7 @@ export default async function WelcomePage({
                 className="aspect-4/5 w-24 shrink-0 object-cover sm:w-28"
               />
             )}
-            <p className="reading whitespace-pre-line text-ink-800">{signOff}</p>
+            <p className="reading min-w-0 whitespace-pre-line text-ink-800">{signOff}</p>
           </div>
         )}
       </div>

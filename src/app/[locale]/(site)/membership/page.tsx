@@ -110,25 +110,31 @@ export default async function MembershipPage({
         stated in the admin-authored intro at the top. Restating it beside the button put
         two near-identical Mongolian sentences on one screen.
       */}
-      <section className="on-copper">
-        <div className="shell py-16 md:py-20">
+      {/*
+        The tint marks the ask; it does not drench it. This was `on-copper` — a
+        copper-700 ground, the solid brown Chinguun rejected — and it was the last
+        drenched surface on the public site. Same treatment as the homepage's membership
+        band now, so the two places that ask the same question look like each other.
+      */}
+      <section className="border-y border-ink-200 bg-ink-50">
+        <div className="shell py-14 md:py-20">
           <div className="flex flex-wrap items-center justify-between gap-x-12 gap-y-8">
-            <h2 className="max-w-[20ch] text-h2 font-bold text-balance">
+            <h2 className="max-w-[20ch] text-h2 font-semibold text-balance">
               {t.membership.applyTitle}
             </h2>
 
             <div className="shrink-0 md:text-right">
               <Link
                 href={localePath(locale, "/membership/apply")}
-                className="btn btn-on-dark"
+                className="btn btn-primary"
               >
                 {t.membership.apply}
               </Link>
-              <p className="mt-4 text-small">
+              <p className="mt-4 text-small text-ink-700">
                 {t.auth.hasAccount}{" "}
                 <Link
                   href={localePath(locale, "/login")}
-                  className="font-semibold text-paper underline underline-offset-2"
+                  className="font-semibold text-copper-700 underline underline-offset-2"
                 >
                   {t.auth.login}
                 </Link>

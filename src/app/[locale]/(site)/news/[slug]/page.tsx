@@ -60,7 +60,7 @@ export default async function NewsPostPage({
         lead={tr(post, "excerpt", locale) || undefined}
         breadcrumb={[{ label: t.events.news, href: localePath(locale, "/news") }]}
         meta={
-          <time dateTime={published} className="tabular text-small text-ink-300">
+          <time dateTime={published} className="tabular text-small text-ink-600">
             {formatDate(published, locale)}
           </time>
         }

@@ -2,7 +2,6 @@ import Image from "next/image";
 import type { Locale } from "@/lib/db/types";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getSettings } from "@/lib/settings";
-import { formatDate } from "@/lib/format";
 import { safeExternalLink } from "@/lib/video";
 
 export async function Footer({ locale }: { locale: Locale }) {
@@ -14,7 +13,9 @@ export async function Footer({ locale }: { locale: Locale }) {
     locale === "mn" ? settings.contact_address_mn : settings.contact_address_en;
 
   return (
-    <footer className="on-dark mt-24 border-t-2 border-copper-600">
+    /* A hairline, like every other rule on the site. At 2px the copper rule was the
+       heaviest line anywhere, sitting under the quietest part of the page. */
+    <footer className="on-dark mt-12 border-t border-copper-600">
       {/*
         Two columns: who we are, how to reach us. No quick links — the masthead is
         sticky and already carries the navigation — and no partners, because the pages
@@ -41,12 +42,6 @@ export async function Footer({ locale }: { locale: Locale }) {
           </div>
 
           <p className="mt-5 max-w-[38ch] text-small text-ink-300">{t.org.name}</p>
-          <p className="mt-3 text-small text-ink-400">
-            {t.footer.ngo} · {t.about.founded}{" "}
-            <time dateTime={settings.founded_on}>
-              {formatDate(settings.founded_on, locale)}
-            </time>
-          </p>
         </div>
 
         <div>
@@ -75,9 +70,12 @@ export async function Footer({ locale }: { locale: Locale }) {
               href={safeExternalLink(settings.facebook_url) ?? "#"}
               target="_blank"
               rel="noreferrer noopener"
-              className="mt-4 inline-block text-small font-medium text-copper-400 transition-colors duration-100 hover:text-copper-300"
+              className="mt-4 inline-flex items-center gap-2 text-small font-medium text-copper-400 transition-colors duration-100 hover:text-copper-300"
             >
-              Facebook →
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" aria-hidden>
+                <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06C2 17.08 5.66 21.24 10.44 22v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.78-1.63 1.57v1.88h2.78l-.45 2.91h-2.33V22C18.34 21.24 22 17.08 22 12.06z" />
+              </svg>
+              Facebook
             </a>
           )}
         </div>

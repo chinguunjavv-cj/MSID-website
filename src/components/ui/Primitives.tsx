@@ -8,8 +8,14 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 /* -------------------------------------------------------------------------- */
 
 /**
- * Standard interior page header: an ink band with the title and an optional lead.
- * Consistent across every section so a visitor always knows where the page starts.
+ * Standard interior page header: the page's name, on paper, over a hairline.
+ *
+ * This was a drenched ink band carrying the title at h1/bold in white. On a page called
+ * "Удирдах зөвлөл" that is a wall of black shouting two words, and it repeated on every
+ * interior page — the loudest element on the site was its least informative one
+ * (Chinguun, August 2026). A heading does not need a stage; it needs to be first.
+ *
+ * The rule beneath it does the work the band was doing: it says where the page starts.
  */
 export function PageHeader({
   title,
@@ -23,18 +29,22 @@ export function PageHeader({
   breadcrumb?: { label: string; href: string }[];
 }) {
   return (
-    <div className="on-dark">
-      <div className="shell py-12 md:py-16">
+    <div className="border-b border-ink-200">
+      <div className="shell pt-10 pb-8 md:pt-14 md:pb-10">
         {breadcrumb && breadcrumb.length > 0 && (
-          <nav aria-label="Breadcrumb" className="mb-5">
-            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-ink-400">
+          <nav aria-label="Breadcrumb" className="mb-4">
+            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-ink-600">
               {breadcrumb.map((crumb, index) => (
                 <li key={crumb.href} className="flex items-center gap-2">
                   {/* Separators sit between crumbs, never after the last one. */}
-                  {index > 0 && <span aria-hidden>/</span>}
+                  {index > 0 && (
+                    <span aria-hidden className="text-ink-400">
+                      /
+                    </span>
+                  )}
                   <Link
                     href={crumb.href}
-                    className="transition-colors duration-100 hover:text-paper"
+                    className="transition-colors duration-100 hover:text-copper-700"
                   >
                     {crumb.label}
                   </Link>
@@ -44,15 +54,13 @@ export function PageHeader({
           </nav>
         )}
 
-        <h1 className="max-w-[20ch] text-h1 font-bold text-paper">{title}</h1>
+        <h1 className="max-w-[24ch] text-h2 font-semibold text-ink-950">{title}</h1>
 
         {lead && (
-          <p className="mt-5 max-w-[58ch] text-[1.0625rem] text-ink-300 md:text-lg">
-            {lead}
-          </p>
+          <p className="mt-4 max-w-[62ch] text-ink-600 text-pretty">{lead}</p>
         )}
 
-        {meta && <div className="mt-7">{meta}</div>}
+        {meta && <div className="mt-5">{meta}</div>}
       </div>
     </div>
   );
@@ -78,7 +86,7 @@ export function SectionHead({
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
       <div className="max-w-[52ch]">
-        <h2 id={id} className="text-h2 font-bold">
+        <h2 id={id} className="text-h2 font-semibold">
           {title}
         </h2>
         {lead && (
@@ -127,19 +135,43 @@ export function Prose({
   );
 }
 
-/** Plain-text list: one item per line. Used for member benefits and similar. */
-export function ProseList({ body }: { body: string }) {
+/**
+ * Plain-text list: one item per line. Used for member benefits and similar.
+ *
+ * `tone` follows the same convention as SectionHead. On an ink ground the hairlines
+ * have to come down to a transparency of paper — ink-200 is a near-white line and
+ * reads as a bright rule against ink-950 — and the copper mark moves up the ramp to
+ * the step DESIGN.md reserves for marks on ink.
+ */
+export function ProseList({
+  body,
+  tone = "light",
+}: {
+  body: string;
+  tone?: "light" | "dark";
+}) {
   const items = toParagraphs(body);
   if (items.length === 0) return null;
 
+  const dark = tone === "dark";
+
   return (
-    <ul className="register mt-6">
+    <ul
+      className={`mt-6 border-t ${dark ? "border-white/15" : "border-ink-200"}`}
+    >
       {items.map((item, index) => (
         <li
           key={index}
-          className="flex gap-4 border-b border-ink-200 py-4 text-ink-800"
+          className={`flex gap-4 border-b py-4 ${
+            dark ? "border-white/15 text-ink-200" : "border-ink-200 text-ink-800"
+          }`}
         >
-          <span aria-hidden className="mt-2.5 h-1.5 w-1.5 shrink-0 bg-copper-600" />
+          <span
+            aria-hidden
+            className={`mt-2.5 h-1.5 w-1.5 shrink-0 ${
+              dark ? "bg-copper-400" : "bg-copper-600"
+            }`}
+          />
           <span>{item}</span>
         </li>
       ))}
@@ -203,10 +235,15 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-ink-200 py-14">
-      <p className="text-[1.0625rem] font-semibold text-ink-800">{title}</p>
-      {hint && <p className="mt-2 max-w-[54ch] text-ink-600">{hint}</p>}
-      {action && <div className="mt-6">{action}</div>}
+    /*
+      Compact on purpose. A section with nothing in it should not reserve as much room
+      as a full one — with the section's own padding around it, py-10 here left a
+      three-line notice floating in some 240px of white.
+    */
+    <div className="border-t border-ink-200 py-7">
+      <p className="text-body font-semibold text-ink-800">{title}</p>
+      {hint && <p className="mt-1.5 max-w-[54ch] text-ink-600">{hint}</p>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

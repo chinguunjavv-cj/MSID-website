@@ -20,6 +20,7 @@ import {
   formatDateNumeric,
   formatDateRange,
   formatMnt,
+  todayIso,
 } from "@/lib/format";
 import {
   EmptyState,
@@ -103,6 +104,18 @@ export default async function EventPage({
     tr(event, "body", locale) || photos.length > 0 || event.video_url || sessions.length > 0,
   );
 
+  /*
+    An event that has already happened is a record, not an offer.
+
+    The sidebar used to announce "Бүртгэл хаагдсан" on a congress from 2024, which tells
+    a reader nothing they could not work out from the date at the top of the page, and
+    put a dead control where the page should simply be about what happened (Chinguun,
+    August 2026). Past events therefore drop the registration state, the seats-left
+    count and the deadline table; what remains is the date, the venue, and the record —
+    the programme, the photographs, the recording.
+  */
+  const isPast = (event.ends_on ?? event.starts_on ?? "") < todayIso();
+
   const registrationPanel = (
     <>
       {state === "open" ? (
@@ -113,9 +126,11 @@ export default async function EventPage({
           {t.events.register}
         </Link>
       ) : (
-        <p className="border border-ink-200 bg-ink-50 px-4 py-3 text-center text-small text-ink-700">
-          {stateLabel}
-        </p>
+        !isPast && (
+          <p className="border border-ink-200 bg-ink-50 px-4 py-3 text-center text-small text-ink-700">
+            {stateLabel}
+          </p>
+        )
       )}
 
       {event.external_url && (
@@ -129,13 +144,13 @@ export default async function EventPage({
         </a>
       )}
 
-      {remaining !== null && (
+      {remaining !== null && !isPast && (
         <p className="tabular mt-4 text-center text-small text-ink-600">
           {remaining} {t.events.seatsLeft}
         </p>
       )}
 
-      {deadlines.length > 0 && (
+      {deadlines.length > 0 && !isPast && (
         <div className="mt-8">
           <h2 className="text-label font-semibold text-ink-600">
             {t.events.deadlines}
@@ -200,22 +215,26 @@ export default async function EventPage({
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
         meta={
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-            <StatusPill
-              label={stateLabel}
-              tone={state === "open" ? "active" : state === "not_yet" ? "pending" : "neutral"}
-            />
-            <p className="tabular text-small text-ink-200">
+            {/* Registration status is news only while registering is possible. On a
+                congress from 2024 the pill said "closed" next to a 2024 date. */}
+            {!isPast && (
+              <StatusPill
+                label={stateLabel}
+                tone={state === "open" ? "active" : state === "not_yet" ? "pending" : "neutral"}
+              />
+            )}
+            <p className="tabular text-small text-ink-700">
               {formatDateRange(event.starts_on, event.ends_on, locale)}
             </p>
             {tr(event, "venue", locale) && (
-              <p className="text-small text-ink-300">
+              <p className="text-small text-ink-600">
                 {[tr(event, "venue", locale), tr(event, "city", locale)]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
             )}
             {countdown !== null && countdown > 0 && (
-              <p className="tabular text-small text-ink-300">
+              <p className="tabular text-small text-ink-600">
                 {countdown} {t.events.daysUntil}
               </p>
             )}

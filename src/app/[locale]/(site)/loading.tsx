@@ -15,12 +15,13 @@ export default function SiteLoading() {
     <div aria-busy="true" aria-live="polite">
       <span className="sr-only">Уншиж байна…</span>
 
-      <div className="on-dark">
-        <div className="shell py-12 md:py-16">
+      {/* Matches PageHeader: paper over a hairline, not the ink band it used to be —
+          otherwise a black slab flashes and turns white as the page lands. */}
+      <div className="border-b border-ink-200">
+        <div className="shell pt-10 pb-8 md:pt-14 md:pb-10">
           <div className="skeleton h-3 w-28" />
-          <div className="skeleton mt-6 h-9 w-[min(28rem,80%)] md:h-12" />
+          <div className="skeleton mt-5 h-8 w-[min(24rem,80%)] md:h-9" />
           <div className="skeleton mt-4 h-4 w-[min(34rem,92%)]" />
-          <div className="skeleton mt-7 h-3 w-40" />
         </div>
       </div>
 

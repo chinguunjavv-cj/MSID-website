@@ -40,7 +40,9 @@ export default async function EventsPage({
         title={t.events.title}
         lead={t.events.lead}
         meta={
-          <Link href={p("/membership")} className="btn btn-on-dark">
+          /* Secondary, not on-dark: the page header is paper now, and a white-on-ink
+             button on a paper ground is an invisible button. */
+          <Link href={p("/membership")} className="btn btn-secondary">
             {t.home.joinCta}
           </Link>
         }

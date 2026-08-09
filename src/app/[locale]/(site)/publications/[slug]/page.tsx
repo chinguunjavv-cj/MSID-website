@@ -67,7 +67,7 @@ export default async function PublicationPage({
         ]}
         meta={
           tr(publication, "authors", locale) ? (
-            <p className="text-ink-300">{tr(publication, "authors", locale)}</p>
+            <p className="text-ink-600">{tr(publication, "authors", locale)}</p>
           ) : undefined
         }
       />

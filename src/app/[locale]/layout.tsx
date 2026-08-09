@@ -15,10 +15,19 @@ import { isNoIndex, siteUrl } from "@/lib/site";
  * with fallback glyphs in the middle of words.
  */
 
+/*
+  Commissioner. Nunito was tried in its place (August 2026) and reverted: its rounded
+  terminals and wide, soft counters read friendly rather than academic, which is the
+  wrong voice for a society that publishes clinical standards. Commissioner's flatter,
+  more upright humanist forms hold that register.
+
+  Weight 300 is not loaded — nothing on the site uses it, and each weight is another
+  file per subset across four subsets.
+*/
 const commissioner = Commissioner({
   variable: "--font-commissioner",
   subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 

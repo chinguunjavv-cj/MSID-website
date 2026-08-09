@@ -80,7 +80,7 @@ export default async function GuidelinePage({
               tone={guidelineTone(guideline.status)}
             />
             {guideline.code && (
-              <span className="tabular text-small text-ink-300">
+              <span className="tabular text-small text-ink-600">
                 {guideline.code} · v{guideline.version}
               </span>
             )}

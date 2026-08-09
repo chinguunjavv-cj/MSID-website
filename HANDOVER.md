@@ -1,148 +1,130 @@
-# Handover
+# Handover — 8 August 2026
 
-Written 6 August 2026, at commit `9cc5c06`, **plus one uncommitted change** — see "The
-homepage in the working tree" below before doing anything else. `main` is what Vercel
-deploys automatically.
-
-This is the state of the work and the things that are not written down anywhere else.
-For the ordered list of what still has to happen before launch, read
-[LAUNCH.md](LAUNCH.md); for the security and quality findings, [AUDIT.md](AUDIT.md).
-This document does not repeat either.
+One long design session with Chinguun, working through the public site. **Nothing is
+committed.** 22 modified files, ~785 insertions. Typecheck clean, every public page
+returns 200 in both locales.
 
 ---
 
-## Do this first
+## The decision that governs everything else
 
-1. **Delete `.env.production.local`.** It is sitting in the repo root (gitignored, but
-   on disk) and holds every production secret in plaintext — SMTP password, admin
-   password, session secret, both database tokens. It was pulled with `vercel env pull`
-   on 5 August to run imports. If the imports you need are done, it has no reason to
-   exist: `rm .env.production.local`.
+The site was running **two visual languages at once** — the flat "register" (hairlines,
+tabular numerals) and a card language (rounded corners, shadows, tinted grounds). Each
+pass had been adding to one or the other, so nothing was wrong on its own and the whole
+read as noise. Chinguun's words: *"The website design is now mess."*
 
-2. **Decide the fate of `fwdhi/`** — 27 MB of the original photographs MSID sent
-   (Taiwan ×4, DD Week ×4, the President's portrait, the unattributed endoscopy group
-   photo), currently untracked in the repo root. The import scripts are built to take
-   originals, so "the imports are re-runnable" is only true while these files exist
-   somewhere durable. Either commit them deliberately (27 MB of never-changing JPEGs is
-   fine in git) or move them somewhere the next person can reach. Do not leave them
-   untracked on one laptop, and do not let a reflexive `git add .` sweep them in
-   undecided.
+It is now committed to **Restrained**:
 
-3. **Review the uncommitted homepage** — next section.
+- **Paper is the ground.** Structure comes from hairlines and type, not from cards,
+  shadows or tints.
+- **Copper is the only accent.** Ink is reserved for the masthead strip and the footer —
+  the frame around the page, never a section inside it.
+- One radius (`rounded-lg`), **zero shadows** on the public site, one section rhythm
+  (`py-12 md:py-16`).
 
----
+Measured before → after: 6 tinted surfaces → 1; 3 radii → 1; 2 shadow recipes → 0;
+4 spacing values → 1; 12 text styles → 10.
 
-## The homepage in the working tree
-
-`src/app/[locale]/(site)/page.tsx` carries an uncommitted redesign (+229/−126) that
-**Chinguun has not yet approved**. It is the fourth iteration of the hero in one day,
-and the history matters more than the diff:
-
-1. Copper-drenched split hero (photo beside type) — *"not aesthetic"*.
-2. Flat white, display-size headline — *"Not good"*.
-3. White with an ink-50 band, headline shrunk to h1 — *"worse"*.
-4. **Current, unreviewed:** the hero is one rounded photographic card, inset from the
-   page, message set over a left scrim (caps society name in copper, tagline as the
-   big line, two buttons); a slim copper next-event banner under it; a four-card
-   quick-links grid with small hand-drawn stroke icons; About facts in a card; soft
-   ambient shadows throughout.
-
-Version 4 deliberately copies the composition of a Stitch mock Chinguun supplied twice
-as his reference ("think of yourself as a senior UI designer of Dribbble") — its
-structure and polish, **not** its navy/teal palette (he explicitly chose "lighten, keep
-copper" when asked directly) and not its invented content. What was refused from the
-mock and why: CME tracking, fellowships and annual congresses do not exist for this
-society and nothing on this site is invented; "full text access to *Intestinal
-Research*" is KASID's journal and **might actually be true** under the KASID
-agreement — ask MSID, and if confirmed it is excellent membership-benefit copy.
-
-What his reactions taught, for whoever designs next: he judges from screenshots, in
-few words, and against polished consumer references. Flat hairline austerity — the
-documented "clinical standards register" look — reads to him as unfinished, not as
-restrained. Rounded corners (xl/2xl), soft shadows, card surfaces and small functional
-icons are now deliberately in, on his instruction.
-
-**DESIGN.md is now stale where it disagrees with this**: its hero clause (drenched
-copper), shape rules (radius stops at 10px), elevation rules (no shadows), and the
-"rules over cards" doctrine. If version 4 survives his review and ships, update
-DESIGN.md to match reality; if he rejects it, `git checkout -- src/app/[locale]/(site)/page.tsx`
-returns to the committed light split hero and DESIGN.md needs only the hero clause
-revisited.
+**DESIGN.md is stale.** It still documents "Strategy: Committed" with copper occupying
+whole surfaces, a drenched hero, square corners and no shadows. None of that is true
+now. Rewriting it is the single highest-value cleanup left.
 
 ---
 
-## What shipped this session (commits `c91c97c`…`9cc5c06`)
+## What Chinguun decided (do not silently re-litigate)
 
-- **Membership page**: three grounds (paper → ink-50 → copper CTA band), category
-  descriptions moved from hardcoded JSX into the dictionary.
-- **President's letter**: portrait beside a three-line sign-off at the foot (the
-  KASID-letter convention); `Prose` now preserves single newlines site-wide
-  (`whitespace-pre-line`) — that fix is what un-collapsed the signature.
-- **History**: the year no longer prints twice per row (`formatDayMonth` in
-  `src/lib/format.ts`).
-- **Guidelines register**: capped at `max-w-4xl` so the status pill sits with its
-  record instead of stranded at the page edge.
-- **Event galleries**: `EventGallery` is a crossfade carousel in the hero's dialect
-  (7s, segments with elapsed-time fill, pause on hover/dialog, reduced-motion),
-  no visible heading, click-to-enlarge dialog kept.
-- **Event pages**: an event with no body/photos/programme shows an EmptyState instead
-  of a void beside the registration sidebar.
-- **Footer**: brand + contact only. Quick links duplicated the sticky masthead;
-  partners duplicated the homepage section directly above. Chinguun's explicit call.
-- **Import safety** (`scripts/import-event-photos.mts`): re-runs no longer overwrite
-  alt text/captions unless flags are passed, and `sort` appends after the event's
-  current highest instead of restarting at 1. Both fixes exist so a future admin
-  editor's corrections survive re-imports.
+These were argued, some more than once. He reaffirmed each; treat them as settled.
 
-## Production state — partly unverified
+| Decision | Note |
+|---|---|
+| **No photograph in the hero** | Type only. The photographs moved beside the introduction |
+| **No guidelines register section on the landing page** | His reasoning: the register serves researchers, a narrower audience than the landing page. I argued against this twice — he reaffirmed with audience reasoning I don't have better information on |
+| **No membership section on the landing page** | Reachable from the hero button and the menu |
+| **Both hero buttons stay** | Гишүүнээр элсэх + Эмнэлзүйн заавар |
+| **Commissioner, not Nunito** | Nunito was tried and reverted — rounded terminals read friendly, wrong for a clinical standards body |
+| **Plus Jakarta Sans is impossible** | Ships `cyrillic-ext` but **not** base `cyrillic`, so А–я would fall back to a system font while only Ө/Ү rendered in the brand face. Verified in `node_modules/next/dist/compiled/@next/font/dist/google/font-data.json` — check that file before ever proposing a font |
+| **Filled copper is `copper-600`, not 700** | 700 is a step darker than the logo and reads brown; 600 ≈ the logo body `#A85423`, and passes AA at 5.16:1 |
+| **Bottom tab bar on mobile** | Was gated on `pointer: coarse` so it was invisible in every desktop browser — now width-based |
 
-Done and confirmed on 5 August: **both leaked credentials rotated** (Blob and Turso,
-via Vercel's managed rotation, zero-delay expiry — the handover item from 4 August is
-closed). The Gmail app password still does not exist.
+**He notices duplication instantly.** Three separate duplications were caught this
+session (quick-link cards repeating the sections below them verbatim; the empty-events
+notice appearing in both hero and congress section; the mobile menu listing each
+section's landing page twice because every parent's `href` *is* its first child's).
+A DOM sweep for repeated strings now returns empty — worth re-running after any change.
 
-Done by Chinguun, **never verified from this machine** (the sandbox blocked curl and
-deploys): the `vercel --prod` redeploy after rotation, and the Taiwan event import
-against production. Before trusting either, check: the live site loads at all (proves
-the redeploy), and `msidwebsite.vercel.app/en/events` lists `taiwan-mongolia-ibd-2024`
-(proves the import). The board-portrait import for the President
-(`npm run import:board -- --photo "Bayarmaa O.=fwdhi/IMG_7477.jpeg"`) was prepared but
-never confirmed run — the greeting page shows her portrait only if production has it.
+---
 
-**Event photos exist only locally.** Production `event_photos` is empty. The local
-database has Taiwan (IMG_1505/1496/1515) and DD Week (IMG_9547/9542) galleries — but
-two rows carry colliding `sort=1` values from before the append fix, so clear and
-re-import locally (or renumber) before treating local as the rehearsal for the
-production run. Local also still has the demo rows — `npm run demo:clear` — which is
-why screenshots keep showing a 2027 congress that does not exist.
+## Current homepage
 
-## Mongolian pending Chinguun's review
+```
+Hero  →  Нийгэмлэгийн тухай + photo gallery  →  Их хурал, сургалт  →  Түншүүд
+```
 
-- `Дэлгэрэнгүй мэдээлэл хараахан нийтлэгдээгүй байна.` (events.noDetails — composed
-  from already-reviewed patterns, still new).
-- The six photo alt texts written into the local gallery import (read off the
-  photographs; the DD Week slide one names Э.Бат-Өлзий from the slide itself).
+The hero is the last thing touched and **is unreviewed**. It got, in response to *"the
+background is just white wall"*:
 
-## Facts learned from the photographs, not yet acted on
+- an `ink-50` ground with a hairline bottom (the page's only tinted surface)
+- a faint ruled texture (`.ruled` in globals.css) using the same hairline and rhythm as
+  `.register-row`, masked to the **right** half where the emptiness actually is —
+  ruling through the headline read as lined notebook paper; disabled below 48rem
+- a short copper hairline above the headline
 
-- `Taiwan/IMG_1515` (auditorium group photo) is provably the Taiwan venue: its wall
-  motto `ХҮН ЧАНАР БОЛ ДОТООД НЭР ТӨР` pairs with `НЭР ТӨР БОЛ ГАДААД ХҮН ЧАНАР`
-  behind the banners in IMG_1519.
-- `DD week/IMG_9547`: the slide names Bat-Ulzii E. (FCHM colorectal surgery head)
-  presenting — a fact off the slide, safe to use.
-- The 11 September front row: unconfirmed observation, the woman in the tan suit in
-  IMG_1519 resembles the President's portrait and the same person sits at the chairs'
-  table in IMG_9551. **Do not ship this** — it is face-recognition inference; ask MSID,
-  who should also be asked the panel name plates (CHEIN-CHIH TUNG, O.ANAR,
-  …URNULTSAIKHAN).
-- The endoscopy group photo (`fwdhi/International_event.JPG`) remains unattributed —
-  still nowhere honest to put it.
+Chinguun has not seen this. It may need cutting back.
 
-## Still missing, still true from last time
+---
 
-The event-photo admin editor (alt text and captions are script-only until it exists —
-follow the fees/sessions pattern on the event edit page, **not** the resource
-registry); the Gmail app password; a domain; bank details; 14 of 16 board portraits;
-the remaining page text. The "Things that will bite you" and "Going public" sections
-of the 4 August handover remain accurate — MIGRATIONS array, `auditTx` inside
-transactions, `MSID_SITE_URL`, no stray exports from `"use server"` modules, admin
-guide sourced from `docs/admin-guide.html`, and the noindex mechanism.
+## Work still open
+
+1. **Partner logos** — `partners.logo` exists in the schema and is empty for KASID, AOCC
+   and ECCO. Rendering is wired: a logo replaces the acronym, no logo keeps the text, no
+   grey placeholder either way. Needs uploads via admin.
+2. **`unte_logo/` is untracked in the project root** — ~4.5MB of `.ai`/`.eps`/PNG design
+   source. Only `Logo-05.png` was copied to `public/brand/unte-logo.png`. Move it out or
+   gitignore it before committing.
+3. **PRODUCT.md contradicts the site** — it names the primary user job as "find the
+   current MSID position on a clinical question", but the guidelines register is no
+   longer on the landing page.
+4. **Open audit findings**: `aria-haspopup` missing on desktop dropdown triggers; utility
+   strip links are 66×29px and contact `tel:`/`mailto:` links 19px (under 44px); dates
+   built with `padStart` rather than `Intl.DateTimeFormat`; `HeroCarousel.tsx` is dead
+   code with zero importers, and `--animate-hero-progress` exists only for it.
+5. **36 arbitrary `text-[…rem]` values** still bypass existing tokens (`text-[0.8125rem]`
+   ×25 *is* `--text-label`).
+6. **Semantic token layer** — discussed, not done, deliberately. `ink-600` is written 110
+   times, `ink-200` 66, `copper-700` 45. Worth doing when dark mode or another palette
+   change comes up; invisible on screen, so it was not the priority.
+
+---
+
+## Two traps that cost real time
+
+**`curl` returning 200 does not mean the page works.** Next renders its error boundary
+with a 200 status. A broken SQL query in `listSocietyPhotos` passed every status check
+and only surfaced when the page was opened in a browser. Check for the error boundary
+string, or look.
+
+**The Browser pane paints stale and blank frames constantly.** Verify through computed
+styles and `getBoundingClientRect` rather than screenshots. Several times a screenshot
+showed a grey headline or an empty page while the DOM was correct. Also: Chinguun spent
+much of the session looking at **cached pages** and reporting "nothing has changed" —
+tell him to hard-reload (`Cmd+Shift+R`), a normal reload keeps Next's hashed CSS chunks.
+
+**JSX comments cannot sit beside a root element or inside a prop expression.** Broke the
+build three times this way. Put them above the `return`.
+
+---
+
+## Skills
+
+`impeccable` and `design-house-rules` are fully installed and were used throughout.
+
+`ui-ux-pro-max`, `ui-styling`, `design-system`, `brand`, `banner-design` and `slides` all
+arrived as **SKILL.md only** — one file each, no `scripts/`, no `references/`, no data.
+They are pointer skills whose substance did not ship; `ui-ux-pro-max`'s 192 palettes and
+74 font pairings are not queryable. Do not pretend otherwise to the user; he has asked
+about this repeatedly and been told each time. `web-design-guidelines` **is** complete —
+it fetches Vercel's rules live and was used for the UX audit.
+
+House rules that bit this session: *at most 2 font families*; *icons in coloured circles
+→ use a text label, a number, or nothing*; *visible text styles stay limited*; *a silent
+deviation is a bug*.

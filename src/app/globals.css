@@ -54,8 +54,14 @@
   --font-sans: var(--font-commissioner), ui-sans-serif, system-ui, sans-serif;
   --font-read: var(--font-literata), ui-serif, Georgia, serif;
 
-  --text-display: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
-  --text-display--line-height: 1.02;
+  /*
+    The display step starts smaller than it used to. At a 2.5rem floor the homepage
+    statement ran five lines on a phone and filled the screen before a visitor had read
+    anything else (Chinguun, August 2026). The ceiling and the tracking are
+    Commissioner's own again after the brief Nunito experiment.
+  */
+  --text-display: clamp(1.875rem, 1.2rem + 3.1vw, 4.5rem);
+  --text-display--line-height: 1.04;
   --text-display--letter-spacing: -0.03em;
 
   --text-h1: clamp(2rem, 1.4rem + 2.4vw, 3.25rem);
@@ -161,6 +167,18 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  /*
+    No double-tap-to-zoom delay on things meant to be tapped once. Pinch zoom is
+    untouched — the page never disables it, which a site read by clinicians with a wide
+    range of eyesight has no business doing.
+  */
+  a,
+  button,
+  summary,
+  [role="button"] {
+    touch-action: manipulation;
+  }
+
   html {
     scroll-behavior: smooth;
     /* Sticky masthead height, so in-page anchors are not hidden behind it. */
@@ -175,6 +193,19 @@
     line-height: 1.65;
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+  }
+
+  /* A phone holds fewer words per line, so the same size reads bigger there than it
+     does on a laptop. These are floors, not compromises: 16px interface, 17px reading. */
+  @media (width < 40rem) {
+    body {
+      font-size: 1rem;
+    }
+
+    .reading {
+      font-size: 1.0625rem;
+      line-height: 1.7;
+    }
   }
 
   h1,
@@ -367,18 +398,35 @@
       color var(--duration-state) var(--ease-out-quart);
   }
 
+  /* Trimmer on a phone. The desktop padding made two Mongolian labels sit heavily on a
+     375px row; this keeps the 44px touch target while taking back the bulk. */
+  @media (width < 40rem) {
+    .btn {
+      padding: 0.625rem 0.875rem;
+      font-size: 0.875rem;
+    }
+  }
+
   .btn:disabled,
   .btn[aria-disabled="true"] {
     cursor: not-allowed;
     opacity: 0.55;
   }
 
+  /*
+    Filled copper sits at 600, not 700.
+
+    700 is a full step darker than the logo and reads as brown rather than as the mark's
+    burnt sienna; 600 is within a hair of the logo body (#A85423) and still clears AA on
+    white at 5.16:1. Copper *text* stays at 700 below — a filled button only needs to
+    carry its own label, while an inline link has to hold up at 15px against paper.
+  */
   .btn-primary {
-    background-color: var(--color-copper-700);
+    background-color: var(--color-copper-600);
     color: var(--color-paper);
   }
   .btn-primary:hover:not(:disabled) {
-    background-color: var(--color-copper-800);
+    background-color: var(--color-copper-700);
   }
 
   .btn-secondary {
@@ -538,6 +586,74 @@
     background-color: var(--color-ink-50);
   }
 
+  /* --- The hero's ground --------------------------------------------------- */
+
+  /*
+    Ruled paper, faintly.
+
+    The hero carries no photograph, and on plain white the statement floated on nothing
+    (Chinguun, August 2026: "the background is just white wall"). The rules are the same
+    hairline and the same rhythm as `.register-row` — the component this whole site is
+    built around — so the opening screen sits on the same ruled ground the guidelines and
+    events are recorded on, rather than on decoration borrowed from somewhere else.
+
+    They fade out downward with a mask so the type at the top has clean paper under it
+    and nothing collides with the section boundary below.
+  */
+  .ruled {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(3rem - 1px),
+      var(--color-ink-200) calc(3rem - 1px),
+      var(--color-ink-200) 3rem
+    );
+    /*
+      Masked to the right, where the emptiness actually is: the statement is left
+      aligned at 18ch, so the void a visitor sees is the half beside it. Ruling straight
+      through the headline read as lined notebook paper; ruling the space next to it
+      reads as the sheet the statement is set on.
+    */
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 42%,
+      #000 78%
+    );
+    mask-image: linear-gradient(to right, transparent 0%, transparent 42%, #000 78%);
+  }
+
+  /* On a phone the type fills the width, so there is no space beside it to rule. */
+  @media (width < 48rem) {
+    .ruled {
+      background-image: none;
+    }
+  }
+
+  /* --- The mobile navigation sheet ---------------------------------------- */
+
+  /*
+    A native <dialog> stretched to the viewport, so the panel inside it can sit against
+    the right edge. The browser supplies what a modal actually needs — top layer, inert
+    background, focus trapping, Escape — and this only has to undo the default centred
+    box and give the backdrop the site's ink.
+  */
+  .sheet {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overscroll-behavior: contain;
+  }
+
+  .sheet::backdrop {
+    background-color: oklch(0.175 0.014 45 / 0.45);
+  }
+
   /* --- Surfaces ----------------------------------------------------------- */
 
   .on-dark {
@@ -599,39 +715,36 @@
 }
 
 /* ==========================================================================
-   Which mobile navigation a visitor gets
+   Which navigation a visitor gets
    ==========================================================================
 
-   Width alone is the wrong test. A desktop window dragged narrow has the same
-   *space* as a phone but not the same *hand* — a bottom bar pinned to the edge of a
-   window, reached with a mouse, reads as a phone layout leaking onto a desktop.
+   Narrow viewport → the bar at the bottom of the screen. Wide → the full horizontal
+   nav in the masthead. One test, one breakpoint.
 
-   So the switch is on pointer type. A coarse pointer is a finger, and a finger wants
-   the bar at the bottom of the screen. Anything else keeps the menu button in the
-   header, where a mouse already is.
+   This used to switch on `pointer: coarse` instead, reasoning that a desktop window
+   dragged narrow has a phone's *space* but not its *hand*. That is true, and it cost
+   more than it bought (Chinguun, August 2026): the bar was invisible in every browser
+   anyone reviews the site in, so nobody could see the site's main mobile navigation
+   without a real handset. Width is also the more robust test — every browser
+   understands it, while a browser that does not understand `pointer` fell through to a
+   layout with no bottom bar at all.
 
-   The header button is the default and the tab bar is opt-in, deliberately: a browser
-   too old to understand `pointer` falls through to the button, and the failure mode of
-   getting that wrong is a page with no navigation at all.
+   The trade the old rule was protecting against — a bottom bar in a narrow desktop
+   window — is a small cosmetic oddity. Being unable to review the navigation was not.
 */
 .tab-bar {
-  display: none;
+  display: block;
 }
 
-@media (pointer: coarse) {
-  .tab-bar {
-    display: block;
-  }
-
-  .masthead-menu-button {
-    display: none;
-  }
+/* The header's menu button was the fallback for the no-bottom-bar case. The bottom
+   bar's own "Цэс" tab opens the same sheet, so two ways in is one too many. */
+.masthead-menu-button {
+  display: none;
 }
 
 /* Above the breakpoint the full horizontal nav takes over and neither is wanted. */
 @media (width >= 68rem) {
-  .tab-bar,
-  .masthead-menu-button {
+  .tab-bar {
     display: none;
   }
 }

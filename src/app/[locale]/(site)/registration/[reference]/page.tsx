@@ -100,7 +100,7 @@ export default async function RegistrationPage({
               tone={paymentTone(registration.payment_status)}
             />
             {event && (
-              <p className="text-small text-ink-300">
+              <p className="text-small text-ink-600">
                 {tr(event, "title", locale)} ·{" "}
                 <span className="tabular">
                   {formatDateRange(event.starts_on, event.ends_on, locale)}

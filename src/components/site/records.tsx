@@ -41,9 +41,12 @@ export function GuidelineRow({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[1.0625rem] font-semibold text-ink-900 group-hover:text-copper-700">
+        <p className="text-body font-semibold text-ink-900 group-hover:text-copper-700">
           {tr(guideline, "title", locale)}
         </p>
+        {/* Same treatment as the event and news summaries beside it. Setting this one in
+            Literata added a text style used exactly once, and made guideline rows read
+            differently from every other record in the same register. */}
         {tr(guideline, "summary", locale) && (
           <p className="mt-1.5 max-w-[62ch] text-small text-ink-600">
             {truncate(tr(guideline, "summary", locale), 160)}
@@ -83,7 +86,7 @@ export function EventRow_({ event, locale }: { event: EventRow; locale: Locale }
       </div>
 
       <div className="min-w-0">
-        <p className="text-[1.0625rem] font-semibold text-ink-900 group-hover:text-copper-700">
+        <p className="text-body font-semibold text-ink-900 group-hover:text-copper-700">
           {tr(event, "title", locale)}
         </p>
         {tr(event, "summary", locale) && (
@@ -132,7 +135,7 @@ export function PublicationRow({
       </div>
 
       <div className="min-w-0">
-        <p className="text-[1.0625rem] font-semibold text-ink-900 group-hover:text-copper-700">
+        <p className="text-body font-semibold text-ink-900 group-hover:text-copper-700">
           {tr(publication, "title", locale)}
         </p>
         {tr(publication, "authors", locale) && (
@@ -168,7 +171,7 @@ export function NewsRow({ post, locale }: { post: NewsPost; locale: Locale }) {
       </time>
 
       <div className="min-w-0 md:col-span-2">
-        <p className="text-[1.0625rem] font-semibold text-ink-900 group-hover:text-copper-700">
+        <p className="text-body font-semibold text-ink-900 group-hover:text-copper-700">
           {tr(post, "title", locale)}
         </p>
         {tr(post, "excerpt", locale) && (

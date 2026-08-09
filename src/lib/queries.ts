@@ -384,6 +384,58 @@ export async function listEventPhotos(eventId: string): Promise<EventPhoto[]> {
   );
 }
 
+/**
+ * Every photograph the Society has published, with the event each one documents.
+ *
+ * Two sources, one list: the photographs attached to an event, and the event's own
+ * cover. A cover is a photograph that happens to be doing a second job, so excluding it
+ * would drop the best picture of several events on the floor.
+ *
+ * Each row carries its event's title, date and city, because a photograph on this site
+ * is a record of something that happened and is captioned as one — never a decorative
+ * plate. `tr()` reads the `_mn`/`_en` pairs, so the shape matches the rest of the site.
+ */
+export interface SocietyPhoto {
+  id: string;
+  image: string;
+  alt_mn: string;
+  alt_en: string;
+  caption_mn: string;
+  caption_en: string;
+  slug: string;
+  title_mn: string;
+  title_en: string;
+  starts_on: string | null;
+  city_mn: string;
+  city_en: string;
+}
+
+export async function listSocietyPhotos(limit = 8): Promise<SocietyPhoto[]> {
+  return all<SocietyPhoto>(
+    /*
+      The union is wrapped because a compound SELECT may only be ordered by a column
+      name from its result set — `starts_on IS NULL` is an expression, and SQLite
+      rejects it there. Ordering outside the subquery lifts that restriction, and undated
+      events sort last instead of first.
+    */
+    `SELECT * FROM (
+       SELECT p.id, p.image, p.alt_mn, p.alt_en, p.caption_mn, p.caption_en,
+              e.slug, e.title_mn, e.title_en, e.starts_on, e.city_mn, e.city_en
+         FROM event_photos p
+         JOIN events e ON e.id = p.event_id
+        WHERE e.status = 'published' AND p.image != ''
+        UNION ALL
+       SELECT e.id || ':cover', e.cover_image, e.cover_alt_mn, e.cover_alt_en, '', '',
+              e.slug, e.title_mn, e.title_en, e.starts_on, e.city_mn, e.city_en
+         FROM events e
+        WHERE e.status = 'published' AND e.cover_image != ''
+     )
+      ORDER BY starts_on IS NULL, starts_on DESC
+      LIMIT ?`,
+    limit,
+  );
+}
+
 export async function listHistoryEntries(): Promise<HistoryEntry[]> {
   return all<HistoryEntry>(
     "SELECT * FROM history_entries ORDER BY year DESC, sort, happened_on DESC",

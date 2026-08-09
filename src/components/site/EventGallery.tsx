@@ -31,9 +31,17 @@ export interface GalleryPhoto {
 export function EventGallery({
   photos,
   labels,
+  className = "mt-14",
+  frameClassName = "aspect-4/3",
 }: {
   photos: GalleryPhoto[];
   labels: { heading: string; show: string; enlarge: string; close: string };
+  /* The event page stacks this under the prose, so it keeps the original top margin.
+     Beside a column of text it needs none — hence a prop rather than a hardcoded rule. */
+  className?: string;
+  /* The frame's shape. An event page gives its photographs a 4:3 plate; beside a column
+     of text a fixed, shorter height keeps the panel from towering over the paragraph. */
+  frameClassName?: string;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const regionRef = useRef<HTMLDivElement>(null);
@@ -85,7 +93,7 @@ export function EventGallery({
       ref={regionRef}
       aria-roledescription={single ? undefined : "carousel"}
       aria-label={labels.heading}
-      className="mt-14"
+      className={className}
       onPointerEnter={() => setPaused(true)}
       onPointerLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
@@ -93,7 +101,16 @@ export function EventGallery({
         if (!regionRef.current?.contains(event.relatedTarget as Node)) setPaused(false);
       }}
     >
-      <div className="relative aspect-4/3 w-full overflow-hidden">
+      {/*
+        `contain`, not `cover`. These photographs arrive in several shapes — 4:3 off a
+        phone, the odd portrait, a wide conference cover — and filling a fixed frame with
+        them sliced the tops off rooms and left a picture of a ceiling. A photograph on
+        this site is a record, and a record is shown whole; the frame letterboxes onto a
+        quiet ground rather than cropping to fit (Chinguun, August 2026).
+      */}
+      <div
+        className={`relative w-full overflow-hidden rounded-lg bg-ink-50 ${frameClassName}`}
+      >
         {photos.map((photo, position) => (
           <div
             key={photo.id}
@@ -119,21 +136,25 @@ export function EventGallery({
                 fill
                 loading={position === 0 ? undefined : "lazy"}
                 sizes="(min-width: 64rem) 60vw, 100vw"
-                className="object-cover transition-opacity duration-100 group-hover:opacity-95"
+                className="object-contain transition-opacity duration-100 group-hover:opacity-95"
               />
             </button>
           </div>
         ))}
       </div>
 
-      {/* Caption for the visible photograph, and the controls beside it. */}
-      <div className="mt-3 flex items-start justify-between gap-x-6 gap-y-2">
-        <p className="min-w-0 max-w-[52ch] text-small text-ink-600 text-pretty">
+      {/*
+        Caption first, across the full width, then the controls beneath it. These used
+        to sit side by side, which is fine on a wide event page and cramped the caption
+        into a six-line ribbon when the gallery stands in a column beside text.
+      */}
+      <div className="mt-3">
+        <p className="max-w-[60ch] text-small text-ink-600 text-pretty">
           {current.caption || current.alt}
         </p>
 
         {!single && (
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {photos.map((photo, position) => (
               <button
                 key={photo.id}
@@ -175,7 +196,7 @@ export function EventGallery({
           // Clicking the backdrop — the dialog element itself — dismisses.
           if (event.target === dialogRef.current) hide();
         }}
-        className="max-h-[92dvh] max-w-[94vw] bg-transparent backdrop:bg-ink-950/85"
+        className="max-h-[92dvh] max-w-[94vw] overscroll-contain bg-transparent backdrop:bg-ink-950/85"
       >
         {open && (
           <figure className="flex max-h-[92dvh] flex-col">
@@ -184,6 +205,9 @@ export function EventGallery({
               alt={open.alt}
               width={2200}
               height={1650}
+              /* Without this the enlarged photograph is served at full width to a
+                 phone — the heaviest request on the site, on hospital wifi. */
+              sizes="94vw"
               className="min-h-0 w-auto object-contain"
             />
             <figcaption className="mt-3 flex items-start justify-between gap-6">

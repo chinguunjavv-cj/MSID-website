@@ -116,7 +116,7 @@ export default async function RegisterPage({
           },
         ]}
         meta={
-          <p className="tabular text-small text-ink-300">
+          <p className="tabular text-small text-ink-600">
             {formatDateRange(event.starts_on, event.ends_on, locale)}
             {tr(event, "venue", locale) && ` · ${tr(event, "venue", locale)}`}
           </p>
