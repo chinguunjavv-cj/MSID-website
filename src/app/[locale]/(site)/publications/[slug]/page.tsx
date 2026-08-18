@@ -11,7 +11,7 @@ import {
   StaffPreviewNotice,
   TranslationNotice,
 } from "@/components/ui/Primitives";
-import { safeExternalLink } from "@/lib/video";
+import { safeExternalLink, safeFileHref } from "@/lib/video";
 import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
@@ -43,6 +43,7 @@ export default async function PublicationPage({
   if (!publication) notFound();
 
   const t = getDictionary(locale);
+  const fileHref = safeFileHref(publication.file_path);
 
   const facts = [
     { label: t.publications.authors, value: tr(publication, "authors", locale) },
@@ -82,8 +83,8 @@ export default async function PublicationPage({
 
           <aside>
             <div className="flex flex-col gap-3">
-              {publication.file_path && (
-                <a href={publication.file_path} download className="btn btn-primary">
+              {fileHref && (
+                <a href={fileHref} download className="btn btn-primary">
                   {t.common.download}
                 </a>
               )}

@@ -1,10 +1,12 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { randomUUID } from "node:crypto";
 import { get, run } from "@/lib/db";
-import type { Role, User, UserStatus } from "@/lib/db/types";
+import type { Locale, Role, User, UserStatus } from "@/lib/db/types";
+import { localePath } from "@/lib/i18n/config";
 
 export const SESSION_COOKIE = "msid_session";
 const SESSION_DAYS = 14;
@@ -124,6 +126,26 @@ export const currentUser = cache(async function currentUser(): Promise<SessionUs
 
 export function isStaff(user: SessionUser | null): boolean {
   return user?.role === "admin" || user?.role === "editor";
+}
+
+/**
+ * The access check for admin *pages*, called at the top of each one.
+ *
+ * The admin layout performs the same check, but a layout is not a guard: on soft
+ * navigation and partial RSC requests Next can render a page segment without
+ * re-running the layout above it. Repeating the check here — `currentUser()` is
+ * request-cached, so it costs nothing — means every admin page verifies the session
+ * against the database itself, whichever route the request took to reach it.
+ *
+ * Redirects rather than throws, because on a page the right answer to "not signed in"
+ * is the login form, not an error boundary. Server actions use their own throwing
+ * `requireStaff()` for the same reason in reverse.
+ */
+export async function requireStaffPage(locale: Locale): Promise<SessionUser> {
+  const user = await currentUser();
+  if (!user) redirect(localePath(locale, "/login"));
+  if (!isStaff(user)) redirect(localePath(locale, "/portal"));
+  return user;
 }
 
 /** Removes expired session rows. Called opportunistically on sign-in. */

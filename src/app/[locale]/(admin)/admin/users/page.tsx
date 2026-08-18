@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
-import { currentUser } from "@/lib/auth/session";
+import { requireStaffPage } from "@/lib/auth/session";
 import { isLocale } from "@/lib/i18n/config";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password";
 import { listStaffUsers } from "@/lib/queries";
@@ -16,11 +16,11 @@ export default async function AdminUsersPage({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  const me = await requireStaffPage(locale);
 
   const mn = locale === "mn";
-  const me = await currentUser();
   const staff = await listStaffUsers();
-  const isAdmin = me?.role === "admin";
+  const isAdmin = me.role === "admin";
 
   const roles = [
     { value: "editor", label: mn ? "Редактор" : "Editor" },
@@ -62,7 +62,7 @@ export default async function AdminUsersPage({
               <tr key={user.id}>
                 <td className="font-medium text-ink-900">
                   {tr(user, "name", locale) || "—"}
-                  {user.id === me?.id && (
+                  {user.id === me.id && (
                     <span className="pill pill-info ml-2">{mn ? "Та" : "You"}</span>
                   )}
                 </td>
@@ -97,7 +97,7 @@ export default async function AdminUsersPage({
                         </button>
                       </form>
 
-                      {user.id !== me?.id && (
+                      {user.id !== me.id && (
                         <form action={deleteStaffAction}>
                           <input type="hidden" name="userId" value={user.id} />
                           <button

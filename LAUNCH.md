@@ -15,7 +15,7 @@ Chase these first. They are the long poles, and nothing below finishes without t
 
 | | What | Why it blocks |
 | --- | --- | --- |
-| ☐ | **Gmail app password** for `ibdmsid@gmail.com` | Every email the site sends. Until it exists, sends are skipped with a log line and the password-reset page says so. See "Email and password resets" in the README for the steps to give them. |
+| ☑ | ~~**Gmail app password** for `ibdmsid@gmail.com`~~ — **done via Brevo, 18 Aug 2026.** Google refused to generate an app password for the account ("There was an error generating your app password", every browser). Outgoing mail now goes through Brevo's SMTP relay with `ibdmsid@gmail.com` as the verified sender; see section 1. | Every email the site sends. |
 | ☐ | **Real content** — board members, guidelines, congress dates, publications | The site currently shows sample content with invented guideline codes and a placeholder congress. This is the single reason it must stay hidden from search engines. |
 | ☐ | **A domain** | Everything in step 5. |
 | ☐ | **Bank details** — bank, account number, account holder | Until these are in Тохиргоо → Төлбөр, a participant registering for a paid event is told the Society will send payment details separately, rather than being shown where to transfer. |
@@ -24,20 +24,33 @@ Chase these first. They are the long poles, and nothing below finishes without t
 
 ## 1. Email
 
-☐ Add to Vercel → Settings → Environment Variables, then redeploy:
+☑ **Done (18 Aug 2026) — Brevo, not Gmail.** Google would not issue an app password for
+`ibdmsid@gmail.com`, so the site sends through Brevo's free SMTP relay (300/day) with
+`ibdmsid@gmail.com` added and verified as a sender in the Brevo account. Vercel holds:
 
 ```
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=465
-SMTP_USER=ibdmsid@gmail.com
-SMTP_PASSWORD=<the 16-character app password>
+SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USER=<the Brevo SMTP login, e.g. xxxxxxxx@smtp-brevo.com>
+SMTP_PASSWORD=<the Brevo SMTP key>
 MAIL_FROM=MSID <ibdmsid@gmail.com>
 ```
 
-☐ Verify by using the site rather than by reading the config: open `/mn/forgot-password`,
-enter an address you control that has an account, and confirm the mail arrives. Check the
-spam folder — a brand-new sending pattern from a Gmail account often lands there for the
-first few messages.
+Two things learned the hard way, so nobody repeats them: `MAIL_FROM` must be exactly a
+verified Brevo sender or the relay answers `451 Invalid from` (the site logs it, the user
+sees the usual "if that address has an account…" message and nothing arrives); and the
+Vercel value field takes the bare value — `MSID <ibdmsid@gmail.com>`, not
+`MAIL_FROM=MSID <…>`.
+
+Brevo will show DKIM/DMARC warnings against the gmail.com sender. They are advice, not a
+block — a freemail sender cannot be authenticated. Once MSID has a domain (step 5), add it
+under Brevo → Senders & IP → Domains, authenticate it, and change `MAIL_FROM` to an
+address on it; the warnings go away and deliverability improves.
+
+☑ Verified live: `/mn/forgot-password` delivered a reset link to `chinguunjavv@gmail.com`
+and the password was changed through it. If it ever stops, look at Brevo → Transactional
+→ Logs first (empty = the site never reached Brevo; check `vercel logs` for the SMTP
+error), then at the Brevo log line for the message.
 
 ☐ Tell MSID what now goes out in their name. Section 8 of the administrator's guide lists
 it; the point they will care about is that approving a membership emails the applicant

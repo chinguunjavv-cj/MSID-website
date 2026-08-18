@@ -3,7 +3,8 @@ node_modules
 data
 public/uploads
 .git
-.env*.local
+.env*
+.vercel
 .claude
 *.md
 !README.md

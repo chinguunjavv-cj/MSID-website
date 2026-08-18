@@ -148,6 +148,46 @@ export async function recordFormSubmission(form: PublicForm): Promise<void> {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* Registration lookups by reference                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * `/registration/[reference]` shows a participant's name, email and amount due to
+ * whoever holds the reference — by design, so they can come back to their payment
+ * instructions from an email without an account. The reference space is large enough
+ * that guessing one is impractical *only if* nobody is allowed to guess quickly. This
+ * counts misses per address and, past the limit, answers every lookup from that
+ * address with the same 404 a wrong reference gets — so the limit is invisible to a
+ * participant reloading their own page and a wall to a script.
+ *
+ * Only misses are recorded. A hit is someone with a real reference, and they may
+ * reload as often as they like. The limit is generous — thirty wrong references an
+ * hour from one address — because a hospital's whole staff sits behind one address,
+ * and a link mistyped by several colleagues must not lock out the one who has it right.
+ */
+const LOOKUP_WINDOW_MINUTES = 60;
+const MAX_LOOKUP_MISSES_PER_HOUR = 30;
+
+export async function checkLookupThrottle(): Promise<boolean> {
+  const address = await clientAddress();
+  /*
+    With no address to key on — a container with no proxy in front, local development —
+    every visitor would share one bucket, and thirty misses from anyone would 404 the
+    page for everyone. Not throttling at all is the lesser harm there; the sign-in
+    throttle keeps its per-email limit for exactly this reason.
+  */
+  if (address === "unknown") return false;
+  const seen = await recentInWindow(`lookup:${address}`, LOOKUP_WINDOW_MINUTES);
+  return seen >= MAX_LOOKUP_MISSES_PER_HOUR;
+}
+
+export async function recordLookupMiss(): Promise<void> {
+  const address = await clientAddress();
+  if (address === "unknown") return;
+  await run("INSERT INTO login_attempts (id, identity) VALUES (?, ?)", newId(), `lookup:${address}`);
+}
+
 /**
  * Recorded for every request, not only the ones that match an account — otherwise the
  * limit would apply to real users and not to someone working through a list of guessed

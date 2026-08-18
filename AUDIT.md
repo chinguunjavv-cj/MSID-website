@@ -11,6 +11,46 @@ severity and, where it needs one, the decision MSID has to make before it can be
 
 ---
 
+## Second pass — 18 August 2026
+
+A 20-point pre-launch checklist run against the tree (secrets, git history, auth on
+routes and actions, IDOR, field tampering, cookies, hashing, throttling, bot protection,
+parameterised SQL, validation, escaping, uploads, response leakage, headers, HTTPS,
+dependencies). Thirteen passed outright and the "what holds up well" claims below were
+re-verified against the code. What changed:
+
+- **Dependencies:** `next` 16.2.12 → 16.3.1, `npm audit fix` for the rest. From four
+  high advisories (sharp/libvips — which `next/image` uses on admin-uploaded images —
+  postcss, nanoid) to zero. 16.3 removed the inert `experimental.viewTransition` flag,
+  so it is gone from `next.config.ts`; the `<ViewTransition>` template works without it.
+- **Admin pages check the session themselves.** `requireStaffPage(locale)` in
+  `src/lib/auth/session.ts`, called at the top of all eight `/admin/**` pages. The layout
+  still checks too, but a layout is not a guard: Next can render a page segment without
+  re-running the layout on soft navigation and partial RSC requests. `currentUser()` is
+  request-cached, so the second check is free.
+- **`password_hash` never leaves the query layer.** `getMemberRecord`, `listMembers`
+  and `listStaffUsers` select user columns by name instead of `u.*`; `MemberRecord`
+  omits the field in its type as well.
+- **Registration lookups throttled** (item 4 below, now closed).
+- **Headers:** `Strict-Transport-Security` (2 years, includeSubDomains) and a
+  `Content-Security-Policy-Report-Only` with a real `default-src` policy. The report-only
+  header blocks nothing; it logs violations to the console so the enforced policy can be
+  tightened from evidence. `frame-ancestors 'none'` remains enforced.
+- **Staff-side input tightened.** The generic form rejects a select value outside its
+  option list and a non-finite number, and caps free text; event fee and programme
+  actions parse through zod (audience enum, non-negative integer amounts, ISO dates,
+  200-char labels); `createStaffAction` validates the email format; `updateMemberAction`
+  drops malformed dates instead of writing them; `saveSettingsAction` writes only known
+  keys. Guideline and publication download links pass through `safeFileHref()`, which
+  admits `/uploads/…` and http(s) only. SVG removed from the upload allow-list.
+- `.dockerignore` now excludes every `.env*` file and `.vercel/`.
+
+Still open from the list below: foreign-key enforcement on Turso (5), backups (6),
+on-demand rendering (8). Housekeeping worth doing: rotate the Vercel Blob token if its
+prefix matches the one that briefly appeared in commit `1bc7c29`.
+
+---
+
 ## Fixed in this pass
 
 ### SQL injection reachable by any editor account — was high
@@ -171,17 +211,15 @@ a false positive that leaves a doctor believing they applied is the worse failur
 Honest about the weakest of the three: the timing check only catches a bot that fetches
 the page and posts within three seconds.
 
-### 4. The registration page shows personal data to anyone with the reference — medium
+### 4. The registration page shows personal data to anyone with the reference — CLOSED
 
 `/mn/registration/MSID-2026-XXXXXX` shows the participant's name, email address and
 amount due, to anyone who has the code. It is marked `noindex` and the code is one of
-about a billion, which is the same design an airline uses for a booking reference.
-
-But nothing rate-limits guesses at it. If MSID ever runs a congress with a few hundred
-paying participants, that is a scan worth someone's time.
-
-**Options:** rate-limit the route by address, or require the email address as a second
-value on the link. Neither is urgent while there are no live registrations.
+about a billion, which is the same design an airline uses for a booking reference — and
+now, as of 18 Aug 2026, guesses are rate-limited: `checkLookupThrottle()` in
+`src/lib/auth/throttle.ts` counts *misses* per address (30 an hour) and past the limit
+every lookup from that address gets the same 404 a wrong reference does. Hits are never
+counted, so a participant reloading their own page is unaffected.
 
 ### 5. Foreign keys may not be enforced in production — medium, one check needed
 
@@ -208,12 +246,12 @@ Turso's free plan has no point-in-time restore. Every member record, registratio
 piece of content lives in one database with no copy. A `turso db shell … .dump` on a
 schedule, or the paid plan, would both do.
 
-### 7. SVG uploads are allowed — low
+### 7. SVG uploads are allowed — CLOSED
 
-`image/svg+xml` is in the upload allow-list, and an SVG can carry script. On Vercel Blob
-these are served from `*.public.blob.vercel-storage.com` — a different origin, so a script
-inside one cannot touch the site or its cookies. Only staff can upload. If MSID has no
-need for SVG logos, removing the one line closes it entirely.
+`image/svg+xml` was in the upload allow-list, and an SVG can carry script. Removed on
+18 Aug 2026 (`src/lib/storage.ts`); every logo and photograph the site has needed was a
+JPEG or PNG. If a vector logo is ever wanted, export it to PNG — or add the type back
+together with a sanitiser, never alone.
 
 ### 8. Everything is rendered on demand — low
 
@@ -230,8 +268,8 @@ on its settings query, and the page body crossfades between routes.
 
 ### 10. Notes, no action required
 
-- `saveSettingsAction` writes any key present in the form into `site_settings`. Staff-only,
-  and unknown keys are ignored on read; intersecting with `SETTING_DEFAULTS` would be tidier.
+- ~~`saveSettingsAction` writes any key present in the form into `site_settings`.~~ Done
+  18 Aug 2026: only keys in `SETTING_DEFAULTS` are written, values capped at 5 000 chars.
 - `verifyPassword` trusts the cost parameters recorded in the stored hash. Only reachable
   by someone who can already write to the `users` table.
 - Seeding runs inside `connect()` and swallows its errors on purpose — a site that renders

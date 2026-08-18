@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { get } from "@/lib/db";
 import { tr } from "@/lib/db/types";
+import { requireStaffPage } from "@/lib/auth/session";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { bi, getResource } from "@/lib/admin/resources";
 import { relationOptions } from "@/lib/admin/options";
@@ -18,6 +19,7 @@ export default async function EditResourcePage({
 }) {
   const { locale, resource: resourceKey, id: rawId } = await params;
   if (!isLocale(locale)) notFound();
+  await requireStaffPage(locale);
 
   const resource = getResource(resourceKey);
   if (!resource) notFound();

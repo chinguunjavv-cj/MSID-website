@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { all } from "@/lib/db";
+import { requireStaffPage } from "@/lib/auth/session";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { dashboardStats, listRegistrations } from "@/lib/queries";
@@ -17,6 +18,7 @@ export default async function AdminDashboard({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  await requireStaffPage(locale);
 
   const mn = locale === "mn";
   const t = getDictionary(locale);

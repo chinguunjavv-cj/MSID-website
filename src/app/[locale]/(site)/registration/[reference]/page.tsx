@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
 import { get } from "@/lib/db";
+import { checkLookupThrottle, recordLookupMiss } from "@/lib/auth/throttle";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getEventById, getRegistrationByReference } from "@/lib/queries";
@@ -35,8 +36,9 @@ export async function generateMetadata({
  *
  * Reachable by anyone holding the reference code, which is a 6-character random string
  * on top of the year — enough to be unguessable while letting a participant return to
- * their payment details from an email without an account. It deliberately shows no
- * personal data beyond what the participant themselves entered.
+ * their payment details from an email without an account, provided nobody may guess
+ * quickly: misses are throttled per address (see `checkLookupThrottle`). It
+ * deliberately shows no personal data beyond what the participant themselves entered.
  */
 export default async function RegistrationPage({
   params,
@@ -46,8 +48,18 @@ export default async function RegistrationPage({
   const { locale, reference } = await params;
   if (!isLocale(locale)) notFound();
 
+  /*
+    A wrong reference and a throttled address get the same 404, in that order: an
+    address that has already missed too often is refused before the lookup, so the
+    database is not consulted on its behalf either.
+  */
+  if (await checkLookupThrottle()) notFound();
+
   const registration = await getRegistrationByReference(reference);
-  if (!registration) notFound();
+  if (!registration) {
+    await recordLookupMiss();
+    notFound();
+  }
 
   const event = await getEventById(registration.event_id);
   const t = getDictionary(locale);

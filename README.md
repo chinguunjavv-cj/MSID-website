@@ -293,19 +293,23 @@ reset links. Completing a reset signs out every other session on the account.
 Sending is plain SMTP, configured entirely by environment variable, so Gmail today and
 a provider on MSID's own domain later is a change of variables and not of code.
 
-MSID has `ibdmsid@gmail.com` and no domain of its own, so start with Gmail:
+MSID has `ibdmsid@gmail.com` and no domain of its own. **In production the site sends
+through Brevo's SMTP relay** (free tier, 300 messages a day) with that Gmail address as
+the verified sender — Google declined to issue an app password for the account, so
+sending through Gmail directly was not an option. To reproduce or rotate it:
 
-1. On that Google account, turn on **2-Step Verification** — app passwords are not
-   offered without it.
-2. **Google Account → Security → App passwords**, create one for "MSID website".
-   Google shows a 16-character password once.
-3. Set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER=ibdmsid@gmail.com` and
-   `SMTP_PASSWORD=` that app password. Add them in Vercel under Settings →
-   Environment Variables, then redeploy.
+1. In the Brevo account: **Senders & IP → Senders**, add `ibdmsid@gmail.com` and confirm
+   the verification mail. **SMTP & API → SMTP**, generate an SMTP key; note the login
+   (`xxxxxxxx@smtp-brevo.com`) and the key.
+2. Set `SMTP_HOST=smtp-relay.brevo.com`, `SMTP_PORT=587`, `SMTP_USER=` the Brevo login,
+   `SMTP_PASSWORD=` the key, and `MAIL_FROM=MSID <ibdmsid@gmail.com>` — the address in
+   `MAIL_FROM` must be a verified Brevo sender, or the relay refuses with `451 Invalid
+   from`. Add them in Vercel under Settings → Environment Variables, then redeploy.
 
-Gmail allows a few hundred messages a day, well beyond what a society this size sends.
-If MSID later takes a domain, move to a transactional provider — deliverability from a
-verified domain is better, and Gmail is not meant for bulk sending.
+Nothing is Brevo-specific: any SMTP relay (Gmail with an app password, Postmark, a
+university mail server) is the same five variables. When MSID takes a domain, add and
+authenticate it in Brevo and move `MAIL_FROM` onto it — deliverability from a verified
+domain is better than from a freemail sender.
 
 **Until this is configured** the reset page says so and gives the Society's contact
 address, rather than accepting a request that silently goes nowhere.

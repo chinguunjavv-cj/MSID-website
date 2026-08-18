@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { requireStaffPage } from "@/lib/auth/session";
 import { isLocale } from "@/lib/i18n/config";
 import { getSettings } from "@/lib/settings";
 import { qpayConfigured } from "@/lib/payments/qpay";
@@ -13,6 +14,7 @@ export default async function AdminSettingsPage({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  await requireStaffPage(locale);
 
   const mn = locale === "mn";
   const settings = await getSettings();

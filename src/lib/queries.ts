@@ -458,12 +458,22 @@ export async function getPartnerById(id: string): Promise<Partner | undefined> {
 /* Members                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export async function getMemberRecord(userId: string): Promise<MemberRecord | undefined> {
-  return get<MemberRecord>(
-    `SELECT u.*, m.member_no, m.degree, m.specialty_mn, m.specialty_en,
+/**
+ * The user columns a MemberRecord carries — everything except `password_hash`. Listed
+ * by name rather than `u.*` so the hash never leaves the database layer; a page that
+ * spreads a record into client props cannot leak what was never selected.
+ */
+const USER_COLUMNS =
+  "u.id, u.email, u.role, u.status, u.name_mn, u.name_en, u.last_login_at, u.created_at, u.updated_at";
+
+const PROFILE_COLUMNS = `m.member_no, m.degree, m.specialty_mn, m.specialty_en,
             m.institution_mn, m.institution_en, m.position_mn, m.position_en,
             m.phone, m.membership_type, m.membership_status, m.joined_on,
-            m.valid_until, m.notes
+            m.valid_until, m.notes`;
+
+export async function getMemberRecord(userId: string): Promise<MemberRecord | undefined> {
+  return get<MemberRecord>(
+    `SELECT ${USER_COLUMNS}, ${PROFILE_COLUMNS}
      FROM users u
      LEFT JOIN member_profiles m ON m.user_id = u.id
      WHERE u.id = ?`,
@@ -486,10 +496,7 @@ export async function listMembers(filters: { status?: string; query?: string }):
   }
 
   return all<MemberRecord>(
-    `SELECT u.*, m.member_no, m.degree, m.specialty_mn, m.specialty_en,
-            m.institution_mn, m.institution_en, m.position_mn, m.position_en,
-            m.phone, m.membership_type, m.membership_status, m.joined_on,
-            m.valid_until, m.notes
+    `SELECT ${USER_COLUMNS}, ${PROFILE_COLUMNS}
      FROM users u
      LEFT JOIN member_profiles m ON m.user_id = u.id
      WHERE ${where.join(" AND ")}
@@ -501,7 +508,7 @@ export async function listMembers(filters: { status?: string; query?: string }):
 
 export async function listStaffUsers(): Promise<MemberRecord[]> {
   return all<MemberRecord>(
-    `SELECT u.*, NULL AS member_no, '' AS degree, '' AS specialty_mn, '' AS specialty_en,
+    `SELECT ${USER_COLUMNS}, NULL AS member_no, '' AS degree, '' AS specialty_mn, '' AS specialty_en,
             '' AS institution_mn, '' AS institution_en, '' AS position_mn,
             '' AS position_en, '' AS phone, 'full' AS membership_type,
             'active' AS membership_status, NULL AS joined_on, NULL AS valid_until,

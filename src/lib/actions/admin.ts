@@ -19,7 +19,7 @@ import { deletionBlockedReason } from "@/lib/admin/deletion";
 import { notify } from "@/lib/email/mailer";
 import { membershipApprovedMessage } from "@/lib/email/messages";
 import { siteUrl } from "@/lib/site";
-import { setSettings, type SiteSettings } from "@/lib/settings";
+import { SETTING_DEFAULTS, setSettings, type SiteSettings } from "@/lib/settings";
 import { localePath } from "@/lib/i18n/config";
 import type { FormState } from "@/lib/actions/types";
 
@@ -86,24 +86,54 @@ async function auditTx(
 /* Generic resource save                                                       */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Upper bound on any free-text column written through the generic form. Far above
+ * anything a real record holds — the longest body texts are a few thousand characters
+ * — and there only so a single request cannot park megabytes in a row.
+ */
+const MAX_FIELD_LENGTH = 50_000;
+
+/** A submitted value the field's definition does not admit. Named so the action can
+ *  turn it into a field error rather than a crashed request. */
+class InvalidField extends Error {
+  constructor(readonly column: string) {
+    super(`Invalid value for ${column}`);
+  }
+}
+
 /** Reads one field's columns out of the submitted form, coerced to its kind. */
 function readField(field: FieldDef, formData: FormData): Record<string, string | number | null> {
   const values: Record<string, string | number | null> = {};
 
-  const coerce = (raw: FormDataEntryValue | null): string | number | null => {
+  const coerce = (column: string, raw: FormDataEntryValue | null): string | number | null => {
     if (field.kind === "checkbox") return raw ? 1 : 0;
     const text = String(raw ?? "").trim();
-    if (field.kind === "number") return text === "" ? null : Number(text);
+    if (field.kind === "number") {
+      if (text === "") return null;
+      const n = Number(text);
+      if (!Number.isFinite(n)) throw new InvalidField(column);
+      return n;
+    }
     if (field.kind === "date" || field.kind === "datetime") return text === "" ? null : text;
     if (field.kind === "select" && field.optionsFrom) return text === "" ? null : text;
-    return text;
+    if (field.kind === "select" && field.options) {
+      /*
+        A select with a fixed option list is a closed enum, and the column behind it is
+        usually a status the public site switches on. A value outside the list — a
+        hand-edited request, or a stale form after the options changed — is refused
+        rather than written.
+      */
+      if (!field.options.some((option) => option.value === text)) throw new InvalidField(column);
+      return text;
+    }
+    return text.slice(0, MAX_FIELD_LENGTH);
   };
 
   if (field.bilingual) {
-    values[`${field.name}_mn`] = coerce(formData.get(`${field.name}_mn`));
-    values[`${field.name}_en`] = coerce(formData.get(`${field.name}_en`));
+    values[`${field.name}_mn`] = coerce(`${field.name}_mn`, formData.get(`${field.name}_mn`));
+    values[`${field.name}_en`] = coerce(`${field.name}_en`, formData.get(`${field.name}_en`));
   } else {
-    values[field.name] = coerce(formData.get(field.name));
+    values[field.name] = coerce(field.name, formData.get(field.name));
   }
 
   return values;
@@ -124,7 +154,17 @@ export async function saveResourceAction(
   const idColumn = resource.idColumn ?? "id";
 
   const patch: Record<string, string | number | null> = {};
-  for (const field of resource.fields) Object.assign(patch, readField(field, formData));
+  try {
+    for (const field of resource.fields) Object.assign(patch, readField(field, formData));
+  } catch (error) {
+    if (error instanceof InvalidField) {
+      return {
+        errors: [locale === "mn" ? "Талбарын утга буруу байна." : "A field has an invalid value."],
+        fieldErrors: { [error.column]: locale === "mn" ? "Утга буруу байна." : "Invalid value." },
+      };
+    }
+    throw error;
+  }
 
   // Required fields are checked against the Mongolian column, which is the primary
   // language: an English-only record would render as untranslated to most visitors.
@@ -232,21 +272,67 @@ export async function deleteResourceAction(formData: FormData): Promise<void> {
 /* Event fees and programme                                                    */
 /* -------------------------------------------------------------------------- */
 
+/*
+  These sub-forms are staff-only, and the columns they write are read back by the
+  public event page and by the registration price calculation. The schemas keep a
+  mistyped or hand-crafted request from putting a negative fee, an unknown audience or
+  a kilobyte of text where a room number belongs. `parse` throws on failure, which for
+  a staff form means the error boundary — the honest outcome for a request the real
+  form cannot produce.
+*/
+const shortText = z.string().trim().max(200);
+const optionalId = z.string().trim().max(64);
+const requiredId = z.string().trim().min(1).max(64);
+const money = z.coerce.number().int().min(0).max(1_000_000_000);
+const sortOrder = z.coerce.number().int().min(-10_000).max(10_000).catch(0);
+const optionalDate = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .or(z.literal(""))
+  .transform((value) => value || null);
+
+const feeSchema = z.object({
+  eventId: requiredId,
+  feeId: optionalId,
+  label_mn: shortText,
+  label_en: shortText,
+  // Unknown or missing audience falls back to the widest tier, as the old code did —
+  // never to a value the price calculation does not recognise.
+  audience: z.enum(["member", "non_member", "trainee", "international", "student"]).catch("non_member"),
+  // An empty box coerces to 0 (a free tier); anything else out of range is refused,
+  // not silently zeroed — a congress fee that quietly became free is the worse outcome.
+  amount_mnt: money,
+  // Empty box means "no early-bird price"; anything else is a fee like the main one.
+  early_amount_mnt: z.literal("").transform(() => null).or(money),
+  sort: sortOrder,
+});
+
+const sessionSchema = z.object({
+  eventId: requiredId,
+  sessionId: optionalId,
+  day: optionalDate,
+  starts_at: z.string().trim().max(20),
+  ends_at: z.string().trim().max(20),
+  title_mn: shortText,
+  title_en: shortText,
+  speaker_mn: shortText,
+  speaker_en: shortText,
+  room_mn: shortText,
+  room_en: shortText,
+  sort: sortOrder,
+});
+
+/** The named fields of a form as a plain object, for a zod schema to check. */
+function formFields(formData: FormData, names: readonly string[]): Record<string, string> {
+  return Object.fromEntries(names.map((name) => [name, String(formData.get(name) ?? "")]));
+}
+
 export async function saveEventFeeAction(formData: FormData): Promise<void> {
   const user = await requireStaff();
-  const eventId = String(formData.get("eventId") ?? "");
-  const feeId = String(formData.get("feeId") ?? "");
-
-  const values = {
-    label_mn: String(formData.get("label_mn") ?? "").trim(),
-    label_en: String(formData.get("label_en") ?? "").trim(),
-    audience: String(formData.get("audience") ?? "non_member"),
-    amount_mnt: Number(formData.get("amount_mnt") ?? 0) || 0,
-    early_amount_mnt: formData.get("early_amount_mnt")
-      ? Number(formData.get("early_amount_mnt"))
-      : null,
-    sort: Number(formData.get("sort") ?? 0) || 0,
-  };
+  const { eventId, feeId, ...values } = feeSchema.parse(
+    formFields(formData, Object.keys(feeSchema.shape)),
+  );
 
   if (feeId) {
     const { sql, params } = setClause(values);
@@ -280,21 +366,9 @@ export async function deleteEventFeeAction(formData: FormData): Promise<void> {
 
 export async function saveEventSessionAction(formData: FormData): Promise<void> {
   const user = await requireStaff();
-  const eventId = String(formData.get("eventId") ?? "");
-  const sessionId = String(formData.get("sessionId") ?? "");
-
-  const values = {
-    day: String(formData.get("day") ?? "").trim() || null,
-    starts_at: String(formData.get("starts_at") ?? "").trim(),
-    ends_at: String(formData.get("ends_at") ?? "").trim(),
-    title_mn: String(formData.get("title_mn") ?? "").trim(),
-    title_en: String(formData.get("title_en") ?? "").trim(),
-    speaker_mn: String(formData.get("speaker_mn") ?? "").trim(),
-    speaker_en: String(formData.get("speaker_en") ?? "").trim(),
-    room_mn: String(formData.get("room_mn") ?? "").trim(),
-    room_en: String(formData.get("room_en") ?? "").trim(),
-    sort: Number(formData.get("sort") ?? 0) || 0,
-  };
+  const { eventId, sessionId, ...values } = sessionSchema.parse(
+    formFields(formData, Object.keys(sessionSchema.shape)),
+  );
 
   if (sessionId) {
     const { sql, params } = setClause(values);
@@ -403,12 +477,19 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
   if (status.success) patch.membership_status = status.data;
   if (type.success) patch.membership_type = type.data;
 
+  /*
+    Each optional column is only touched when the form sent it — the member and
+    registration forms share this action but not their fields — and, when sent, is held
+    to its shape: an ISO date or empty for the two dates, a short string for the number.
+    A malformed date is dropped rather than written, since the portal renders these
+    columns straight into `formatDate` and a stray value there breaks the member's page.
+  */
   const memberNo = formData.get("member_no");
-  if (memberNo !== null) patch.member_no = String(memberNo).trim() || null;
-  const validUntil = formData.get("valid_until");
-  if (validUntil !== null) patch.valid_until = String(validUntil).trim() || null;
-  const joinedOn = formData.get("joined_on");
-  if (joinedOn !== null) patch.joined_on = String(joinedOn).trim() || null;
+  if (memberNo !== null) patch.member_no = String(memberNo).trim().slice(0, 32) || null;
+  const validUntil = optionalDate.safeParse(formData.get("valid_until"));
+  if (validUntil.success) patch.valid_until = validUntil.data;
+  const joinedOn = optionalDate.safeParse(formData.get("joined_on"));
+  if (joinedOn.success) patch.joined_on = joinedOn.data;
   const notes = formData.get("notes");
   if (notes !== null) patch.notes = String(notes).slice(0, 2000);
 
@@ -500,10 +581,19 @@ export async function saveSettingsAction(
   const user = await requireStaff();
   const locale = localeSchema.parse(formData.get("locale"));
 
+  /*
+    Only keys the site actually defines are written. `site_settings` is a free-form
+    key/value table, so without this filter any name in the request would become a row
+    — harmless in itself, but a table that fills with arbitrary keys is a table nobody
+    can reason about, and `getSettings()` spreads every row into the object the whole
+    site reads. Values are capped: the longest legitimate setting is a hero paragraph.
+  */
   const patch: Partial<SiteSettings> = {};
   for (const [key, value] of formData.entries()) {
-    if (key.startsWith("__") || key === "locale") continue;
-    patch[key as keyof SiteSettings] = String(value);
+    // `hasOwn`, not `in`: `in` would also admit `constructor`, `toString` and the rest
+    // of Object.prototype as setting names.
+    if (!Object.hasOwn(SETTING_DEFAULTS, key)) continue;
+    patch[key as keyof SiteSettings] = String(value).slice(0, 5_000);
   }
   // Unticked checkboxes are absent from FormData entirely.
   if (!formData.has("qpay_enabled")) patch.qpay_enabled = "0";
@@ -531,14 +621,30 @@ export async function createStaffAction(
   const admin = await requireAdmin();
   const locale = localeSchema.parse(formData.get("locale"));
 
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const name = String(formData.get("name") ?? "").trim();
+  // Same email rule as sign-up and registration. The address is where the reset link
+  // goes; an account with a malformed one is locked out the first time its password is
+  // forgotten.
+  const parsedEmail = z
+    .string()
+    .trim()
+    .toLowerCase()
+    .pipe(z.email())
+    .pipe(z.string().max(160))
+    .safeParse(formData.get("email") ?? "");
+  const name = String(formData.get("name") ?? "").trim().slice(0, 200);
   const password = String(formData.get("password") ?? "");
   const role = z.enum(["admin", "editor"]).catch("editor").parse(formData.get("role"));
 
-  if (!email || !name) {
+  if (!name || !String(formData.get("email") ?? "").trim()) {
     return { errors: [locale === "mn" ? "Мэдээлэл дутуу байна." : "Missing details."] };
   }
+  if (!parsedEmail.success) {
+    return {
+      errors: [locale === "mn" ? "И-мэйл хаяг буруу байна." : "That email address is not valid."],
+      fieldErrors: { email: locale === "mn" ? "И-мэйл хаяг буруу байна." : "Invalid email address." },
+    };
+  }
+  const email = parsedEmail.data;
   if (password.length < MIN_PASSWORD_LENGTH) {
     return {
       errors: [

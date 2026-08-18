@@ -16,7 +16,7 @@ const INITIAL: FormState = { errors: [] };
   which the browser happily offered and the server then rejected — the picker now only
   shows files the upload will actually accept.
 */
-const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/avif,image/svg+xml";
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
 const FILE_ACCEPT = `application/pdf,${IMAGE_ACCEPT}`;
 
 /* -------------------------------------------------------------------------- */

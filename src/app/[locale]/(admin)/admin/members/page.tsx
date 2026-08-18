@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
+import { requireStaffPage } from "@/lib/auth/session";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { listMembers } from "@/lib/queries";
@@ -19,6 +20,7 @@ export default async function AdminMembersPage({
 }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
+  await requireStaffPage(locale);
 
   const filters = await searchParams;
   const mn = locale === "mn";

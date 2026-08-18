@@ -66,7 +66,14 @@ export interface MemberProfile {
   updated_at: string;
 }
 
-export type MemberRecord = User & Omit<MemberProfile, "created_at" | "updated_at">;
+/**
+ * A user joined to their member profile, as the admin lists and the portal show it.
+ * Never carries the password hash: the queries that build it select the user columns
+ * by name, so the hash stays in the database layer and cannot be leaked by a page that
+ * spreads the record into props.
+ */
+export type MemberRecord = Omit<User, "password_hash"> &
+  Omit<MemberProfile, "created_at" | "updated_at">;
 
 export interface EventRow {
   id: string;

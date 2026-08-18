@@ -19,13 +19,17 @@ import { randomUUID } from "node:crypto";
  */
 
 /** Allowed uploads keyed by MIME type. The extension comes from this table, never from
- *  the submitted filename, so a file cannot be stored under a surprising extension. */
+ *  the submitted filename, so a file cannot be stored under a surprising extension.
+ *
+ *  No SVG. An SVG is a document that can carry script, and every partner seal and
+ *  board photograph the site has ever needed arrived as a JPEG or PNG. Should a
+ *  vector logo ever be wanted, export it to PNG first — or add the type back here
+ *  together with a sanitiser, never alone. */
 export const ALLOWED_UPLOADS: Record<string, string> = {
   "image/jpeg": ".jpg",
   "image/png": ".png",
   "image/webp": ".webp",
   "image/avif": ".avif",
-  "image/svg+xml": ".svg",
   "application/pdf": ".pdf",
 };
 

@@ -101,6 +101,25 @@ export function parseVideoUrl(input: string): VideoEmbed | null {
   return null;
 }
 
+/**
+ * An uploaded file's stored path, fit to put in an `href`.
+ *
+ * The upload code writes either a same-origin `/uploads/…` path (filesystem backend)
+ * or an absolute `https://` Blob URL, and nothing else — but the column is plain text
+ * that any staff account can edit through the generic form, and a `javascript:` URL in
+ * a download button would run in every visitor's browser. Same-origin absolute paths
+ * and http(s) URLs pass; everything else (`javascript:`, `data:`, protocol-relative
+ * `//host` or `/\host`) is dropped and the button simply does not render.
+ */
+export function safeFileHref(input: string | null | undefined): string | null {
+  const raw = input?.trim();
+  if (!raw) return null;
+  // A single leading slash followed by anything but another slash — or a backslash,
+  // which browsers normalise to a slash and so read `/\host` as `//host`.
+  if (/^\/(?![\/\\])/.test(raw)) return raw;
+  return safeExternalLink(raw);
+}
+
 /** A link we will not frame, but can still offer as a plain link. */
 export function safeExternalLink(input: string): string | null {
   const raw = input?.trim();

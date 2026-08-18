@@ -21,8 +21,8 @@ export function formLabels(locale: Locale): Record<string, string> {
       supported formats are stated up front rather than after a failed upload.
     */
     fileHint: mn
-      ? "JPG, PNG, WebP, AVIF, SVG, PDF. Дээд тал нь 20 MB. iPhone-ы HEIC зургийг эхлээд JPG болгож хөрвүүлнэ үү."
-      : "JPG, PNG, WebP, AVIF, SVG, PDF. Up to 20 MB. Convert iPhone HEIC photos to JPG first.",
+      ? "JPG, PNG, WebP, AVIF, PDF. Дээд тал нь 20 MB. iPhone-ы HEIC зургийг эхлээд JPG болгож хөрвүүлнэ үү."
+      : "JPG, PNG, WebP, AVIF, PDF. Up to 20 MB. Convert iPhone HEIC photos to JPG first.",
     remove: mn ? "Хасах" : "Remove",
     add: mn ? "Нэмэх" : "Add",
     cancel: mn ? "Цуцлах" : "Cancel",

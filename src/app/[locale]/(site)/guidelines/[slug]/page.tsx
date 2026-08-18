@@ -6,6 +6,7 @@ import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { findSuccessor, getGuidelineById, getGuidelineBySlug } from "@/lib/queries";
 import { formatDate } from "@/lib/format";
+import { safeFileHref } from "@/lib/video";
 import {
   PageHeader,
   StaffPreviewNotice,
@@ -62,6 +63,7 @@ export default async function GuidelinePage({
     { label: t.guidelines.effective, value: formatDate(guideline.effective_from, locale) },
     { label: t.guidelines.reviewDue, value: formatDate(guideline.review_due, locale) },
   ].filter((fact) => fact.value);
+  const fileHref = safeFileHref(guideline.file_path);
 
   return (
     <>
@@ -122,9 +124,9 @@ export default async function GuidelinePage({
           </div>
 
           <aside className="lg:sticky lg:top-32 lg:self-start">
-            {guideline.file_path && (
+            {fileHref && (
               <a
-                href={guideline.file_path}
+                href={fileHref}
                 download
                 className="btn btn-primary mb-8 w-full"
               >
