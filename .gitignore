@@ -53,3 +53,7 @@ next-env.d.ts
 /fwdhi
 /unte_logo
 /Logos
+
+# Database dumps written by \
+pm run backup\ — keep them off the laptop, not in the repo
+backups/

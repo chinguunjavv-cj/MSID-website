@@ -280,7 +280,10 @@ With the filesystem backend, uploads are served by a route handler
 the project. It serves only image and PDF types and refuses any path resolving outside
 the upload directory.
 
-**Backup.** On Turso, use its managed backups. On a file database,
+**Backup.** `npm run backup` dumps the whole database to `backups/msid-<date>.sql` from
+whichever backend the environment points at; restore with `turso db shell <name> < file`
+or `sqlite3 new.db < file`. On Turso's free plan that scheduled dump *is* the backup —
+there is no point-in-time restore. On a file database,
 `sqlite3 msid.db ".backup backup.db"` (safe while running) plus the uploads directory.
 
 ### Email and password resets
@@ -347,6 +350,8 @@ environment rather than arguments, so they stay out of shell history. Add
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run seed` | Apply schema, seed MSID's own facts, create the first administrator |
 | `npm run demo` / `npm run demo:clear` | Add / remove sample content |
+| `npm run admin` | Create an administrator, or promote/reset an existing account (see above) |
+| `npm run backup` | Full SQL dump to `backups/`, and a report on foreign-key enforcement. Add `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` to back up production |
 
 ---
 

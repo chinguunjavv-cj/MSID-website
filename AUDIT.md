@@ -46,8 +46,9 @@ re-verified against the code. What changed:
 - `.dockerignore` now excludes every `.env*` file and `.vercel/`.
 
 Still open from the list below: foreign-key enforcement on Turso (5), backups (6),
-on-demand rendering (8). Housekeeping worth doing: rotate the Vercel Blob token if its
-prefix matches the one that briefly appeared in commit `1bc7c29`.
+on-demand rendering (8). Checked and closed: the Blob token fragment that briefly
+appeared in commit `1bc7c29` is 32 characters — the public `vercel_blob_rw_` prefix, the
+store id and a trailing underscore, none of the secret — so no rotation is needed.
 
 ---
 
@@ -237,14 +238,18 @@ Where it matters: deleting a staff account should remove their sessions; deletin
 should remove their profile. Events no longer depend on it — they clean up after
 themselves — but the others still do.
 
-**One check closes this:** run `PRAGMA foreign_keys;` against the production database. If
-it returns 0, the remaining deletions need the same explicit treatment events got.
+**One check closes this:** `npm run backup` with the Turso variables set prints whether
+foreign keys are enforced on the app's own connection, as its first line. If it says NOT
+enforced, the remaining deletions need the same explicit treatment events got.
 
-### 6. No backups — medium, needs a decision
+### 6. No backups — tooling done, schedule needed
 
 Turso's free plan has no point-in-time restore. Every member record, registration and
-piece of content lives in one database with no copy. A `turso db shell … .dump` on a
-schedule, or the paid plan, would both do.
+piece of content lives in one database with no copy. `npm run backup` (added 18 Aug 2026,
+`scripts/backup.mts`) writes a full SQL dump to `backups/` that restores into any SQLite
+or libSQL; verified round-trip locally. What remains is a habit: run it weekly with the
+Turso variables set and keep the file somewhere other than the laptop that made it — or
+take the paid plan.
 
 ### 7. SVG uploads are allowed — CLOSED
 

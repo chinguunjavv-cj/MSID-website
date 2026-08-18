@@ -11,6 +11,7 @@
     "demo": "node --env-file-if-exists=.env.local scripts/demo.mts",
     "demo:clear": "node --env-file-if-exists=.env.local scripts/demo.mts --clear",
     "admin": "node --env-file-if-exists=.env.local scripts/add-admin.mts",
+    "backup": "node --env-file-if-exists=.env.local scripts/backup.mts",
     "guide:pdf": "node scripts/guide-pdf.mjs",
     "import:board": "node --env-file-if-exists=.env.local scripts/import-board.mts",
     "import:assets": "node --env-file-if-exists=.env.local scripts/import-assets.mts",
