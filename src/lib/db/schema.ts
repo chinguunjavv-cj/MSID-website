@@ -364,7 +364,7 @@ CREATE TABLE IF NOT EXISTS partners (
   description_mn TEXT NOT NULL DEFAULT '',
   description_en TEXT NOT NULL DEFAULT '',
   kind           TEXT NOT NULL DEFAULT 'society'
-                   CHECK (kind IN ('society', 'academic', 'sponsor', 'government')),
+                   CHECK (kind IN ('society', 'academic', 'sponsor', 'government', 'hospital')),
   sort           INTEGER NOT NULL DEFAULT 0
 );
 

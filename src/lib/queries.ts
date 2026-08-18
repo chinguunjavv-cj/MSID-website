@@ -71,6 +71,7 @@ export const PAGE_KEYS = [
   "membership.intro",
   "membership.benefits",
   "home.about",
+  "events.abstracts",
 ] as const;
 
 export type PageKey = (typeof PAGE_KEYS)[number];
@@ -209,6 +210,25 @@ const flaggedEvent = cached("featured-event", async (today: string) => {
     today,
   );
 });
+
+/*
+  Published events whose call for abstracts is still open: an abstract deadline set and
+  not yet passed. Keyed by today's date like the other date-bounded lists.
+*/
+const openAbstractCalls = cached("open-abstract-calls", async (today: string) => {
+  return all<EventRow>(
+    `SELECT * FROM events
+     WHERE status = 'published'
+       AND abstract_deadline IS NOT NULL AND abstract_deadline != ''
+       AND abstract_deadline >= ?
+     ORDER BY abstract_deadline ASC`,
+    today,
+  );
+});
+
+export async function listOpenAbstractCalls(): Promise<EventRow[]> {
+  return openAbstractCalls(todayIso());
+}
 
 /** The single event to feature on the home page: nearest upcoming, or the flagged one. */
 export async function featuredEvent(): Promise<EventRow | undefined> {

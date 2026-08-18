@@ -294,7 +294,7 @@ export interface Partner {
   logo: string;
   description_mn: string;
   description_en: string;
-  kind: "society" | "academic" | "sponsor" | "government";
+  kind: "society" | "academic" | "sponsor" | "government" | "hospital";
   sort: number;
 }
 

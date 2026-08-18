@@ -42,6 +42,7 @@ export function mainNav(locale: Locale): NavItem[] {
       children: [
         { label: t.eventsNav.upcoming, href: p("/events") },
         { label: t.eventsNav.past, href: p("/events/past") },
+        { label: t.eventsNav.abstracts, href: p("/events/abstracts") },
         { label: t.eventsNav.news, href: p("/news") },
         { label: t.eventsNav.membership, href: p("/membership") },
       ],

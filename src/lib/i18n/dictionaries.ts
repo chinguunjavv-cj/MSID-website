@@ -44,6 +44,7 @@ const mn = {
   eventsNav: {
     upcoming: "Удахгүй болох",
     past: "Өнгөрсөн арга хэмжээ",
+    abstracts: "Илтгэл хүлээн авах",
     news: "Мэдээ, мэдээлэл",
     membership: "Гишүүнчлэл",
   },
@@ -118,6 +119,15 @@ const mn = {
     registrationClosed: "Бүртгэл хаагдсан",
     registrationNotOpen: "Бүртгэл хараахан нээгдээгүй",
     abstractDeadline: "Илтгэлийн хураангуй хүлээн авах эцсийн хугацаа",
+    abstracts: {
+      title: "Илтгэлийн хураангуй хүлээн авах",
+      lead: "Нийгэмлэгийн эрдэм шинжилгээний хуралд илтгэл ирүүлэх журам, хугацаа.",
+      openCalls: "Одоо хүлээн авч буй",
+      deadline: "Эцсийн хугацаа",
+      viewEvent: "Арга хэмжээг харах",
+      noOpenCalls:
+        "Одоогоор илтгэлийн хураангуй хүлээн авч буй арга хэмжээ байхгүй байна. Зарлагдмагц энд нийтлэгдэнэ.",
+    },
     earlyBirdDeadline: "Хөнгөлөлттэй бүртгэлийн эцсийн хугацаа",
     registrationCloses: "Бүртгэл хаагдах",
     registrationOpens: "Бүртгэл нээгдэх",
@@ -242,6 +252,7 @@ const mn = {
       academic: "Эрдэм шинжилгээний байгууллага",
       sponsor: "Дэмжигч",
       government: "Төрийн байгууллага",
+      hospital: "Эмнэлэг",
     },
   },
   about: {
@@ -410,6 +421,7 @@ const en: Dictionary = {
   eventsNav: {
     upcoming: "Upcoming",
     past: "Past events",
+    abstracts: "Abstract submission",
     news: "News",
     membership: "Membership",
   },
@@ -483,6 +495,15 @@ const en: Dictionary = {
     registrationClosed: "Registration closed",
     registrationNotOpen: "Registration not yet open",
     abstractDeadline: "Abstract submission deadline",
+    abstracts: {
+      title: "Abstract submission",
+      lead: "How and when to submit an abstract to the Society's scientific meetings.",
+      openCalls: "Currently accepting abstracts",
+      deadline: "Deadline",
+      viewEvent: "View event",
+      noOpenCalls:
+        "No meeting is accepting abstracts at the moment. Calls are published here as soon as they open.",
+    },
     earlyBirdDeadline: "Early-bird registration deadline",
     registrationCloses: "Registration closes",
     registrationOpens: "Registration opens",
@@ -604,6 +625,7 @@ const en: Dictionary = {
       academic: "Academic body",
       sponsor: "Supporter",
       government: "Government body",
+      hospital: "Hospital",
     },
   },
   about: {

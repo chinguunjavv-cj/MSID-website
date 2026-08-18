@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
@@ -21,7 +20,7 @@ import {
 import { EmptyState, Prose, ProseList, SectionHead } from "@/components/ui/Primitives";
 import { EventRow_, NewsRow } from "@/components/site/records";
 import { EventGallery } from "@/components/site/EventGallery";
-import { safeExternalLink } from "@/lib/video";
+import { PartnerMarquee } from "@/components/site/PartnerMarquee";
 
 export default async function HomePage({
   params,
@@ -461,42 +460,11 @@ export default async function HomePage({
             not. A partner's logo is their identity and belongs here; a grey box standing
             in for a missing one is worse than the name set properly, so nothing is
             reserved for an image that may never arrive.
+
+            Four partners sit in a still grid; from six they become a slow marquee — see
+            PartnerMarquee for the reasoning and the reduced-motion fallback.
           */}
-          {/*
-            A grid, not a wrap: with four partners a wrapped flex row broke the last
-            one onto its own line while a third of the first row sat empty. Columns
-            divide the shell evenly, so every partner fills its share of the width.
-          */}
-          <ul className="mt-6 grid items-start gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-            {partners.map((partner) => (
-              <li key={partner.id}>
-                <a
-                  href={safeExternalLink(partner.url) ?? "#"}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="group block"
-                >
-                  {partner.logo ? (
-                    <Image
-                      src={partner.logo}
-                      alt={partner.acronym}
-                      width={240}
-                      height={96}
-                      sizes="120px"
-                      className="h-12 w-auto max-w-[9rem] object-contain object-left"
-                    />
-                  ) : (
-                    <span className="block text-body font-semibold text-ink-900 transition-colors duration-100 group-hover:text-copper-700">
-                      {partner.acronym}
-                    </span>
-                  )}
-                  <span className="mt-1.5 block max-w-[30ch] text-[0.8125rem] text-ink-600">
-                    {tr(partner, "name", locale)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <PartnerMarquee partners={partners} locale={locale} />
           <Link href={p("/collaboration")} className="btn btn-ghost mt-7">
             {t.nav.collaboration} →
           </Link>

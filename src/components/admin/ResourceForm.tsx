@@ -151,7 +151,9 @@ function BilingualPair({
             id={mnId}
             name={`${field.name}_mn`}
             defaultValue={mnValue}
-            required={field.required}
+            // Browser-side `required` only when Mongolian specifically is required; a
+            // field satisfied by either language is checked on the server instead.
+            required={field.required && !field.requireEither}
             placeholder={field.placeholder}
             aria-invalid={error ? "true" : undefined}
             rows={field.kind === "textarea" ? 7 : undefined}

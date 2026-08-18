@@ -129,6 +129,51 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       ALTER TABLE pages ADD COLUMN image_alt_en TEXT NOT NULL DEFAULT '';
     `,
   },
+  {
+    /*
+      Three of the new partners are hospitals — UB Songdo, Intermed, the National
+      Center for Maternal and Child Health — and none of the four kinds fitted them: a
+      private hospital is not a government body and not a sponsor. SQLite cannot alter
+      a CHECK constraint in place, so the table is rebuilt: same columns, one more
+      allowed value. Nothing references `partners` by foreign key, so the swap is safe.
+      `schema.ts` carries the new constraint for databases created after this.
+    */
+    id: "2026-08-18-partner-kind-hospital",
+    sql: `
+      CREATE TABLE partners_v2 (
+        id             TEXT PRIMARY KEY,
+        name_mn        TEXT NOT NULL DEFAULT '',
+        name_en        TEXT NOT NULL DEFAULT '',
+        acronym        TEXT NOT NULL DEFAULT '',
+        country_mn     TEXT NOT NULL DEFAULT '',
+        country_en     TEXT NOT NULL DEFAULT '',
+        url            TEXT NOT NULL DEFAULT '',
+        logo           TEXT NOT NULL DEFAULT '',
+        description_mn TEXT NOT NULL DEFAULT '',
+        description_en TEXT NOT NULL DEFAULT '',
+        kind           TEXT NOT NULL DEFAULT 'society'
+                         CHECK (kind IN ('society', 'academic', 'sponsor', 'government', 'hospital')),
+        sort           INTEGER NOT NULL DEFAULT 0
+      );
+      INSERT INTO partners_v2 SELECT id, name_mn, name_en, acronym, country_mn, country_en,
+        url, logo, description_mn, description_en, kind, sort FROM partners;
+      DROP TABLE partners;
+      ALTER TABLE partners_v2 RENAME TO partners;
+    `,
+  },
+  {
+    /*
+      The Society's decision (18 August 2026): a foreign partner's name is shown in
+      English on both language versions of the site — a transliterated or translated
+      name is not what those organisations call themselves. `tr()` already falls back
+      to the English column when the Mongolian one is empty, so the change is to the
+      data: the three seeded translations are cleared. The seed no longer writes them.
+    */
+    id: "2026-08-18-foreign-partner-names-english",
+    sql: `
+      UPDATE partners SET name_mn = '' WHERE acronym IN ('KASID', 'AOCC', 'ECCO');
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

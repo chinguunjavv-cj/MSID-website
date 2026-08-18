@@ -19,6 +19,7 @@ const STATIC_PATHS = [
   "/about/contact",
   "/events",
   "/events/past",
+  "/events/abstracts",
   "/news",
   "/publications",
   "/collaboration",

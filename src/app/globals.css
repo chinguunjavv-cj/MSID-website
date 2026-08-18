@@ -750,6 +750,75 @@
 }
 
 /* ==========================================================================
+   Partner marquee (home page)
+   ========================================================================== */
+
+/*
+  A strip of partner marks that drifts leftward without end. The list is rendered
+  twice, end to end; the track moves exactly one copy's width and snaps back, which the
+  eye cannot see because copy two is standing where copy one began. Slow on purpose — a
+  society's partners are read, not glimpsed — and it stops under the pointer or the
+  keyboard so a link can be aimed at.
+
+  Duration scales with the number of marks (set as --marquee-items by the component) so
+  ten logos and four move at the same speed rather than the same period.
+
+  Under reduced motion the track is a wrapped row and the second copy is dropped: the
+  same content, laid out still.
+*/
+.marquee {
+  overflow: hidden;
+  /* Fades the ends so marks appear and leave softly rather than being cut by an edge. */
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 4rem;
+  animation: marquee calc(var(--marquee-items, 8) * 4s) linear infinite;
+}
+
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+.marquee-copy {
+  display: flex;
+  flex: none;
+  gap: 4rem;
+  align-items: flex-start;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* One copy plus the gap that separates it from the next. */
+    transform: translateX(calc(-100% / 2 - 2rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    mask-image: none;
+  }
+  .marquee-track {
+    width: auto;
+    animation: none;
+  }
+  .marquee-copy {
+    flex-wrap: wrap;
+    gap: 2rem 3rem;
+  }
+  .marquee-copy[aria-hidden="true"] {
+    display: none;
+  }
+}
+
+/* ==========================================================================
    Navigation: loading placeholders and the transition between pages
    ========================================================================== */
 

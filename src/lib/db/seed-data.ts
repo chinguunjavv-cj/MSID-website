@@ -78,6 +78,19 @@ Participation in case conferences and joint international activities
 
 Eligibility to join the Society's working groups and research projects`;
 
+/*
+  Placeholder until the Society sends the call for abstracts for its annual scientific
+  meeting. Deliberately says nothing that has to be true — no dates, no fees, no
+  submission address — so it can stand until it is replaced from the admin.
+*/
+const ABSTRACTS_MN = `Нийгэмлэг жил бүр эрдэм шинжилгээний хурал зохион байгуулж, гишүүд болон гэдэсний эмгэг судлалын чиглэлээр ажиллаж буй эмч, судлаачдаас илтгэлийн хураангуй хүлээн авдаг.
+
+Илтгэл ирүүлэх журам, хураангуйн бүтэц, хүлээн авах хугацааг тухайн хурлын зарын хамт энэ хуудсанд нийтэлнэ. Илтгэлийн хураангуй хүлээн авч буй арга хэмжээ доор жагсаана.`;
+
+const ABSTRACTS_EN = `Each year the Society holds a scientific meeting and invites abstracts from members and from physicians and researchers working in intestinal disease.
+
+Submission rules, the abstract format and the deadline are published on this page together with the call for each meeting. Meetings currently accepting abstracts are listed below.`;
+
 const HOME_ABOUT_MN = `Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг нь 2024 оны 3 дугаар сарын 5-ны өдөр байгуулагдсан төрийн бус байгууллага юм. Нийгэмлэг гэдэсний эмгэгийн оношилгоо, эмчилгээний чанарыг сайжруулах, эмнэлзүйн зааврыг боловсруулах, мэргэжлийн боловсон хүчнийг бэлтгэх чиглэлээр ажилладаг.`;
 const HOME_ABOUT_EN = `The Mongolian Society of Intestinal Disease is a non-governmental organisation founded on 5 March 2024. It works to improve the diagnosis and treatment of intestinal disease, to develop clinical guidelines, and to train specialists in the field.`;
 
@@ -165,6 +178,13 @@ const PAGES: {
     body_mn: HOME_ABOUT_MN,
     body_en: HOME_ABOUT_EN,
   },
+  {
+    key: "events.abstracts",
+    title_mn: "Илтгэлийн хураангуй хүлээн авах",
+    title_en: "Abstract submission",
+    body_mn: ABSTRACTS_MN,
+    body_en: ABSTRACTS_EN,
+  },
 ];
 
 for (const page of PAGES) {
@@ -202,9 +222,17 @@ if (!await tx.get("SELECT id FROM history_entries LIMIT 1")) {
 /* Partner organisations MSID publicly links to                                */
 /* -------------------------------------------------------------------------- */
 
+/*
+  Foreign organisations carry an empty `name_mn` on purpose — the Society's decision of
+  18 August 2026 is that their names appear in English on both language versions of the
+  site, and `tr()` falls back to `name_en` when the Mongolian column is empty. Mongolian
+  organisations get both names. Logos are not seeded — the acronym renders until an
+  administrator uploads the mark from Түншүүд in the admin, which is also how the first
+  four got theirs (`scripts/import-partner-logos.mts` for those in the repo).
+*/
 const PARTNERS = [
   {
-    name_mn: "Солонгосын Гэдэсний Эмгэг Судлалын Нийгэмлэг",
+    name_mn: "",
     name_en: "Korean Association for the Study of Intestinal Diseases",
     acronym: "KASID",
     country_mn: "Бүгд Найрамдах Солонгос Улс",
@@ -218,7 +246,7 @@ const PARTNERS = [
     sort: 1,
   },
   {
-    name_mn: "Кроны өвчин, колитыг судлах Азийн байгууллага",
+    name_mn: "",
     name_en: "Asian Organization for Crohn's and Colitis",
     acronym: "AOCC",
     country_mn: "Ази, Номхон далайн бүс",
@@ -232,7 +260,7 @@ const PARTNERS = [
     sort: 2,
   },
   {
-    name_mn: "Европын Кроны өвчин, колитын байгууллага",
+    name_mn: "",
     name_en: "European Crohn's and Colitis Organisation",
     acronym: "ECCO",
     country_mn: "Европ",
@@ -245,6 +273,81 @@ const PARTNERS = [
     kind: "society",
     sort: 3,
   },
+  /* Added 18 August 2026 at the Society's request. */
+  {
+    name_mn: "Анагаахын Шинжлэх Ухааны Үндэсний Их Сургууль",
+    name_en: "Mongolian National University of Medical Sciences",
+    acronym: "MNUMS",
+    country_mn: "Монгол Улс",
+    country_en: "Mongolia",
+    url: "https://www.mnums.edu.mn",
+    description_mn:
+      "1942 онд байгуулагдсан, Монгол Улсын анагаах ухааны боловсрол, судалгааны тэргүүлэх их сургууль.",
+    description_en:
+      "Founded in 1942, Mongolia's leading university for medical education and research.",
+    kind: "academic",
+    sort: 5,
+  },
+  {
+    name_mn: "",
+    name_en: "National Taiwan University",
+    acronym: "NTU",
+    country_mn: "Тайвань",
+    country_en: "Taiwan",
+    url: "https://www.ntu.edu.tw",
+    description_mn: "",
+    description_en: "",
+    kind: "academic",
+    sort: 6,
+  },
+  {
+    name_mn: "Монголын Гастроэнтерологийн Холбоо",
+    name_en: "Mongolian Gastroenterology Association",
+    acronym: "MGA",
+    country_mn: "Монгол Улс",
+    country_en: "Mongolia",
+    url: "",
+    description_mn: "",
+    description_en: "",
+    kind: "society",
+    sort: 7,
+  },
+  {
+    name_mn: "УБ Сонгдо эмнэлэг",
+    name_en: "UB Songdo Hospital",
+    acronym: "Songdo",
+    country_mn: "Монгол Улс",
+    country_en: "Mongolia",
+    url: "https://www.songdo.mn",
+    description_mn: "Bumrungrad Health Network-ийн гишүүн, Улаанбаатар хотын хувийн эмнэлэг.",
+    description_en: "A private hospital in Ulaanbaatar and a member of the Bumrungrad Health Network.",
+    kind: "hospital",
+    sort: 8,
+  },
+  {
+    name_mn: "Интермед эмнэлэг",
+    name_en: "Intermed Hospital",
+    acronym: "Intermed",
+    country_mn: "Монгол Улс",
+    country_en: "Mongolia",
+    url: "https://www.intermed.mn",
+    description_mn: "",
+    description_en: "",
+    kind: "hospital",
+    sort: 9,
+  },
+  {
+    name_mn: "Н. Гэндэнжамцын нэрэмжит Эх Хүүхдийн Эрүүл Мэндийн Үндэсний Төв",
+    name_en: "National Center for Maternal and Child Health",
+    acronym: "NCMCH",
+    country_mn: "Монгол Улс",
+    country_en: "Mongolia",
+    url: "https://www.ncmch.gov.mn",
+    description_mn: "",
+    description_en: "",
+    kind: "hospital",
+    sort: 10,
+  },
 ];
 
 for (const partner of PARTNERS) {
@@ -253,7 +356,7 @@ for (const partner of PARTNERS) {
     `INSERT INTO partners
        (id, name_mn, name_en, acronym, country_mn, country_en, url, logo,
         description_mn, description_en, kind, sort)
-     VALUES (?, ?, ?, ?, ?, ?, ?, '', ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     newId(),
     partner.name_mn,
     partner.name_en,
@@ -261,6 +364,7 @@ for (const partner of PARTNERS) {
     partner.country_mn,
     partner.country_en,
     partner.url,
+    "",
     partner.description_mn,
     partner.description_en,
     partner.kind,

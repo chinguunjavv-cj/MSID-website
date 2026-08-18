@@ -182,10 +182,15 @@ export async function saveResourceAction(
 
   // Required fields are checked against the Mongolian column, which is the primary
   // language: an English-only record would render as untranslated to most visitors.
+  // A field marked `requireEither` is the exception — a foreign partner's name is
+  // meant to be English-only — and passes when either language is filled in.
+  const empty = (value: unknown) => value === null || value === "" || value === undefined;
   for (const field of resource.fields.filter((f) => f.required)) {
     const key = field.bilingual ? `${field.name}_mn` : field.name;
     const value = patch[key];
-    if (value === null || value === "" || value === undefined) {
+    const satisfiedByOther =
+      field.bilingual && field.requireEither && !empty(patch[`${field.name}_en`]);
+    if (empty(value) && !satisfiedByOther) {
       return {
         errors: [locale === "mn" ? "Заавал бөглөх талбар дутуу байна." : "A required field is empty."],
         fieldErrors: { [key]: locale === "mn" ? "Энэ талбарыг бөглөнө үү." : "This field is required." },

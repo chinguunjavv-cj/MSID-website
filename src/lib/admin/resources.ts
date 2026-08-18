@@ -32,6 +32,8 @@ export interface FieldDef {
   kind: FieldKind;
   bilingual?: boolean;
   required?: boolean;
+  /** With `required` on a bilingual field: satisfied by either language, not only Mongolian. */
+  requireEither?: boolean;
   hint?: Bi;
   options?: { value: string; label: Bi }[];
   /** Populates a select from another table's published rows (self-reference safe). */
@@ -291,7 +293,24 @@ export const RESOURCES: Record<string, ResourceDef> = {
     listStatus: false,
     defaultOrder: "sort, name_en",
     fields: [
-      { name: "name", label: { mn: "Байгууллагын нэр", en: "Organisation name" }, kind: "text", bilingual: true, required: true, section: SECTION_CONTENT },
+      {
+        name: "name",
+        label: { mn: "Байгууллагын нэр", en: "Organisation name" },
+        kind: "text",
+        bilingual: true,
+        required: true,
+        /*
+          Either language satisfies the requirement. A foreign organisation's name is
+          shown in English on both versions of the site — leave the Mongolian box empty
+          and the English one is used everywhere. Mongolian organisations get both.
+        */
+        requireEither: true,
+        hint: {
+          mn: "Гадаадын байгууллагын нэрийг зөвхөн англиар бичээд монгол талбарыг хоосон үлдээнэ үү — ингэснээр хэл солиход ч англиар харагдана.",
+          en: "For a foreign organisation, fill in only the English name and leave the Mongolian box empty — it will then show in English on both language versions.",
+        },
+        section: SECTION_CONTENT,
+      },
       { name: "acronym", label: { mn: "Товчилсон нэр", en: "Acronym" }, kind: "text", section: SECTION_CONTENT },
       { name: "country", label: { mn: "Улс", en: "Country" }, kind: "text", bilingual: true, section: SECTION_CONTENT },
       { name: "description", label: { mn: "Тайлбар", en: "Description" }, kind: "textarea", bilingual: true, section: SECTION_CONTENT },
@@ -305,6 +324,7 @@ export const RESOURCES: Record<string, ResourceDef> = {
           { value: "academic", label: { mn: "Эрдэм шинжилгээний байгууллага", en: "Academic body" } },
           { value: "sponsor", label: { mn: "Дэмжигч", en: "Supporter" } },
           { value: "government", label: { mn: "Төрийн байгууллага", en: "Government body" } },
+          { value: "hospital", label: { mn: "Эмнэлэг", en: "Hospital" } },
         ],
       },
       { name: "sort", label: { mn: "Эрэмбэ", en: "Sort order" }, kind: "number", section: SECTION_SETTINGS },
