@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { all, get, count } from "@/lib/db";
 import type {
   BoardMember,
@@ -16,6 +17,42 @@ import type {
   Registration,
 } from "@/lib/db/types";
 import { todayIso } from "@/lib/format";
+
+/* -------------------------------------------------------------------------- */
+/* Caching                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Every public page under `(site)` renders on demand — the layout reads the session
+ * cookie, so nothing is prerendered — and until now each render sent its queries to a
+ * database in another region. libSQL calls are not `fetch`, so Next's data cache never
+ * saw them.
+ *
+ * The published-content readers below are wrapped in Next's data cache under one tag.
+ * A hit costs no database round trip; a miss fills the cache for everyone. Every admin
+ * save calls `updateTag(CONTENT_TAG)` (see `bustContent()` in `actions/admin.ts`), so an
+ * editor sees their change on the next request; the five-minute `revalidate` is only a
+ * backstop for writes that bypass the actions — the seed and import scripts.
+ *
+ * What is deliberately *not* cached: anything keyed by the signed-in user (portal,
+ * session), the admin's own lists (an administrator must see the row they just edited
+ * even if a bust were ever missed), registration and payment rows (they change outside
+ * the admin), and the throttle tables. Draft previews for staff (`includeDrafts`) go to
+ * the database directly for the same reason.
+ *
+ * `unstable_cache` is the pre-`"use cache"` API. The newer directive needs
+ * `cacheComponents` in next.config, which changes rendering semantics for the whole app
+ * — a bigger step than this site needs today.
+ */
+export const CONTENT_TAG = "content";
+const CONTENT_REVALIDATE_SECONDS = 300;
+
+function cached<A extends unknown[], R>(name: string, fn: (...args: A) => Promise<R>) {
+  return unstable_cache(fn, ["content", name], {
+    tags: [CONTENT_TAG],
+    revalidate: CONTENT_REVALIDATE_SECONDS,
+  });
+}
 
 /* -------------------------------------------------------------------------- */
 /* Pages                                                                       */
@@ -38,9 +75,9 @@ export const PAGE_KEYS = [
 
 export type PageKey = (typeof PAGE_KEYS)[number];
 
-export async function getPage(key: PageKey): Promise<Page | undefined> {
+export const getPage = cached("page", async (key: PageKey): Promise<Page | undefined> => {
   return get<Page>("SELECT * FROM pages WHERE key = ?", key);
-}
+});
 
 export async function listPages(): Promise<Page[]> {
   return all<Page>("SELECT * FROM pages ORDER BY key");
@@ -54,37 +91,58 @@ export async function listPages(): Promise<Page[]> {
  * Events that have not finished yet, soonest first. An event with no end date counts
  * as upcoming until its start date passes.
  */
-export async function listUpcomingEvents(limit = 20): Promise<EventRow[]> {
+/*
+  Today's date is passed *into* the cached functions rather than read inside them, so it
+  becomes part of the cache key: the entry for "upcoming as of the 18th" is a different
+  entry from the 19th's, and an event that finished overnight drops off the list at
+  midnight rather than up to five minutes later.
+*/
+const upcomingEvents = cached("upcoming-events", async (today: string, limit: number) => {
   return all<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published'
        AND COALESCE(ends_on, starts_on, '9999-12-31') >= ?
      ORDER BY starts_on IS NULL, starts_on ASC
      LIMIT ?`,
-    todayIso(),
+    today,
     limit,
   );
+});
+
+export async function listUpcomingEvents(limit = 20): Promise<EventRow[]> {
+  return upcomingEvents(todayIso(), limit);
 }
+
+const pastEvents = cached(
+  "past-events",
+  async (today: string, limit: number, offset: number) => {
+    return all<EventRow>(
+      `SELECT * FROM events
+       WHERE status = 'published'
+         AND COALESCE(ends_on, starts_on) < ?
+       ORDER BY starts_on DESC
+       LIMIT ? OFFSET ?`,
+      today,
+      limit,
+      offset,
+    );
+  },
+);
 
 export async function listPastEvents(limit = 50, offset = 0): Promise<EventRow[]> {
-  return all<EventRow>(
-    `SELECT * FROM events
-     WHERE status = 'published'
-       AND COALESCE(ends_on, starts_on) < ?
-     ORDER BY starts_on DESC
-     LIMIT ? OFFSET ?`,
-    todayIso(),
-    limit,
-    offset,
-  );
+  return pastEvents(todayIso(), limit, offset);
 }
 
-export async function countPastEvents(): Promise<number> {
+const pastEventCount = cached("past-event-count", async (today: string) => {
   return count(
     `SELECT COUNT(*) AS n FROM events
      WHERE status = 'published' AND COALESCE(ends_on, starts_on) < ?`,
-    todayIso(),
+    today,
   );
+});
+
+export async function countPastEvents(): Promise<number> {
+  return pastEventCount(todayIso());
 }
 
 /**
@@ -94,15 +152,21 @@ export async function countPastEvents(): Promise<number> {
  * and description, once in the page itself — and Next deduplicates `fetch()` calls but
  * not arbitrary async functions. Without this, opening one guideline is two identical
  * round trips to a database on the other side of a network.
+ *
+ * The published lookup is additionally in the data cache; the draft lookup — staff
+ * previewing from the admin — always goes to the database, so an editor never previews
+ * a stale draft.
  */
+const publishedEventBySlug = cached("event-by-slug", async (slug: string) => {
+  return get<EventRow>("SELECT * FROM events WHERE slug = ? AND status = 'published'", slug);
+});
+
 export const getEventBySlug = cache(async function getEventBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<EventRow | undefined> {
-  return get<EventRow>(
-    `SELECT * FROM events WHERE slug = ?${includeDrafts ? "" : " AND status = 'published'"}`,
-    slug,
-  );
+  if (includeDrafts) return get<EventRow>("SELECT * FROM events WHERE slug = ?", slug);
+  return publishedEventBySlug(slug);
 });
 
 export async function getEventById(id: string): Promise<EventRow | undefined> {
@@ -115,33 +179,40 @@ export async function listAllEvents(): Promise<EventRow[]> {
   );
 }
 
-export async function listEventFees(eventId: string): Promise<EventFee[]> {
+export const listEventFees = cached("event-fees", async (eventId: string): Promise<EventFee[]> => {
   return all<EventFee>(
     "SELECT * FROM event_fees WHERE event_id = ? ORDER BY sort, amount_mnt",
     eventId,
   );
-}
+});
 
 export async function getEventFee(id: string): Promise<EventFee | undefined> {
   return get<EventFee>("SELECT * FROM event_fees WHERE id = ?", id);
 }
 
-export async function listEventSessions(eventId: string): Promise<EventSession[]> {
-  return all<EventSession>(
-    "SELECT * FROM event_sessions WHERE event_id = ? ORDER BY day, sort, starts_at",
-    eventId,
-  );
-}
+export const listEventSessions = cached(
+  "event-sessions",
+  async (eventId: string): Promise<EventSession[]> => {
+    return all<EventSession>(
+      "SELECT * FROM event_sessions WHERE event_id = ? ORDER BY day, sort, starts_at",
+      eventId,
+    );
+  },
+);
 
-/** The single event to feature on the home page: nearest upcoming, or the flagged one. */
-export async function featuredEvent(): Promise<EventRow | undefined> {
-  const flagged = await get<EventRow>(
+const flaggedEvent = cached("featured-event", async (today: string) => {
+  return get<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published' AND is_featured = 1
        AND COALESCE(ends_on, starts_on, '9999-12-31') >= ?
      ORDER BY starts_on LIMIT 1`,
-    todayIso(),
+    today,
   );
+});
+
+/** The single event to feature on the home page: nearest upcoming, or the flagged one. */
+export async function featuredEvent(): Promise<EventRow | undefined> {
+  const flagged = await flaggedEvent(todayIso());
   if (flagged) return flagged;
   return (await listUpcomingEvents(1))[0];
 }
@@ -252,14 +323,14 @@ export async function listRegistrations(filters: {
 /* -------------------------------------------------------------------------- */
 
 /** In-force guidelines first, then superseded ones — the register reading order. */
-export async function listPublishedGuidelines(): Promise<Guideline[]> {
+export const listPublishedGuidelines = cached("guidelines", async (): Promise<Guideline[]> => {
   return all<Guideline>(
     `SELECT * FROM guidelines
      WHERE status IN ('published', 'superseded')
      ORDER BY CASE status WHEN 'published' THEN 0 ELSE 1 END,
               effective_from DESC, approved_on DESC, code`,
   );
-}
+});
 
 export async function listAllGuidelines(): Promise<Guideline[]> {
   return all<Guideline>(
@@ -267,16 +338,19 @@ export async function listAllGuidelines(): Promise<Guideline[]> {
   );
 }
 
+const publishedGuidelineBySlug = cached("guideline-by-slug", async (slug: string) => {
+  return get<Guideline>(
+    "SELECT * FROM guidelines WHERE slug = ? AND status IN ('published', 'superseded')",
+    slug,
+  );
+});
+
 export const getGuidelineBySlug = cache(async function getGuidelineBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<Guideline | undefined> {
-  return get<Guideline>(
-    `SELECT * FROM guidelines WHERE slug = ?${
-      includeDrafts ? "" : " AND status IN ('published', 'superseded')"
-    }`,
-    slug,
-  );
+  if (includeDrafts) return get<Guideline>("SELECT * FROM guidelines WHERE slug = ?", slug);
+  return publishedGuidelineBySlug(slug);
 });
 
 export async function getGuidelineById(id: string): Promise<Guideline | undefined> {
@@ -284,23 +358,30 @@ export async function getGuidelineById(id: string): Promise<Guideline | undefine
 }
 
 /** The guideline that replaced this one, if any. */
-export async function findSuccessor(guidelineId: string): Promise<Guideline | undefined> {
-  return get<Guideline>(
-    "SELECT * FROM guidelines WHERE supersedes_id = ? AND status = 'published'",
-    guidelineId,
-  );
-}
+export const findSuccessor = cached(
+  "guideline-successor",
+  async (guidelineId: string): Promise<Guideline | undefined> => {
+    return get<Guideline>(
+      "SELECT * FROM guidelines WHERE supersedes_id = ? AND status = 'published'",
+      guidelineId,
+    );
+  },
+);
 
 /* -------------------------------------------------------------------------- */
 /* Publications                                                                */
 /* -------------------------------------------------------------------------- */
 
-export async function listPublishedPublications(limit = 100): Promise<Publication[]> {
+const publishedPublications = cached("publications", async (limit: number) => {
   return all<Publication>(
     `SELECT * FROM publications WHERE status = 'published'
      ORDER BY published_on DESC, created_at DESC LIMIT ?`,
     limit,
   );
+});
+
+export async function listPublishedPublications(limit = 100): Promise<Publication[]> {
+  return publishedPublications(limit);
 }
 
 export async function listAllPublications(): Promise<Publication[]> {
@@ -309,16 +390,19 @@ export async function listAllPublications(): Promise<Publication[]> {
   );
 }
 
+const publishedPublicationBySlug = cached("publication-by-slug", async (slug: string) => {
+  return get<Publication>(
+    "SELECT * FROM publications WHERE slug = ? AND status = 'published'",
+    slug,
+  );
+});
+
 export const getPublicationBySlug = cache(async function getPublicationBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<Publication | undefined> {
-  return get<Publication>(
-    `SELECT * FROM publications WHERE slug = ?${
-      includeDrafts ? "" : " AND status = 'published'"
-    }`,
-    slug,
-  );
+  if (includeDrafts) return get<Publication>("SELECT * FROM publications WHERE slug = ?", slug);
+  return publishedPublicationBySlug(slug);
 });
 
 export async function getPublicationById(id: string): Promise<Publication | undefined> {
@@ -329,7 +413,12 @@ export async function getPublicationById(id: string): Promise<Publication | unde
 /* News                                                                        */
 /* -------------------------------------------------------------------------- */
 
-export async function listPublishedNews(limit = 20, offset = 0): Promise<NewsPost[]> {
+/*
+  A post scheduled for a future `published_at` surfaces on the first cache miss after
+  that time — at most five minutes late. Keying the entry by the minute would defeat the
+  cache for the sake of a precision nobody scheduling a society's news needs.
+*/
+const publishedNews = cached("news", async (limit: number, offset: number) => {
   return all<NewsPost>(
     `SELECT * FROM news_posts
      WHERE status = 'published' AND COALESCE(published_at, created_at) <= datetime('now')
@@ -338,6 +427,10 @@ export async function listPublishedNews(limit = 20, offset = 0): Promise<NewsPos
     limit,
     offset,
   );
+});
+
+export async function listPublishedNews(limit = 20, offset = 0): Promise<NewsPost[]> {
+  return publishedNews(limit, offset);
 }
 
 export async function listAllNews(): Promise<NewsPost[]> {
@@ -346,16 +439,16 @@ export async function listAllNews(): Promise<NewsPost[]> {
   );
 }
 
+const publishedNewsBySlug = cached("news-by-slug", async (slug: string) => {
+  return get<NewsPost>("SELECT * FROM news_posts WHERE slug = ? AND status = 'published'", slug);
+});
+
 export const getNewsBySlug = cache(async function getNewsBySlug(
   slug: string,
   includeDrafts = false,
 ): Promise<NewsPost | undefined> {
-  return get<NewsPost>(
-    `SELECT * FROM news_posts WHERE slug = ?${
-      includeDrafts ? "" : " AND status = 'published'"
-    }`,
-    slug,
-  );
+  if (includeDrafts) return get<NewsPost>("SELECT * FROM news_posts WHERE slug = ?", slug);
+  return publishedNewsBySlug(slug);
 });
 
 export async function getNewsById(id: string): Promise<NewsPost | undefined> {
@@ -366,23 +459,29 @@ export async function getNewsById(id: string): Promise<NewsPost | undefined> {
 /* Board, history, partners                                                    */
 /* -------------------------------------------------------------------------- */
 
-export async function listBoardMembers(currentOnly = true): Promise<BoardMember[]> {
-  return all<BoardMember>(
-    `SELECT * FROM board_members ${currentOnly ? "WHERE is_current = 1" : ""}
-     ORDER BY sort, name_mn`,
-  );
-}
+export const listBoardMembers = cached(
+  "board",
+  async (currentOnly: boolean = true): Promise<BoardMember[]> => {
+    return all<BoardMember>(
+      `SELECT * FROM board_members ${currentOnly ? "WHERE is_current = 1" : ""}
+       ORDER BY sort, name_mn`,
+    );
+  },
+);
 
 export async function getBoardMemberById(id: string): Promise<BoardMember | undefined> {
   return get<BoardMember>("SELECT * FROM board_members WHERE id = ?", id);
 }
 
-export async function listEventPhotos(eventId: string): Promise<EventPhoto[]> {
-  return all<EventPhoto>(
-    "SELECT * FROM event_photos WHERE event_id = ? ORDER BY sort, created_at",
-    eventId,
-  );
-}
+export const listEventPhotos = cached(
+  "event-photos",
+  async (eventId: string): Promise<EventPhoto[]> => {
+    return all<EventPhoto>(
+      "SELECT * FROM event_photos WHERE event_id = ? ORDER BY sort, created_at",
+      eventId,
+    );
+  },
+);
 
 /**
  * Every photograph the Society has published, with the event each one documents.
@@ -410,7 +509,7 @@ export interface SocietyPhoto {
   city_en: string;
 }
 
-export async function listSocietyPhotos(limit = 8): Promise<SocietyPhoto[]> {
+export const listSocietyPhotos = cached("society-photos", async (limit: number = 8): Promise<SocietyPhoto[]> => {
   return all<SocietyPhoto>(
     /*
       The union is wrapped because a compound SELECT may only be ordered by a column
@@ -434,21 +533,21 @@ export async function listSocietyPhotos(limit = 8): Promise<SocietyPhoto[]> {
       LIMIT ?`,
     limit,
   );
-}
+});
 
-export async function listHistoryEntries(): Promise<HistoryEntry[]> {
+export const listHistoryEntries = cached("history", async (): Promise<HistoryEntry[]> => {
   return all<HistoryEntry>(
     "SELECT * FROM history_entries ORDER BY year DESC, sort, happened_on DESC",
   );
-}
+});
 
 export async function getHistoryEntryById(id: string): Promise<HistoryEntry | undefined> {
   return get<HistoryEntry>("SELECT * FROM history_entries WHERE id = ?", id);
 }
 
-export async function listPartners(): Promise<Partner[]> {
+export const listPartners = cached("partners", async (): Promise<Partner[]> => {
   return all<Partner>("SELECT * FROM partners ORDER BY sort, name_en");
-}
+});
 
 export async function getPartnerById(id: string): Promise<Partner | undefined> {
   return get<Partner>("SELECT * FROM partners WHERE id = ?", id);
@@ -578,7 +677,7 @@ export async function dashboardStats(): Promise<DashboardStats> {
  * photograph belongs in the hero as much as one that has happened — the point is to show
  * the Society is active, and an upcoming date says that at least as well.
  */
-export async function listEventsWithCovers(limit = 4): Promise<EventRow[]> {
+export const listEventsWithCovers = cached("event-covers", async (limit: number = 4): Promise<EventRow[]> => {
   return all<EventRow>(
     `SELECT * FROM events
      WHERE status = 'published' AND cover_image != ''
@@ -586,4 +685,4 @@ export async function listEventsWithCovers(limit = 4): Promise<EventRow[]> {
      LIMIT ?`,
     limit,
   );
-}
+});

@@ -152,18 +152,13 @@ Finding 5 in [AUDIT.md](AUDIT.md) has the detail.
 
 ## Still open, with nobody blocked on them
 
-From [AUDIT.md](AUDIT.md), in the order I would take them:
+From [AUDIT.md](AUDIT.md). All three that stood here on 9 August were closed on 18 August
+— registration lookups are throttled, published content is cached, SVG uploads are gone;
+AUDIT.md has the detail. What remains:
 
-- **The registration page shows a participant's name and email to anyone holding the
-  reference code.** Unguessable, `noindex`, and the same design an airline uses — but not
-  rate-limited. Worth closing before a congress with a few hundred paying participants,
-  not before.
-- **Everything is rendered on demand.** Every visitor to the home page causes queries to
-  Turso. Adding revalidation would make the public pages near-instant; admin saves already
-  purge the cache, so nothing would go stale.
-- **SVG uploads are allowed.** An SVG can carry script. Vercel Blob serves them from a
-  different origin so they cannot touch the site, and only staff can upload — but if MSID
-  never needs an SVG logo, removing the one line closes it entirely.
+- **A backup habit.** `npm run backup` with the Turso variables writes a restorable dump;
+  nothing runs it on a schedule. Weekly, kept off the laptop, until MSID takes Turso's
+  paid plan.
 
 ## Things that are done and worth knowing
 

@@ -46,8 +46,9 @@ re-verified against the code. What changed:
 - `.dockerignore` now excludes every `.env*` file and `.vercel/`.
 
 Still open from the list below: a backup schedule (6 — the tooling exists, the habit
-does not yet), on-demand rendering (8). Item 5 was checked against production the same
-day and closed. Checked and closed: the Blob token fragment that briefly
+does not yet). Item 5 was checked against production the same day and closed; item 8 was
+closed the same evening by caching the published-content reads (details there), and the
+public `loading.tsx` from item 9 was removed with it so missing pages answer 404. Checked and closed: the Blob token fragment that briefly
 appeared in commit `1bc7c29` is 32 characters — the public `vercel_blob_rw_` prefix, the
 store id and a trailing underscore, none of the secret — so no rotation is needed.
 
@@ -263,18 +264,34 @@ take the paid plan.
 JPEG or PNG. If a vector logo is ever wanted, export it to PNG — or add the type back
 together with a sanitiser, never alone.
 
-### 8. Everything is rendered on demand — low
+### 8. Everything is rendered on demand — CLOSED (data cached, 18 Aug 2026)
 
-All 65 routes are dynamic; nothing is cached or pre-rendered. Every visitor to the home
-page causes queries to a database in another region. Since `revalidatePath("/", "layout")`
-already runs on every admin save, adding `revalidate` to the public pages would make them
-near-instant with no risk of stale content. Worth doing before any real traffic.
+All routes were dynamic and every visitor's render sent its queries to a database in
+another region. The pages are still rendered on demand — the site layout reads the
+session cookie, so nothing can be prerendered without restructuring the masthead — but
+the *data* no longer is: every published-content reader in `src/lib/queries.ts` and
+`getSettings()` sit in Next's data cache under one tag (`CONTENT_TAG`), and every admin
+save calls `updateTag()` on it through `bustContent()` in `actions/admin.ts`, so editors
+still see their change on the next request. Five-minute fallback for the seed and import
+scripts, which write around the actions. Measured locally: home page 512 ms cold, ~80 ms
+warm; a direct database edit is invisible until the tag is busted, which is the proof the
+cache is doing the work. Not cached, on purpose: anything per-user, the admin's own lists,
+registrations and payments, the throttle tables, and staff draft previews.
 
-### 9. Navigation has no loading state — CLOSED
+### 9. Navigation has no loading state — REVERSED, see below
 
-`loading.tsx` for the public site and for the admin, shaped like the real layout so the
-page settles rather than jumps. The footer streams instead of blocking the whole layout
-on its settings query, and the page body crossfades between routes.
+`loading.tsx` for the public site was added on 2 August because clicking a link did
+nothing until the far-away database had answered. It was removed on 18 August, for two
+reasons that arrived together. The pause it papered over is gone — item 8 took the
+database out of the request. And a `loading.tsx` is a Suspense boundary above every page,
+which makes Next commit a `200` before a page can call `notFound()`: every missing event,
+guideline, or registration reference on the public site was answering 200 with a
+not-found body, a soft 404 that search engines index. With it gone, `/mn/events/nope`
+answers 404. The admin keeps its own `loading.tsx` — its data is not cached and its
+status codes do not matter to anyone. The route crossfade (`template.tsx`) stays.
+
+If the pause ever comes back — a region change, say — the fix is a Suspense boundary
+*below* the `notFound()` decision, not a `loading.tsx` above it.
 
 ### 10. Notes, no action required
 

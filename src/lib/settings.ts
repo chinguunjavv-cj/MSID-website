@@ -1,5 +1,7 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { all, run } from "@/lib/db";
+import { CONTENT_TAG } from "@/lib/queries";
 import {
   SETTING_DEFAULTS,
   type SettingKey,
@@ -18,16 +20,25 @@ export { SETTING_DEFAULTS };
 export type { SettingKey, SiteSettings };
 
 /**
- * Wrapped in React's `cache()` so the settings are fetched once per request rather than
- * once per caller. The footer reads them on every page in the site, and six pages read
- * them again for their own content — against a hosted database each of those is a
- * network round trip, not a disk read.
+ * Two layers of caching. React's `cache()` dedupes within a request — the footer reads
+ * settings on every page and six pages read them again — and Next's data cache
+ * (`unstable_cache`, under the same tag as the published content in `queries.ts`) keeps
+ * the row set between requests, so the footer on a cold page costs no round trip at
+ * all. `saveSettingsAction` busts the tag; the five-minute fallback covers the seed.
  */
+const storedSettings = unstable_cache(
+  async () => {
+    const rows = await all<{ key: string; value: string }>(
+      "SELECT key, value FROM site_settings",
+    );
+    return Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  },
+  ["content", "site-settings"],
+  { tags: [CONTENT_TAG], revalidate: 300 },
+);
+
 export const getSettings = cache(async function getSettings(): Promise<SiteSettings> {
-  const rows = await all<{ key: string; value: string }>(
-    "SELECT key, value FROM site_settings",
-  );
-  const stored = Object.fromEntries(rows.map((row) => [row.key, row.value]));
+  const stored = await storedSettings();
   return { ...SETTING_DEFAULTS, ...stored } as SiteSettings;
 });
 

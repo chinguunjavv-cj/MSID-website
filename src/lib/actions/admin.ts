@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
@@ -19,11 +19,25 @@ import { deletionBlockedReason } from "@/lib/admin/deletion";
 import { notify } from "@/lib/email/mailer";
 import { membershipApprovedMessage } from "@/lib/email/messages";
 import { siteUrl } from "@/lib/site";
+import { CONTENT_TAG } from "@/lib/queries";
 import { SETTING_DEFAULTS, setSettings, type SiteSettings } from "@/lib/settings";
 import { localePath } from "@/lib/i18n/config";
 import type { FormState } from "@/lib/actions/types";
 
 const localeSchema = z.enum(["mn", "en"]).catch("mn");
+
+/**
+ * Called after every write. Two caches to clear: the rendered routes (`revalidatePath`
+ * on the whole tree — every page shows the footer settings, so nothing narrower is
+ * honest), and the published-content data cache in `queries.ts` and `settings.ts`.
+ * `updateTag` rather than `revalidateTag` because it expires the entries *now*, within
+ * this action, so the redirect that follows a save renders the row just written rather
+ * than the one before it.
+ */
+function bustContent(): void {
+  revalidatePath("/", "layout");
+  updateTag(CONTENT_TAG);
+}
 
 /** Throws unless the caller is signed in as admin or editor. */
 async function requireStaff(): Promise<SessionUser> {
@@ -227,7 +241,7 @@ export async function saveResourceAction(
     );
   });
 
-  revalidatePath("/", "layout");
+  bustContent();
   redirect(localePath(locale, `/admin/${resource.key}`));
 }
 
@@ -264,7 +278,7 @@ export async function deleteResourceAction(formData: FormData): Promise<void> {
     await auditTx(tx, user.id, `${resource.key}.delete`, resource.key, id);
   });
 
-  revalidatePath("/", "layout");
+  bustContent();
   redirect(localePath(locale, `/admin/${resource.key}`));
 }
 
@@ -353,7 +367,7 @@ export async function saveEventFeeAction(formData: FormData): Promise<void> {
   }
 
   await audit(user.id, "event.fee.save", "event", eventId);
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 export async function deleteEventFeeAction(formData: FormData): Promise<void> {
@@ -361,7 +375,7 @@ export async function deleteEventFeeAction(formData: FormData): Promise<void> {
   const feeId = String(formData.get("feeId") ?? "");
   await run("DELETE FROM event_fees WHERE id = ?", feeId);
   await audit(user.id, "event.fee.delete", "event_fee", feeId);
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 export async function saveEventSessionAction(formData: FormData): Promise<void> {
@@ -390,7 +404,7 @@ export async function saveEventSessionAction(formData: FormData): Promise<void> 
   }
 
   await audit(user.id, "event.session.save", "event", eventId);
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 export async function deleteEventSessionAction(formData: FormData): Promise<void> {
@@ -398,7 +412,7 @@ export async function deleteEventSessionAction(formData: FormData): Promise<void
   const sessionId = String(formData.get("sessionId") ?? "");
   await run("DELETE FROM event_sessions WHERE id = ?", sessionId);
   await audit(user.id, "event.session.delete", "event_session", sessionId);
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -455,7 +469,7 @@ export async function updateRegistrationAction(formData: FormData): Promise<void
     id,
   );
   await audit(user.id, "registration.update", "registration", id, JSON.stringify(patch));
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -567,7 +581,7 @@ export async function updateMemberAction(formData: FormData): Promise<void> {
     );
   }
 
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 /* -------------------------------------------------------------------------- */
@@ -600,7 +614,7 @@ export async function saveSettingsAction(
 
   await setSettings(patch);
   await audit(user.id, "settings.update", "settings", "site");
-  revalidatePath("/", "layout");
+  bustContent();
 
   return {
     errors: [],
@@ -672,7 +686,7 @@ export async function createStaffAction(
     name,
   );
   await audit(admin.id, "staff.create", "user", id, JSON.stringify({ role }));
-  revalidatePath("/", "layout");
+  bustContent();
 
   return { errors: [], ok: true };
 }
@@ -694,7 +708,7 @@ export async function updateStaffRoleAction(formData: FormData): Promise<void> {
 
   await run("UPDATE users SET role = ?, updated_at = datetime('now') WHERE id = ?", role.data, userId);
   await audit(admin.id, "staff.role", "user", userId, JSON.stringify({ role: role.data }));
-  revalidatePath("/", "layout");
+  bustContent();
 }
 
 export async function deleteStaffAction(formData: FormData): Promise<void> {
@@ -704,5 +718,5 @@ export async function deleteStaffAction(formData: FormData): Promise<void> {
 
   await run("DELETE FROM users WHERE id = ? AND role IN ('admin','editor')", userId);
   await audit(admin.id, "staff.delete", "user", userId);
-  revalidatePath("/", "layout");
+  bustContent();
 }
