@@ -57,3 +57,6 @@ next-env.d.ts
 # Database dumps written by \
 pm run backup\ — keep them off the laptop, not in the repo
 backups/
+
+# Per-machine Claude Code permissions
+.claude/settings.local.json
