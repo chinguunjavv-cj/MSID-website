@@ -20,23 +20,30 @@ const MARQUEE_FROM = 6;
 
 function PartnerMark({ partner, locale, tabbable }: { partner: Partner; locale: Locale; tabbable: boolean }) {
   const href = safeExternalLink(partner.url);
+  /*
+    The mark sits in a fixed 3rem box, bottom-aligned, so marks of different heights
+    stand on one shared line and every name beneath starts at the same height. A square
+    seal and a wide wordmark then read as one row rather than a stagger.
+  */
   const inner = (
     <>
-      {partner.logo ? (
-        <Image
-          src={partner.logo}
-          alt={partner.acronym || tr(partner, "name", locale)}
-          width={240}
-          height={96}
-          sizes="160px"
-          className="h-12 w-auto max-w-[10rem] object-contain object-left"
-        />
-      ) : (
-        <span className="block text-body font-semibold text-ink-900 transition-colors duration-100 group-hover:text-copper-700">
-          {partner.acronym}
-        </span>
-      )}
-      <span className="mt-1.5 block max-w-[26ch] text-[0.8125rem] leading-snug text-ink-600">
+      <span className="flex h-12 items-end">
+        {partner.logo ? (
+          <Image
+            src={partner.logo}
+            alt={partner.acronym || tr(partner, "name", locale)}
+            width={240}
+            height={96}
+            sizes="160px"
+            className="max-h-12 w-auto max-w-[10rem] object-contain object-left-bottom transition-transform duration-[240ms] ease-[var(--ease-out-quart)] group-hover:-translate-y-0.5"
+          />
+        ) : (
+          <span className="block text-body font-semibold text-ink-900 transition-colors duration-100 group-hover:text-copper-700">
+            {partner.acronym}
+          </span>
+        )}
+      </span>
+      <span className="mt-2 block max-w-[26ch] text-[0.8125rem] leading-snug text-ink-600 transition-colors duration-100 group-hover:text-ink-900">
         {tr(partner, "name", locale)}
       </span>
     </>

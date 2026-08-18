@@ -43,28 +43,44 @@ export default async function CollaborationPage({
             {partners.map((partner) => {
               const kind = partner.kind as keyof typeof t.collaboration.kind;
               return (
-                <li key={partner.id} className="register-row md:grid-cols-[11rem_minmax(0,1fr)_auto]">
+                /*
+                  The register row aligns its columns on the first text baseline, which
+                  for a column that starts with an image is the image's underside — so
+                  the name used to hang from the bottom of the logo, at a different height
+                  for every partner. Here the row aligns to the top instead, the mark sits
+                  in a fixed 3rem box, and the name is centred against that same box:
+                  logo and name share one optical line whatever shape the mark is, and the
+                  country, category and description hang beneath in order.
+                */
+                <li
+                  key={partner.id}
+                  className="register-row md:grid-cols-[11rem_minmax(0,1fr)_auto] md:items-start"
+                >
                   <div>
-                    {partner.logo ? (
-                      <Image
-                        src={partner.logo}
-                        alt={tr(partner, "name", locale)}
-                        width={220}
-                        height={80}
-                        className="h-10 w-auto object-contain"
-                      />
-                    ) : (
-                      <p className="text-xl font-bold tracking-tight text-ink-900">
-                        {partner.acronym}
+                    <div className="flex h-12 items-center">
+                      {partner.logo ? (
+                        <Image
+                          src={partner.logo}
+                          alt={tr(partner, "name", locale)}
+                          width={240}
+                          height={96}
+                          className="max-h-12 w-auto max-w-[9.5rem] object-contain object-left"
+                        />
+                      ) : (
+                        <p className="text-xl font-bold tracking-tight text-ink-900">
+                          {partner.acronym}
+                        </p>
+                      )}
+                    </div>
+                    {tr(partner, "country", locale) && (
+                      <p className="mt-2 text-[0.8125rem] leading-snug text-ink-600">
+                        {tr(partner, "country", locale)}
                       </p>
                     )}
-                    <p className="mt-1 text-[0.8125rem] text-ink-600">
-                      {tr(partner, "country", locale)}
-                    </p>
                   </div>
 
                   <div className="min-w-0">
-                    <h2 className="text-[1.0625rem] font-semibold text-ink-900">
+                    <h2 className="flex min-h-12 items-center text-[1.0625rem] font-semibold leading-snug text-ink-900 [text-wrap:balance]">
                       {tr(partner, "name", locale)}
                     </h2>
                     <p className="mt-1 text-[0.8125rem] text-ink-600">
@@ -82,9 +98,16 @@ export default async function CollaborationPage({
                       href={safeExternalLink(partner.url) ?? "#"}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="btn btn-secondary self-start whitespace-nowrap"
+                      className="btn btn-secondary group/link mt-3 self-start whitespace-nowrap md:mt-0"
                     >
-                      {t.collaboration.visitSite} ↗
+                      {t.collaboration.visitSite}
+                      {/* The arrow steps outward on hover: the link leaves the site. */}
+                      <span
+                        aria-hidden
+                        className="ml-1 inline-block transition-transform duration-[120ms] ease-[var(--ease-out-quart)] group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5"
+                      >
+                        ↗
+                      </span>
                     </a>
                   )}
                 </li>
