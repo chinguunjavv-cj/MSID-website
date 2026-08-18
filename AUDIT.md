@@ -45,8 +45,9 @@ re-verified against the code. What changed:
   admits `/uploads/…` and http(s) only. SVG removed from the upload allow-list.
 - `.dockerignore` now excludes every `.env*` file and `.vercel/`.
 
-Still open from the list below: foreign-key enforcement on Turso (5), backups (6),
-on-demand rendering (8). Checked and closed: the Blob token fragment that briefly
+Still open from the list below: a backup schedule (6 — the tooling exists, the habit
+does not yet), on-demand rendering (8). Item 5 was checked against production the same
+day and closed. Checked and closed: the Blob token fragment that briefly
 appeared in commit `1bc7c29` is 32 characters — the public `vercel_blob_rw_` prefix, the
 store id and a trailing underscore, none of the secret — so no rotation is needed.
 
@@ -222,7 +223,11 @@ now, as of 18 Aug 2026, guesses are rate-limited: `checkLookupThrottle()` in
 every lookup from that address gets the same 404 a wrong reference does. Hits are never
 counted, so a participant reloading their own page is unaffected.
 
-### 5. Foreign keys may not be enforced in production — medium, one check needed
+### 5. Foreign keys may not be enforced in production — CLOSED
+
+Checked 18 Aug 2026 with `npm run backup` against the production Turso database, on the
+same connection path the app uses: `PRAGMA foreign_keys` returned 1. The declared
+cascades fire in production; nothing further needed. Original analysis kept below.
 
 The schema declares 11 foreign keys with `ON DELETE CASCADE` and `ON DELETE SET NULL`.
 SQLite only honours them when `PRAGMA foreign_keys = ON` is set **for the connection** —
