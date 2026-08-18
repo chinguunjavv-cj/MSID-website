@@ -10,6 +10,11 @@
  *
  * Idempotent. Run it again after replacing a logo and it overwrites in place — the
  * Blob pathname is stable, so the stored URL does not change.
+ *
+ * The six partners added on 18 August 2026 do not need this: their rows point at the
+ * `/brand/…` files directly (migration `2026-08-18-partner-logos`), which every host
+ * serves as static assets. They are listed here all the same, so running the script
+ * moves the whole set to Blob in one go if that is ever wanted.
  */
 
 import { readFile } from "node:fs/promises";
@@ -20,6 +25,12 @@ const LOGOS: { acronym: string; file: string }[] = [
   { acronym: "AOCC", file: "partner-aocc.png" },
   { acronym: "ECCO", file: "partner-ecco.png" },
   { acronym: "FCHM", file: "partner-fchm.png" },
+  { acronym: "MNUMS", file: "partner-mnums.png" },
+  { acronym: "NTU", file: "partner-ntu.png" },
+  { acronym: "MGA", file: "partner-mga.png" },
+  { acronym: "Songdo", file: "partner-songdo.png" },
+  { acronym: "Intermed", file: "partner-intermed.png" },
+  { acronym: "NCMCH", file: "partner-ncmch.png" },
 ];
 
 await db();

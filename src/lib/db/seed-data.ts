@@ -226,9 +226,10 @@ if (!await tx.get("SELECT id FROM history_entries LIMIT 1")) {
   Foreign organisations carry an empty `name_mn` on purpose — the Society's decision of
   18 August 2026 is that their names appear in English on both language versions of the
   site, and `tr()` falls back to `name_en` when the Mongolian column is empty. Mongolian
-  organisations get both names. Logos are not seeded — the acronym renders until an
-  administrator uploads the mark from Түншүүд in the admin, which is also how the first
-  four got theirs (`scripts/import-partner-logos.mts` for those in the repo).
+  organisations get both names. Logos are `/brand/partner-*.png`, static files in the
+  repo, for the six added on 18 August; the first four were uploaded to Blob by
+  `scripts/import-partner-logos.mts` and keep whatever the administrator set. An
+  admin upload replaces either.
 */
 const PARTNERS = [
   {
@@ -278,6 +279,7 @@ const PARTNERS = [
     name_mn: "Анагаахын Шинжлэх Ухааны Үндэсний Их Сургууль",
     name_en: "Mongolian National University of Medical Sciences",
     acronym: "MNUMS",
+    logo: "/brand/partner-mnums.png",
     country_mn: "Монгол Улс",
     country_en: "Mongolia",
     url: "https://www.mnums.edu.mn",
@@ -292,6 +294,7 @@ const PARTNERS = [
     name_mn: "",
     name_en: "National Taiwan University",
     acronym: "NTU",
+    logo: "/brand/partner-ntu.png",
     country_mn: "Тайвань",
     country_en: "Taiwan",
     url: "https://www.ntu.edu.tw",
@@ -304,6 +307,7 @@ const PARTNERS = [
     name_mn: "Монголын Гастроэнтерологийн Холбоо",
     name_en: "Mongolian Gastroenterology Association",
     acronym: "MGA",
+    logo: "/brand/partner-mga.png",
     country_mn: "Монгол Улс",
     country_en: "Mongolia",
     url: "",
@@ -316,6 +320,7 @@ const PARTNERS = [
     name_mn: "УБ Сонгдо эмнэлэг",
     name_en: "UB Songdo Hospital",
     acronym: "Songdo",
+    logo: "/brand/partner-songdo.png",
     country_mn: "Монгол Улс",
     country_en: "Mongolia",
     url: "https://www.songdo.mn",
@@ -328,6 +333,7 @@ const PARTNERS = [
     name_mn: "Интермед эмнэлэг",
     name_en: "Intermed Hospital",
     acronym: "Intermed",
+    logo: "/brand/partner-intermed.png",
     country_mn: "Монгол Улс",
     country_en: "Mongolia",
     url: "https://www.intermed.mn",
@@ -340,6 +346,7 @@ const PARTNERS = [
     name_mn: "Н. Гэндэнжамцын нэрэмжит Эх Хүүхдийн Эрүүл Мэндийн Үндэсний Төв",
     name_en: "National Center for Maternal and Child Health",
     acronym: "NCMCH",
+    logo: "/brand/partner-ncmch.png",
     country_mn: "Монгол Улс",
     country_en: "Mongolia",
     url: "https://www.ncmch.gov.mn",
@@ -364,7 +371,7 @@ for (const partner of PARTNERS) {
     partner.country_mn,
     partner.country_en,
     partner.url,
-    "",
+    ("logo" in partner && partner.logo) || "",
     partner.description_mn,
     partner.description_en,
     partner.kind,

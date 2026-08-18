@@ -174,6 +174,23 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       UPDATE partners SET name_mn = '' WHERE acronym IN ('KASID', 'AOCC', 'ECCO');
     `,
   },
+  {
+    /*
+      The six partners added on 18 August were seeded before their marks were in the
+      repo. The files now live in public/brand; this points each row at its file — only
+      where the logo is still empty, so a mark an administrator has meanwhile uploaded
+      is left alone. Same-origin paths, served as static assets on every host.
+    */
+    id: "2026-08-18-partner-logos",
+    sql: `
+      UPDATE partners SET logo = '/brand/partner-mnums.png'    WHERE acronym = 'MNUMS'    AND logo = '';
+      UPDATE partners SET logo = '/brand/partner-ntu.png'      WHERE acronym = 'NTU'      AND logo = '';
+      UPDATE partners SET logo = '/brand/partner-mga.png'      WHERE acronym = 'MGA'      AND logo = '';
+      UPDATE partners SET logo = '/brand/partner-songdo.png'   WHERE acronym = 'Songdo'   AND logo = '';
+      UPDATE partners SET logo = '/brand/partner-intermed.png' WHERE acronym = 'Intermed' AND logo = '';
+      UPDATE partners SET logo = '/brand/partner-ncmch.png'    WHERE acronym = 'NCMCH'    AND logo = '';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
