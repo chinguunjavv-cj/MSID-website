@@ -156,11 +156,12 @@ export default async function HomePage({
 
           Every piece of hero content is left-aligned under a hard max-width (18ch
           headline, 56ch lead), so on desktop the photograph runs at full strength on
-          the right and one left-weighted gradient carries all the protection: ~95%
-          ink-50 behind the start of the text, still ~two-thirds where the longest line
-          ends, transparent past it. Even the worst case — display-weight ink-950 over
-          the darkest rock through the gradient's thinnest point under the text — clears
-          AA severalfold. On a phone the text spans the whole width, so a flat wash
+          the right and one left-weighted gradient carries all the protection: 85%
+          ink-50 behind the start of the text, ~60% where the longest line ends,
+          transparent past it. The margin holds because the mirrored photograph puts
+          its palest ground — the grey-green steppe — on the text side: near-black
+          display type over a light photo through a 60% light wash clears AA
+          severalfold, and the ink-700 lead comfortably too. On a phone the text spans the whole width, so a flat wash
           comes back and the photograph reads as a warm ground rather than a picture.
 
           The image is mirrored (scale-x). Decorative by construction — aria-hidden,
@@ -179,7 +180,7 @@ export default async function HomePage({
               className="-scale-x-100 object-cover"
             />
             <div className="absolute inset-0 bg-ink-50/70 md:bg-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/70 via-45% to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/85 via-ink-50/60 via-40% to-transparent" />
           </div>
         )}
 
