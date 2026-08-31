@@ -136,33 +136,28 @@ export default async function HomePage({
         An empty `hero_background` still renders exactly the hero described above; the
         setting is the opt-in for a licensed photograph, and the Society took it on
         31 August 2026 with the red steppe escarpment now seeded as the default
-        (`settings-defaults.ts` has the licence note). The statement does not move, it
-        gains a ground; the scrims below are the cost, and clearing the field in
-        Тохиргоо is the way back.
+        (`settings-defaults.ts` has the licence note). Clearing the field in Тохиргоо
+        is the way back.
 
-        The name is not repeated here: it is in the masthead lockup, once.
+        With a photograph the hero flips to the system's dark register — DESIGN.md's
+        one prescribed photo treatment: "hero and section photography is treated with
+        an ink-950 multiply overlay so it reads as institutional record rather than
+        stock cheer." Three light fades were tried first and every one read as a washed
+        print, because a white veil fights a photograph where shadow beds it in. The
+        ground becomes ink-950 (the token table's own "masthead, footer, hero ground"),
+        the statement is set in paper, and the fade runs into shadow: deepest under the
+        text, thinnest over the escarpment, which keeps its full colour — darkening
+        saturates a photograph where whitening bleaches it. The image stays mirrored
+        (scale-x) so the red rock faces the open half; decorative by construction,
+        aria-hidden, empty alt.
       */}
       {/* overflow-hidden only with a photograph to clip: without one the markup is
           byte-for-byte what it was before this setting existed. */}
       <section
-        className={`relative border-b border-ink-200 bg-ink-50${
-          settings.hero_background ? " overflow-hidden" : ""
+        className={`relative border-b border-ink-200 ${
+          settings.hero_background ? "overflow-hidden bg-ink-950" : "bg-ink-50"
         }`}
       >
-        {/*
-          The optional photographic ground. Decorative by construction: the headline
-          carries the meaning, so the stack is aria-hidden and the alt is empty rather
-          than describing scenery nobody needs read aloud.
-
-          No scrim, no gradient — the Society's call (31 Aug 2026): the photograph runs
-          at full strength edge to edge. Legibility rides on the picture itself, which
-          is why the image stays mirrored (scale-x): its palest ground, the grey-green
-          steppe, lands on the left under the text, and the red escarpment on the open
-          right. Near-black display type holds AA on that pale ground; the ink-700 lead
-          is the tightest pairing and carries its own soft paper halo (text-shadow)
-          instead of a veil over the whole frame, and the secondary button trades its
-          transparent ground for paper so it does not dissolve into the rock.
-        */}
         {settings.hero_background && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <Image
@@ -171,8 +166,16 @@ export default async function HomePage({
               fill
               priority
               sizes="100vw"
-              className="-scale-x-100 object-cover"
+              className="-scale-x-100 object-cover object-[50%_30%]"
             />
+            {/* The record tone: a flat bed of shadow, heavier on a phone where the
+                text owns the whole width. The desktop band is short and crops the
+                photograph to a narrow slice, so its bed stays thin and the crop is
+                biased up to the ridge line (object-position above), where the light is. */}
+            <div className="absolute inset-0 bg-ink-950/70 md:bg-ink-950/15" />
+            {/* The fade — into shadow, never into white. Deepest where the statement
+                sits, gone entirely over the rock. */}
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/50 via-45% to-transparent" />
           </div>
         )}
 
@@ -186,19 +189,27 @@ export default async function HomePage({
         )}
 
         <div className="shell relative pt-12 pb-12 md:pt-20 md:pb-16">
-          {/* The Society's colour, one hairline of it, the way a masthead rules a page. */}
-          <span aria-hidden className="animate-settle block h-0.5 w-12 bg-copper-600" />
+          {/* The Society's colour, one hairline of it, the way a masthead rules a page.
+              copper-400 on the photographic ground — the token for marks on ink. */}
+          <span
+            aria-hidden
+            className={`animate-settle block h-0.5 w-12 ${
+              settings.hero_background ? "bg-copper-400" : "bg-copper-600"
+            }`}
+          />
 
-          <h1 className="animate-settle mt-7 max-w-[18ch] text-display font-bold text-balance text-ink-950">
+          <h1
+            className={`animate-settle mt-7 max-w-[18ch] text-display font-bold text-balance ${
+              settings.hero_background ? "text-paper" : "text-ink-950"
+            }`}
+          >
             {heroTitle}
           </h1>
 
         {heroSub && (
           <p
             className={`animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed ${
-              settings.hero_background
-                ? "text-ink-800 [text-shadow:0_0_16px_var(--color-paper),0_0_4px_var(--color-paper)]"
-                : "text-ink-700"
+              settings.hero_background ? "text-ink-100" : "text-ink-700"
             }`}
             style={{ animationDelay: "80ms" }}
           >
@@ -225,9 +236,11 @@ export default async function HomePage({
           <Link href={p("/membership")} className="btn btn-primary">
             {t.home.joinCta}
           </Link>
+          {/* On the photograph, the system's on-dark button: paper ground, ink text —
+              the white the ink outline cannot be over rock. */}
           <Link
             href={p("/guidelines")}
-            className={`btn btn-secondary${settings.hero_background ? " bg-paper" : ""}`}
+            className={`btn ${settings.hero_background ? "btn-on-dark" : "btn-secondary"}`}
           >
             {t.nav.guidelines}
           </Link>
