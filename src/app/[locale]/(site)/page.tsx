@@ -172,10 +172,10 @@ export default async function HomePage({
                 text owns the whole width. The desktop band is short and crops the
                 photograph to a narrow slice, so its bed stays thin and the crop is
                 biased up to the ridge line (object-position above), where the light is. */}
-            <div className="absolute inset-0 bg-ink-950/70 md:bg-ink-950/15" />
+            <div className="absolute inset-0 bg-ink-950/60 md:bg-ink-950/15" />
             {/* The fade — into shadow, never into white. Deepest where the statement
                 sits, gone entirely over the rock. */}
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/90 via-ink-950/50 via-45% to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/80 via-ink-950/40 via-45% to-transparent" />
           </div>
         )}
 
