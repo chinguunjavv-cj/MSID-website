@@ -154,20 +154,14 @@ export default async function HomePage({
           carries the meaning, so the stack is aria-hidden and the alt is empty rather
           than describing scenery nobody needs read aloud.
 
-          Every piece of hero content is left-aligned under a hard max-width (18ch
-          headline, 56ch lead), so on desktop the photograph runs at full strength on
-          the right and one left-weighted gradient carries all the protection: 85%
-          ink-50 behind the start of the text, ~60% where the longest line ends,
-          transparent past it. The margin holds because the mirrored photograph puts
-          its palest ground — the grey-green steppe — on the text side: near-black
-          display type over a light photo through a 60% light wash clears AA
-          severalfold, and the ink-700 lead comfortably too. On a phone the text spans the whole width, so a flat wash
-          comes back and the photograph reads as a warm ground rather than a picture.
-
-          The image is mirrored (scale-x). Decorative by construction — aria-hidden,
-          empty alt — and the photograph's red escarpment sits centre-left, which the
-          gradient would bury; mirrored, the rock lands on the open right half and the
-          pale steppe disappears behind the text wash.
+          No scrim, no gradient — the Society's call (31 Aug 2026): the photograph runs
+          at full strength edge to edge. Legibility rides on the picture itself, which
+          is why the image stays mirrored (scale-x): its palest ground, the grey-green
+          steppe, lands on the left under the text, and the red escarpment on the open
+          right. Near-black display type holds AA on that pale ground; the ink-700 lead
+          is the tightest pairing and carries its own soft paper halo (text-shadow)
+          instead of a veil over the whole frame, and the secondary button trades its
+          transparent ground for paper so it does not dissolve into the rock.
         */}
         {settings.hero_background && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -179,8 +173,6 @@ export default async function HomePage({
               sizes="100vw"
               className="-scale-x-100 object-cover"
             />
-            <div className="absolute inset-0 bg-ink-50/70 md:bg-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/85 via-ink-50/60 via-40% to-transparent" />
           </div>
         )}
 
@@ -203,7 +195,11 @@ export default async function HomePage({
 
         {heroSub && (
           <p
-            className="animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed text-ink-700"
+            className={`animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed ${
+              settings.hero_background
+                ? "text-ink-800 [text-shadow:0_0_16px_var(--color-paper),0_0_4px_var(--color-paper)]"
+                : "text-ink-700"
+            }`}
             style={{ animationDelay: "80ms" }}
           >
             {heroSub}
@@ -229,7 +225,10 @@ export default async function HomePage({
           <Link href={p("/membership")} className="btn btn-primary">
             {t.home.joinCta}
           </Link>
-          <Link href={p("/guidelines")} className="btn btn-secondary">
+          <Link
+            href={p("/guidelines")}
+            className={`btn btn-secondary${settings.hero_background ? " bg-paper" : ""}`}
+          >
             {t.nav.guidelines}
           </Link>
         </div>
