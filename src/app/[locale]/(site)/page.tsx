@@ -173,13 +173,19 @@ export default async function HomePage({
               sizes="100vw"
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-ink-50/75 md:bg-ink-50/55" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/80 via-45% to-ink-50/15" />
+            <div className="absolute inset-0 bg-ink-50/70 md:bg-ink-50/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/80 via-50% to-ink-50/5" />
           </div>
         )}
 
-        {/* The ruled ground, behind everything and inert to the pointer. */}
-        <div aria-hidden className="ruled pointer-events-none absolute inset-0" />
+        {/*
+          The ruled ground, behind everything and inert to the pointer — only on the
+          typographic hero. Hairlines over a photograph read as scan artefacts, and the
+          photograph is already doing the job the rules did: giving the statement a ground.
+        */}
+        {!settings.hero_background && (
+          <div aria-hidden className="ruled pointer-events-none absolute inset-0" />
+        )}
 
         <div className="shell relative pt-12 pb-12 md:pt-20 md:pb-16">
           {/* The Society's colour, one hairline of it, the way a masthead rules a page. */}
