@@ -154,14 +154,19 @@ export default async function HomePage({
           carries the meaning, so the stack is aria-hidden and the alt is empty rather
           than describing scenery nobody needs read aloud.
 
-          Two scrim layers: a flat wash that guarantees the contrast floor wherever the
-          text runs, and a left-weighted gradient. Every piece of hero content is
-          left-aligned under a hard max-width (18ch headline, 56ch lead), so the wash
-          only needs full strength on that side: under the text the layers stack to
-          ~92% ink-50, the same floor as before, while the empty right half lets the
-          photograph through at a bit over a third strength. On a phone the text spans
-          the whole width, so the flat wash is stronger there and the gradient matters
-          less. The event strip carries its own solid copper ground either way.
+          Every piece of hero content is left-aligned under a hard max-width (18ch
+          headline, 56ch lead), so on desktop the photograph runs at full strength on
+          the right and one left-weighted gradient carries all the protection: ~95%
+          ink-50 behind the start of the text, still ~two-thirds where the longest line
+          ends, transparent past it. Even the worst case — display-weight ink-950 over
+          the darkest rock through the gradient's thinnest point under the text — clears
+          AA severalfold. On a phone the text spans the whole width, so a flat wash
+          comes back and the photograph reads as a warm ground rather than a picture.
+
+          The image is mirrored (scale-x). Decorative by construction — aria-hidden,
+          empty alt — and the photograph's red escarpment sits centre-left, which the
+          gradient would bury; mirrored, the rock lands on the open right half and the
+          pale steppe disappears behind the text wash.
         */}
         {settings.hero_background && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
@@ -171,10 +176,10 @@ export default async function HomePage({
               fill
               priority
               sizes="100vw"
-              className="object-cover"
+              className="-scale-x-100 object-cover"
             />
-            <div className="absolute inset-0 bg-ink-50/70 md:bg-ink-50/30" />
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/80 via-50% to-ink-50/5" />
+            <div className="absolute inset-0 bg-ink-50/70 md:bg-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/70 via-45% to-transparent" />
           </div>
         )}
 
