@@ -11,6 +11,16 @@ const nextConfig: NextConfig = {
 
   images: {
     /*
+      31 days, not the 4-hour default. Optimised variants are billed per *write* on
+      Vercel, and the default TTL rebuilt every variant up to six times a day — which
+      is how the team's shared 5,000-transformation budget was exhausted in August
+      2026 (by a sibling project, but the mechanism is identical here). The site's
+      images change only when an editor uploads a new file, which gets a new URL, so
+      a long TTL costs nothing in staleness.
+    */
+    minimumCacheTTL: 2678400,
+
+    /*
       Uploaded images are stored as absolute URLs when Vercel Blob is the storage
       backend, and `next/image` refuses remote hosts it has not been told about.
       Without this, every board photograph and event cover fails to render on Vercel.

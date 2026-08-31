@@ -88,6 +88,13 @@ export default async function AdminSettingsPage({
                 { name: "hero_lead_mn", label: mn ? "Тайлбар (Монгол)" : "Lead (Mongolian)", kind: "textarea", lang: "mn" },
                 { name: "hero_lead_en", label: mn ? "Тайлбар (Англи)" : "Lead (English)", kind: "textarea", lang: "en" },
                 {
+                  name: "hero_background",
+                  label: mn ? "Нүүрний дэвсгэр зураг" : "Hero background image",
+                  hint: mn
+                    ? "Гарчгийн ард гарах зураг. Одоогийн утга /brand/hero-bg.jpg — хээрийн улаан уулсын зураг. Өөр зургаар солих (жишээ нь /uploads/xxx.jpg) эсвэл хоосон болгож зураггүй шугаман дэвсгэр рүү буцаж болно. Бичвэр уншигдахуйц байлгах цайвар хөшиг автоматаар нэмэгдэнэ."
+                    : "Sits behind the headline. Currently /brand/hero-bg.jpg, the red steppe photograph. Replace it (e.g. /uploads/xxx.jpg) or clear it to return to the plain ruled ground. A light scrim is laid over it automatically so the text stays legible.",
+                },
+                {
                   name: "hero_image",
                   label: mn ? "Нүүр зургийн зам" : "Hero image path",
                   hint: mn

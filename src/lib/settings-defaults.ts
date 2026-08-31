@@ -22,6 +22,7 @@ export interface SiteSettings {
   bank_account_number: string;
   bank_account_name: string;
   qpay_enabled: string;
+  hero_background: string;
   hero_image: string;
   hero_image_alt_mn: string;
   hero_image_alt_en: string;
@@ -50,6 +51,14 @@ export const SETTING_DEFAULTS: SiteSettings = {
   bank_account_number: "",
   bank_account_name: "",
   qpay_enabled: "0",
+  /*
+    The Society's chosen ground (31 Aug 2026): red steppe escarpment, Pexels photo
+    16357527 by Nicephotorussia (Pexels licence — free use, no attribution required),
+    resized into the repo at public/brand/hero-bg.jpg. A default rather than a
+    hardcode so an administrator can clear the field and get the plain ruled hero
+    back, or replace the file with the Society's own photograph later.
+  */
+  hero_background: "/brand/hero-bg.jpg",
   hero_image: "",
   hero_image_alt_mn: "",
   hero_image_alt_en: "",

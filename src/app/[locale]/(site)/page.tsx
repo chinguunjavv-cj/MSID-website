@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
@@ -132,9 +133,51 @@ export default async function HomePage({
         to do. For a body whose product is a written standard, the statement *is* the
         picture — and nothing has to be scrimmed to stay legible over it.
 
+        An empty `hero_background` still renders exactly the hero described above; the
+        setting is the opt-in for a licensed photograph, and the Society took it on
+        31 August 2026 with the red steppe escarpment now seeded as the default
+        (`settings-defaults.ts` has the licence note). The statement does not move, it
+        gains a ground; the scrims below are the cost, and clearing the field in
+        Тохиргоо is the way back.
+
         The name is not repeated here: it is in the masthead lockup, once.
       */}
-      <section className="relative border-b border-ink-200 bg-ink-50">
+      {/* overflow-hidden only with a photograph to clip: without one the markup is
+          byte-for-byte what it was before this setting existed. */}
+      <section
+        className={`relative border-b border-ink-200 bg-ink-50${
+          settings.hero_background ? " overflow-hidden" : ""
+        }`}
+      >
+        {/*
+          The optional photographic ground. Decorative by construction: the headline
+          carries the meaning, so the stack is aria-hidden and the alt is empty rather
+          than describing scenery nobody needs read aloud.
+
+          Two scrim layers: a flat wash that guarantees the contrast floor wherever the
+          text runs, and a left-weighted gradient. Every piece of hero content is
+          left-aligned under a hard max-width (18ch headline, 56ch lead), so the wash
+          only needs full strength on that side: under the text the layers stack to
+          ~92% ink-50, the same floor as before, while the empty right half lets the
+          photograph through at a bit over a third strength. On a phone the text spans
+          the whole width, so the flat wash is stronger there and the gradient matters
+          less. The event strip carries its own solid copper ground either way.
+        */}
+        {settings.hero_background && (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <Image
+              src={settings.hero_background}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-ink-50/75 md:bg-ink-50/55" />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-50/95 via-ink-50/80 via-45% to-ink-50/15" />
+          </div>
+        )}
+
         {/* The ruled ground, behind everything and inert to the pointer. */}
         <div aria-hidden className="ruled pointer-events-none absolute inset-0" />
 
