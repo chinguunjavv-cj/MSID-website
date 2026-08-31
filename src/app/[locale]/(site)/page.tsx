@@ -198,9 +198,17 @@ export default async function HomePage({
             }`}
           />
 
+          {/*
+            Semibold on the photograph, bold on the typographic hero. Over the record
+            ground the photograph shares the stage, and 700-weight paper at display
+            scale shouted from it; 600 states the same sentence. Without a photograph
+            the type is the whole picture and keeps its full weight.
+          */}
           <h1
-            className={`animate-settle mt-7 max-w-[18ch] text-display font-bold text-balance ${
-              settings.hero_background ? "text-paper" : "text-ink-950"
+            className={`animate-settle mt-7 max-w-[18ch] text-display text-balance ${
+              settings.hero_background
+                ? "font-semibold text-paper"
+                : "font-bold text-ink-950"
             }`}
           >
             {heroTitle}
