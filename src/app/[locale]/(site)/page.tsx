@@ -172,10 +172,13 @@ export default async function HomePage({
                 text owns the whole width. The desktop band is short and crops the
                 photograph to a narrow slice, so its bed stays thin and the crop is
                 biased up to the ridge line (object-position above), where the light is. */}
-            <div className="absolute inset-0 bg-ink-950/50 md:bg-ink-950/10" />
+            <div className="absolute inset-0 bg-ink-950/40 md:bg-transparent" />
             {/* The fade — into shadow, never into white. Deepest where the statement
-                sits, gone entirely over the rock. */}
-            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/70 via-ink-950/35 via-45% to-transparent" />
+                sits, gone entirely over the rock. Settled here after four rounds with
+                the Society, one step at a time from 90/50: light enough that the
+                whole frame reads as photograph, dark enough that the paper statement
+                never hunts for its ground. */}
+            <div className="absolute inset-0 bg-gradient-to-r from-ink-950/60 via-ink-950/30 via-45% to-transparent" />
           </div>
         )}
 
@@ -217,7 +220,7 @@ export default async function HomePage({
         {heroSub && (
           <p
             className={`animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed ${
-              settings.hero_background ? "text-ink-100" : "text-ink-700"
+              settings.hero_background ? "text-paper" : "text-ink-700"
             }`}
             style={{ animationDelay: "80ms" }}
           >
