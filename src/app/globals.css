@@ -121,9 +121,9 @@
   }
 
   /*
-    The hero indicator's fill. Its duration is tied to the carousel's interval in
-    HeroCarousel.tsx — change one and change the other, or the bar finishes early and
-    sits full while the photograph has not moved.
+    The gallery lightbox indicator's fill. Its duration is tied to the slideshow
+    interval in EventGallery.tsx — change one and change the other, or the bar
+    finishes early and sits full while the photograph has not moved.
   */
   --animate-hero-progress: hero-progress 7s linear both;
 

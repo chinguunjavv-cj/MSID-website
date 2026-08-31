@@ -22,6 +22,7 @@ import { EmptyState, Prose, ProseList, SectionHead } from "@/components/ui/Primi
 import { EventRow_, NewsRow } from "@/components/site/records";
 import { EventGallery } from "@/components/site/EventGallery";
 import { PartnerMarquee } from "@/components/site/PartnerMarquee";
+import { safeFileHref } from "@/lib/video";
 
 export default async function HomePage({
   params,
@@ -121,6 +122,14 @@ export default async function HomePage({
   const heroTitle = customHeadline ? heroHeadline : heroLead;
   const heroSub = customHeadline ? heroLead : "";
 
+  /*
+    Through `safeFileHref`, not read raw: the setting is staff-editable text, and a
+    malformed value fed straight to next/image throws at render — a whole home page
+    down for a typo in one admin field. Filtered, a bad value simply falls back to
+    the typographic hero until the field is fixed.
+  */
+  const heroBackground = safeFileHref(settings.hero_background);
+
   return (
     <>
       {/* ---------------------------------------------------------------- */}
@@ -155,13 +164,13 @@ export default async function HomePage({
           byte-for-byte what it was before this setting existed. */}
       <section
         className={`relative border-b border-ink-200 ${
-          settings.hero_background ? "overflow-hidden bg-ink-950" : "bg-ink-50"
+          heroBackground ? "overflow-hidden bg-ink-950" : "bg-ink-50"
         }`}
       >
-        {settings.hero_background && (
+        {heroBackground && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <Image
-              src={settings.hero_background}
+              src={heroBackground}
               alt=""
               fill
               priority
@@ -187,7 +196,7 @@ export default async function HomePage({
           typographic hero. Hairlines over a photograph read as scan artefacts, and the
           photograph is already doing the job the rules did: giving the statement a ground.
         */}
-        {!settings.hero_background && (
+        {!heroBackground && (
           <div aria-hidden className="ruled pointer-events-none absolute inset-0" />
         )}
 
@@ -197,7 +206,7 @@ export default async function HomePage({
           <span
             aria-hidden
             className={`animate-settle block h-0.5 w-12 ${
-              settings.hero_background ? "bg-copper-400" : "bg-copper-600"
+              heroBackground ? "bg-copper-400" : "bg-copper-600"
             }`}
           />
 
@@ -209,7 +218,7 @@ export default async function HomePage({
           */}
           <h1
             className={`animate-settle mt-7 max-w-[18ch] text-display text-balance ${
-              settings.hero_background
+              heroBackground
                 ? "font-semibold text-paper"
                 : "font-bold text-ink-950"
             }`}
@@ -220,7 +229,7 @@ export default async function HomePage({
         {heroSub && (
           <p
             className={`animate-settle mt-7 max-w-[56ch] text-lg leading-relaxed ${
-              settings.hero_background ? "text-paper" : "text-ink-700"
+              heroBackground ? "text-paper" : "text-ink-700"
             }`}
             style={{ animationDelay: "80ms" }}
           >
@@ -251,7 +260,7 @@ export default async function HomePage({
               the white the ink outline cannot be over rock. */}
           <Link
             href={p("/guidelines")}
-            className={`btn ${settings.hero_background ? "btn-on-dark" : "btn-secondary"}`}
+            className={`btn ${heroBackground ? "btn-on-dark" : "btn-secondary"}`}
           >
             {t.nav.guidelines}
           </Link>

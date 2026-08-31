@@ -81,7 +81,6 @@ const mn = {
     of: "/",
   },
   home: {
-    heroKicker: "2024 оноос хойш",
     guidelinesTitle: "Эмнэлзүйн заавар",
     guidelinesLead:
       "Нийгэмлэгийн баталсан заавар, зөвлөмжийн бүртгэл. Хувилбар, батлагдсан огноо, хүчин төгөлдөр байдлыг заасан.",
@@ -458,7 +457,6 @@ const en: Dictionary = {
     of: "of",
   },
   home: {
-    heroKicker: "Since 2024",
     guidelinesTitle: "Clinical guidelines",
     guidelinesLead:
       "The register of guidelines and consensus statements approved by the Society, with version, approval date and current standing.",
