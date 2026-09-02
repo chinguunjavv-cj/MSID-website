@@ -298,6 +298,32 @@ The programme and the registration details are published here as they are settle
       WHERE NOT EXISTS (SELECT 1 FROM events WHERE slug = 'ibd-endoscopy-2026');
     `,
   },
+  {
+    /*
+      ХБЭСТ written out: Хоол Боловсруулах Эрхтэн Судлалын Төв, the digestive-organ
+      centre at АШУҮИС (confirmed by the Society, 2 September 2026). The call's own
+      seventh requirement asks an author to spell a non-standard abbreviation out the
+      first time it appears, so the announcement should meet the standard it sets.
+
+      `replace()` on the one phrase rather than a rewrite of the whole body: an
+      administrator may have edited the text since it shipped this morning, and there is
+      no reason for a name correction to overwrite their work.
+    */
+    id: "2026-09-02-digestive-centre-name",
+    sql: `
+      UPDATE pages
+         SET body_mn = replace(body_mn, 'АШУҮИС-ийн ХБЭСТ', 'АШУҮИС-ийн Хоол Боловсруулах Эрхтэн Судлалын Төв (ХБЭСТ)'),
+             body_en = replace(body_en, 'and the Mongolian National University of Medical Sciences', 'and the Centre for the Study of Digestive Organs at the Mongolian National University of Medical Sciences'),
+             updated_at = datetime('now')
+       WHERE key = 'events.abstracts';
+
+      UPDATE events
+         SET summary_mn = replace(summary_mn, 'АШУҮИС-ийн ХБЭСТ', 'АШУҮИС-ийн Хоол Боловсруулах Эрхтэн Судлалын Төв (ХБЭСТ)'),
+             summary_en = replace(summary_en, 'and the Mongolian National University of Medical Sciences', 'and the Centre for the Study of Digestive Organs at the Mongolian National University of Medical Sciences'),
+             updated_at = datetime('now')
+       WHERE slug = 'ibd-endoscopy-2026';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
