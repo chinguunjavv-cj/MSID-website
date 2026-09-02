@@ -376,6 +376,23 @@ The programme and the registration details are published here as they are settle
          AND value = '/brand/hero-bg.jpg';
     `,
   },
+  {
+    /*
+      The previous migration overreached: the Society asked whether the Altai photograph
+      could be used, and the answer belonged to the interior page banners, not to the
+      hero, whose escarpment had been chosen and its shadow tuned over four rounds.
+
+      The hero goes back. The banner keeps the new photograph, which is what was being
+      discussed — and the two pages now open on different pictures, which is better than
+      what either state had.
+    */
+    id: "2026-09-02-hero-back-to-escarpment",
+    sql: `
+      UPDATE site_settings SET value = '/brand/hero-bg.jpg', updated_at = datetime('now')
+       WHERE key = 'hero_background'
+         AND value = '/brand/steppe-altai.jpg';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

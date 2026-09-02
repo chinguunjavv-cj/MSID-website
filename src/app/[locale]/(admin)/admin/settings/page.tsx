@@ -91,8 +91,8 @@ export default async function AdminSettingsPage({
                   name: "hero_background",
                   label: mn ? "Нүүрний дэвсгэр зураг" : "Hero background image",
                   hint: mn
-                    ? "Гарчгийн ард гарах зураг. Одоогийн утга /brand/steppe-altai.jpg — Алтайн хээрийн зураг. Зураг тавихад нүүрний хэсэг бараан өнгөтэй болж, бичвэр цагаанаар гарна; сүүдэр автоматаар нэмэгдэнэ. Өөр зургаар солих (жишээ нь /uploads/xxx.jpg) эсвэл хоосон болгож зураггүй цайвар дэвсгэр рүү буцаж болно."
-                    : "Sits behind the headline. Currently /brand/steppe-altai.jpg, the Altai steppe photograph. With an image set the hero turns dark and the text runs in white, with a shadow laid automatically so it stays legible. Replace it (e.g. /uploads/xxx.jpg) or clear it to return to the plain light ground.",
+                    ? "Гарчгийн ард гарах зураг. Одоогийн утга /brand/hero-bg.jpg — улаан хадан хээрийн зураг. Зураг тавихад нүүрний хэсэг бараан өнгөтэй болж, бичвэр цагаанаар гарна; сүүдэр автоматаар нэмэгдэнэ. Өөр зургаар солих (жишээ нь /uploads/xxx.jpg) эсвэл хоосон болгож зураггүй цайвар дэвсгэр рүү буцаж болно."
+                    : "Sits behind the headline. Currently /brand/hero-bg.jpg, the red escarpment photograph. With an image set the hero turns dark and the text runs in white, with a shadow laid automatically so it stays legible. Replace it (e.g. /uploads/xxx.jpg) or clear it to return to the plain light ground.",
                 },
                 {
                   name: "section_banner",

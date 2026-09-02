@@ -53,16 +53,21 @@ export const SETTING_DEFAULTS: SiteSettings = {
   bank_account_name: "",
   qpay_enabled: "0",
   /*
-    The Society's chosen ground (2 Sept 2026): the Altai steppe under snow-topped
-    mountains, by Bolatbek Gabiden on Unsplash (Unsplash licence — free commercial
-    use, no permission or attribution required), resized into the repo at
-    public/brand/steppe-altai.jpg. It replaced the red escarpment of 31 August
-    (public/brand/hero-bg.jpg, Pexels 16357527 by Nicephotorussia, still in the repo
-    and still selectable from the admin). A default rather than a hardcode so an
-    administrator can clear the field and get the plain ruled hero back.
+    The hero's ground: the red steppe escarpment, Pexels photo 16357527 by
+    Nicephotorussia (Pexels licence — free use, no attribution required), at
+    public/brand/hero-bg.jpg. Chosen on 31 August and tuned over four rounds with the
+    Society until the shadow sat where they wanted it; it stays. A default rather than
+    a hardcode so an administrator can clear the field and get the plain ruled hero
+    back, or point it somewhere else.
   */
-  hero_background: "/brand/steppe-altai.jpg",
+  hero_background: "/brand/hero-bg.jpg",
   /*
+    The interior banner is the Altai steppe under snow-topped mountains, by Bolatbek
+    Gabiden on Unsplash (Unsplash licence — free commercial use, no permission or
+    attribution required), at public/brand/steppe-altai.jpg. Deliberately a different
+    photograph from the hero: the home page and the sections should not open with the
+    same picture.
+
     The same ground behind every section title. One setting rather than one per
     page: the band is short and reads as the Society's masthead texture, not as a
     picture of anything, and twelve separate uploads would be twelve chances for a
