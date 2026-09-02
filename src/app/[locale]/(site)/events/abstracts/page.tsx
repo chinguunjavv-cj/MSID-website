@@ -51,7 +51,16 @@ export default async function AbstractsPage({
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <Prose body={tr(page, "body", locale)} />
 
-          <aside>
+          {/*
+            On a phone the single column puts the rules first and the open call two
+            thousand characters below them, so the one thing a reader came to check —
+            whether anything is open, and until when — is the last thing they reach.
+            An open call moves to the top there; the sidebar is unchanged from `lg` up,
+            where it is already in view. When nothing is open the order stands as
+            written: an empty panel is a poor way to open a page, and the prose then
+            explains what will appear.
+          */}
+          <aside className={calls.length > 0 ? "order-first lg:order-none" : undefined}>
             <h2 className="text-h3 font-bold">{t.events.abstracts.openCalls}</h2>
             {calls.length > 0 ? (
               <ul className="register mt-6">

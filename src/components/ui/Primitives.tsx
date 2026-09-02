@@ -113,6 +113,14 @@ export function SectionHead({
  * Single newlines inside a paragraph are preserved as line breaks. Blank lines separate
  * paragraphs; a single newline is a deliberate break by whoever wrote the text, and
  * collapsing it ran the President's three-line sign-off together into one sentence.
+ *
+ * A paragraph the author broke into lines gets those lines hung: each one starts at the
+ * margin and its wrapped continuation is indented under the text. Rendered flat, the
+ * call for abstracts read as a wall on a phone — "3. Бүтэц – үндэслэл, зорилго," wrapped
+ * to "материал арга зүй, үр дүн, дүгнэлт." hard against the margin, indistinguishable
+ * from the start of item 4. Nothing changes for a line that does not wrap, or for an
+ * ordinary paragraph of continuous prose, which is why the hang is applied per authored
+ * line rather than to the paragraph.
  */
 export function Prose({
   body,
@@ -126,11 +134,20 @@ export function Prose({
 
   return (
     <div className={`reading measure ${className}`}>
-      {paragraphs.map((paragraph, index) => (
-        <p key={index} className="whitespace-pre-line">
-          {paragraph}
-        </p>
-      ))}
+      {paragraphs.map((paragraph, index) => {
+        const lines = paragraph.split("\n");
+        if (lines.length === 1) return <p key={index}>{paragraph}</p>;
+
+        return (
+          <p key={index}>
+            {lines.map((line, lineIndex) => (
+              <span key={lineIndex} className="block pl-[1.6em] -indent-[1.6em]">
+                {line}
+              </span>
+            ))}
+          </p>
+        );
+      })}
     </div>
   );
 }
