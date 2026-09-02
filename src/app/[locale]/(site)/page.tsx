@@ -132,6 +132,19 @@ export default async function HomePage({
   */
   const heroBackground = safeFileHref(settings.hero_background);
 
+  /*
+    The countdown gauge in the hero panel. Thirty days is the dial's full sweep — long
+    enough that a congress announced a month out starts to fill, short enough that the
+    last fortnight reads as urgent.
+  */
+  const COUNTDOWN_WINDOW_DAYS = 30;
+  const RING_RADIUS = 44;
+  const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+  const countdownFraction =
+    nextDays === null || nextDays <= 0
+      ? 1
+      : Math.min(1, Math.max(0, (COUNTDOWN_WINDOW_DAYS - nextDays) / COUNTDOWN_WINDOW_DAYS));
+
   return (
     <>
       {/* ---------------------------------------------------------------- */}
@@ -312,12 +325,6 @@ export default async function HomePage({
                 }`}
               >
                 {tr(next, "title", locale)}
-                <span
-                  aria-hidden
-                  className="ml-2 inline-block transition-transform duration-100 ease-[var(--ease-out-quart)] group-hover:translate-x-1"
-                >
-                  →
-                </span>
               </p>
 
               <p
@@ -348,25 +355,70 @@ export default async function HomePage({
               )}
             </div>
 
-            {/* The count. A hairline separates it from the statement on a wide screen
-                and sits above it on a phone, the way a register rules its columns. */}
+            {/*
+              The count, in a gauge. A hairline separates it from the statement on a
+              wide screen and sits above it on a phone, the way a register rules its
+              columns.
+
+              The ring reads against a declared scale — the final thirty days before
+              the event — so the sweep states something a reader can hold: a quarter
+              filled is three weeks out, nearly closed is this week. An arc set to an
+              arbitrary offset would be ornament, and the whole point of a gauge is
+              that its dial means the same thing every time you look at it. Beyond the
+              window the track sits empty and the numeral still carries the count.
+
+              The label sits under the ring rather than inside it: "ХОНОГ ҮЛДЛЭЭ" does
+              not fit within a 96px circle, and the language that overflows is the one
+              that sets the layout.
+            */}
             {nextDays !== null && (
               <div
-                className={`flex shrink-0 items-baseline gap-3 border-t pt-4 md:flex-col md:items-end md:gap-0 md:border-t-0 md:border-l md:pt-0 md:pl-8 ${
+                className={`flex shrink-0 flex-col items-center border-t pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-8 ${
                   heroBackground ? "border-white/15" : "border-copper-200"
                 }`}
               >
                 {nextDays > 0 ? (
                   <>
+                    <div className="relative h-24 w-24">
+                      <svg viewBox="0 0 96 96" className="h-24 w-24 -rotate-90" aria-hidden>
+                        <circle
+                          cx="48"
+                          cy="48"
+                          r={RING_RADIUS}
+                          fill="none"
+                          strokeWidth="4"
+                          style={{
+                            stroke: heroBackground
+                              ? "rgb(255 255 255 / 0.15)"
+                              : "var(--color-copper-200)",
+                          }}
+                        />
+                        <circle
+                          cx="48"
+                          cy="48"
+                          r={RING_RADIUS}
+                          fill="none"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          style={{
+                            stroke: heroBackground
+                              ? "var(--color-copper-400)"
+                              : "var(--color-copper-700)",
+                            strokeDasharray: RING_CIRCUMFERENCE,
+                            strokeDashoffset: RING_CIRCUMFERENCE * (1 - countdownFraction),
+                          }}
+                        />
+                      </svg>
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center tabular text-h3 font-bold ${
+                          heroBackground ? "text-paper" : "text-ink-900"
+                        }`}
+                      >
+                        {nextDays}
+                      </span>
+                    </div>
                     <span
-                      className={`tabular text-h2 font-bold leading-none ${
-                        heroBackground ? "text-paper" : "text-ink-900"
-                      }`}
-                    >
-                      {nextDays}
-                    </span>
-                    <span
-                      className={`text-[0.75rem] uppercase tracking-wide md:mt-2 ${
+                      className={`mt-2.5 text-[0.75rem] uppercase tracking-wide ${
                         heroBackground ? "text-ink-300" : "text-ink-600"
                       }`}
                     >
