@@ -68,7 +68,7 @@ export default async function ContactPage({
 
   return (
     <>
-      <SectionHeader title={tr(page, "title", locale) || t.about.contactTitle} />
+      <SectionHeader banner={page?.banner} title={tr(page, "title", locale) || t.about.contactTitle} />
 
       <div className="shell py-12 md:py-16">
         {tr(page, "body", locale) && (

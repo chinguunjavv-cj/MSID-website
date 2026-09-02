@@ -31,7 +31,7 @@ export default async function MissionPage({
 
   return (
     <>
-      <SectionHeader title={tr(page, "title", locale) || t.aboutNav.mission} />
+      <SectionHeader banner={page?.banner} title={tr(page, "title", locale) || t.aboutNav.mission} />
       <div className="shell py-14 md:py-20">
         <Prose body={tr(page, "body", locale)} />
 

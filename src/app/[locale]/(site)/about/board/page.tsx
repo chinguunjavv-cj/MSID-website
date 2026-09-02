@@ -34,7 +34,7 @@ export default async function BoardPage({
 
   return (
     <>
-      <SectionHeader title={tr(page, "title", locale) || t.aboutNav.board} />
+      <SectionHeader banner={page?.banner} title={tr(page, "title", locale) || t.aboutNav.board} />
 
       <div className="shell py-14 md:py-20">
         {tr(page, "body", locale) && <Prose body={tr(page, "body", locale)} className="mb-12" />}
