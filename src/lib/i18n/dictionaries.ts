@@ -140,6 +140,9 @@ const mn = {
       case_conference: "Кейс хэлэлцүүлэг",
     },
     daysUntil: "хоногийн дараа",
+    /* Under the countdown numeral in the hero, where the number carries the count. */
+    daysToGo: "хоног үлдлээ",
+    abstractsOpen: "Илтгэл хүлээн авч байна",
     today: "Өнөөдөр",
     inProgress: "Үргэлжилж байна",
     ended: "Өндөрлөсөн",
@@ -515,6 +518,8 @@ const en: Dictionary = {
       case_conference: "Case conference",
     },
     daysUntil: "days away",
+    daysToGo: "days to go",
+    abstractsOpen: "Accepting abstracts",
     today: "Today",
     inProgress: "In progress",
     ended: "Concluded",

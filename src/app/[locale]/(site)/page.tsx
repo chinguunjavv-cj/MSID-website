@@ -14,9 +14,11 @@ import {
 } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import {
+  formatDate,
   formatDateNumeric,
   formatDateRange,
   daysUntil,
+  todayIso,
 } from "@/lib/format";
 import { EmptyState, Prose, ProseList, SectionHead } from "@/components/ui/Primitives";
 import { EventRow_, NewsRow } from "@/components/site/records";
@@ -273,31 +275,117 @@ export default async function HomePage({
           appear and offers a way to hear about it. A strip that announces a live fact
           has nothing to say when there is no fact.
         */}
+        {/*
+          The panel, not the chip it replaced. That was a copper-50 sticker built for a
+          paper hero, and once the hero became a photograph it sat on the rock like a
+          label peeled off something else. This is a plate on the record: the Society's
+          next date, stated, with the count as a tabular numeral — the one typographic
+          move DESIGN.md reserves for dates and figures, and a truer countdown than a
+          ring, whose sweep would have to stand for a span nobody has agreed on.
+
+          Deliberately not the reference mockup's glass: no backdrop blur, no 24px
+          radius, no second typeface. A translucent ink plate over the photograph reads
+          as part of the same record; frosted glass reads as a widget laid on top.
+        */}
         {next && (
           <Link
             href={p(`/events/${next.slug}`)}
-            className="group mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-lg border border-copper-200 bg-copper-50 px-5 py-3.5 text-small"
+            className={`group animate-settle mt-10 flex flex-col gap-5 rounded-lg border px-6 py-5 transition-colors duration-100 md:mt-12 md:flex-row md:items-center md:justify-between md:gap-8 md:px-8 md:py-6 ${
+              heroBackground
+                ? "border-white/15 bg-ink-950/75 hover:border-copper-400/70"
+                : "border-copper-200 bg-copper-50 hover:border-copper-600"
+            }`}
+            style={{ animationDelay: "200ms" }}
           >
-            <span className="font-semibold text-copper-800">{t.events.upcoming}</span>
-            <span aria-hidden className="text-copper-700">
-              →
-            </span>
-            <span className="font-medium text-ink-900 group-hover:underline">
-              {tr(next, "title", locale)}
-            </span>
-            <span className="tabular text-ink-600">
-              {formatDateRange(next.starts_on, next.ends_on, locale)}
-            </span>
-            {tr(next, "city", locale) && (
-              <span className="text-ink-600">· {tr(next, "city", locale)}</span>
-            )}
-            {nextDays !== null && nextDays > 0 && (
-              <span className="tabular text-ink-600">
-                · {nextDays} {t.events.daysUntil}
+            <div className="min-w-0">
+              <span
+                className={`text-[0.75rem] font-semibold uppercase tracking-wide ${
+                  heroBackground ? "text-copper-400" : "text-copper-800"
+                }`}
+              >
+                {t.events.upcoming}
               </span>
+
+              <p
+                className={`mt-1.5 max-w-[46ch] text-h3 font-semibold text-balance ${
+                  heroBackground ? "text-paper" : "text-ink-900"
+                }`}
+              >
+                {tr(next, "title", locale)}
+                <span
+                  aria-hidden
+                  className="ml-2 inline-block transition-transform duration-100 ease-[var(--ease-out-quart)] group-hover:translate-x-1"
+                >
+                  →
+                </span>
+              </p>
+
+              <p
+                className={`mt-2 text-small tabular ${
+                  heroBackground ? "text-ink-300" : "text-ink-600"
+                }`}
+              >
+                {formatDateRange(next.starts_on, next.ends_on, locale)}
+                {tr(next, "city", locale) && ` · ${tr(next, "city", locale)}`}
+              </p>
+
+              {/*
+                Only while the call is actually open. The deadline is the one thing on
+                this page a reader can act on today, and it closes on its own date.
+              */}
+              {next.abstract_deadline && next.abstract_deadline >= todayIso() && (
+                <p
+                  className={`mt-3 text-small ${
+                    heroBackground ? "text-copper-400" : "text-copper-800"
+                  }`}
+                >
+                  {t.events.abstractsOpen}
+                  <span className="tabular">
+                    {" · "}
+                    {formatDate(next.abstract_deadline, locale)}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* The count. A hairline separates it from the statement on a wide screen
+                and sits above it on a phone, the way a register rules its columns. */}
+            {nextDays !== null && (
+              <div
+                className={`flex shrink-0 items-baseline gap-3 border-t pt-4 md:flex-col md:items-end md:gap-0 md:border-t-0 md:border-l md:pt-0 md:pl-8 ${
+                  heroBackground ? "border-white/15" : "border-copper-200"
+                }`}
+              >
+                {nextDays > 0 ? (
+                  <>
+                    <span
+                      className={`tabular text-h2 font-bold leading-none ${
+                        heroBackground ? "text-paper" : "text-ink-900"
+                      }`}
+                    >
+                      {nextDays}
+                    </span>
+                    <span
+                      className={`text-[0.75rem] uppercase tracking-wide md:mt-2 ${
+                        heroBackground ? "text-ink-300" : "text-ink-600"
+                      }`}
+                    >
+                      {t.events.daysToGo}
+                    </span>
+                  </>
+                ) : (
+                  <span
+                    className={`text-[0.75rem] font-semibold uppercase tracking-wide ${
+                      heroBackground ? "text-copper-400" : "text-copper-800"
+                    }`}
+                  >
+                    {nextDays === 0 ? t.events.today : t.events.inProgress}
+                  </span>
+                )}
+              </div>
             )}
-            </Link>
-          )}
+          </Link>
+        )}
         </div>
       </section>
 
