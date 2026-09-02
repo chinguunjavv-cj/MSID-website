@@ -280,6 +280,13 @@ With the filesystem backend, uploads are served by a route handler
 the project. It serves only image and PDF types and refuses any path resolving outside
 the upload directory.
 
+**Photograph weight.** Uploads are stored as they arrive, which on a phone means two
+or three megapixels more than any layout uses. `npm run resize:uploads` reports the
+oversized ones and, with `--apply`, rewrites each blob at 1600px under its existing
+pathname, so nothing in the database changes. It matters more than usual while
+`images.unoptimized` is set in `next.config.ts`: with Vercel's optimiser off, every
+visitor downloads the original. Run it after a batch of gallery uploads.
+
 **Backup.** `npm run backup` dumps the whole database to `backups/msid-<date>.sql` from
 whichever backend the environment points at; restore with `turso db shell <name> < file`
 or `sqlite3 new.db < file`. On Turso's free plan that scheduled dump *is* the backup —
@@ -352,6 +359,7 @@ environment rather than arguments, so they stay out of shell history. Add
 | `npm run demo` / `npm run demo:clear` | Add / remove sample content |
 | `npm run admin` | Create an administrator, or promote/reset an existing account (see above) |
 | `npm run backup` | Full SQL dump to `backups/`, and a report on foreign-key enforcement. Add `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` to back up production |
+| `npm run resize:uploads` | Reports which stored photographs are larger than the page ever displays; `-- --apply` rewrites them in place. Needs `BLOB_READ_WRITE_TOKEN` alongside the Turso variables |
 
 ---
 

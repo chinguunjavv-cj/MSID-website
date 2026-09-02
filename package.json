@@ -16,7 +16,8 @@
     "import:board": "node --env-file-if-exists=.env.local scripts/import-board.mts",
     "import:assets": "node --env-file-if-exists=.env.local scripts/import-assets.mts",
     "import:events": "node --env-file-if-exists=.env.local scripts/import-events.mts",
-    "import:photos": "node --env-file-if-exists=.env.local scripts/import-event-photos.mts"
+    "import:photos": "node --env-file-if-exists=.env.local scripts/import-event-photos.mts",
+    "resize:uploads": "node --env-file-if-exists=.env.local scripts/resize-uploads.mts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -36,6 +37,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "sharp": "^0.34.5"
   }
 }
