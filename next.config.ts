@@ -11,6 +11,28 @@ const nextConfig: NextConfig = {
 
   images: {
     /*
+      Optimisation off, 2 September 2026, because it was down rather than expensive.
+
+      Vercel's optimiser answered `402 OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED` to
+      every uncached variant: the transformation allowance is a *team* budget shared
+      with three sibling projects, and once it is spent every `/_next/image` request
+      fails. The failure is silent and total — the hero rendered as a black band, the
+      partner marks and board photographs as nothing at all — because a broken optimised
+      image leaves only the ground behind it.
+
+      Unoptimised, `next/image` emits a plain `<img>` at the source file, which the CDN
+      serves like any static asset and which no allowance governs. The brand images are
+      already sized for the job (the hero is 2400px at 286KB), so the cost is limited to
+      uploads, which arrive at whatever size an administrator's camera produced. Resizing
+      those at upload time in `storage.ts` is the fix that makes this permanent rather
+      than a stopgap.
+
+      The settings below are kept, not deleted: they are what optimisation should use if
+      the allowance is ever raised and this line comes back out.
+    */
+    unoptimized: true,
+
+    /*
       31 days, not the 4-hour default. Optimised variants are billed per *write* on
       Vercel, and the default TTL rebuilt every variant up to six times a day — which
       is how the team's shared 5,000-transformation budget was exhausted in August
