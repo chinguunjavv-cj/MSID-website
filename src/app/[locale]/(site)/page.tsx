@@ -170,10 +170,13 @@ export default async function HomePage({
         print, because a white veil fights a photograph where shadow beds it in. The
         ground becomes ink-950 (the token table's own "masthead, footer, hero ground"),
         the statement is set in paper, and the fade runs into shadow: deepest under the
-        text, thinnest over the escarpment, which keeps its full colour — darkening
-        saturates a photograph where whitening bleaches it. The image stays mirrored
-        (scale-x) so the red rock faces the open half; decorative by construction,
-        aria-hidden, empty alt.
+        text, thinnest over the landscape, which keeps its full colour — darkening
+        saturates a photograph where whitening bleaches it. The image is mirrored
+        (scale-x) so its open half falls under the panel rather than under the
+        statement, and cropped low, off the bright cloud band the Altai photograph
+        carries across its top third. Decorative by construction: aria-hidden, empty
+        alt. Both the crop and the scrims are tuned to the photograph in the setting —
+        change it and look at the band before shipping.
       */}
       {/* overflow-hidden only with a photograph to clip: without one the markup is
           byte-for-byte what it was before this setting existed. */}
@@ -190,7 +193,7 @@ export default async function HomePage({
               fill
               priority
               sizes="100vw"
-              className="-scale-x-100 object-cover object-[50%_30%]"
+              className="-scale-x-100 object-cover object-[50%_72%]"
             />
             {/* The record tone: a flat bed of shadow, heavier on a phone where the
                 text owns the whole width. The desktop band is short and crops the

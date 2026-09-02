@@ -359,6 +359,23 @@ The programme and the registration details are published here as they are settle
       ON CONFLICT(key) DO NOTHING;
     `,
   },
+  {
+    /*
+      The Society chose a different photograph on 2 September: the Altai steppe under
+      snow-topped mountains, by Bolatbek Gabiden on Unsplash. Both settings already hold
+      the escarpment in the live database, and a stored value wins over a default, so
+      the new default in settings-defaults.ts would never have reached them.
+
+      Guarded on the old path, so an administrator who has since chosen something of
+      their own keeps it. The escarpment stays in the repo and stays selectable.
+    */
+    id: "2026-09-02-steppe-altai-ground",
+    sql: `
+      UPDATE site_settings SET value = '/brand/steppe-altai.jpg', updated_at = datetime('now')
+       WHERE key IN ('hero_background', 'section_banner')
+         AND value = '/brand/hero-bg.jpg';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

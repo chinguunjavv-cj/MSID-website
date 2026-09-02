@@ -59,21 +59,26 @@ export function PageHeader({
             src={image as string}
             alt=""
             fill
+            /* Above the fold on every interior page. Lazy, it painted the ink ground
+               first and the band flashed black before the photograph arrived. */
+            priority
             sizes="100vw"
-            className="object-cover object-[50%_35%]"
+            className="object-cover object-[50%_86%]"
           />
           {/*
-            Two layers, the hero's strategy at a shorter height: a flat bed that keeps
-            the photograph readable as a photograph, and a left-weighted gradient that
-            deepens it where the title and lead actually sit. Together they hold about
-            71% ink under the text — enough that paper type clears AA even if an
-            administrator points this at a bright photograph — and fall to 55% on the
-            open right, where the picture can still be seen. A single heavy scrim was
-            tried first and turned the band into the wall of black this header was
-            redesigned away from in August.
+            Two layers: a light flat bed so the photograph reads as a photograph, and a
+            left-weighted gradient that deepens it under the title and lead, to about
+            62% ink there against 25% on the open right.
+
+            The crop and these two numbers are tuned to the photograph in the setting,
+            because they have to be: measured across its frame this one runs 84 to 122
+            of 255, and a scrim heavy enough to be safe for a bright sky turns a band
+            this short into the wall of black the header was redesigned away from in
+            August. Change the banner photograph and check this strip — the alt text
+            costs nothing to get wrong, the contrast does not.
           */}
-          <div className="absolute inset-0 bg-ink-950/55" />
-          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/35 to-transparent" />
+          <div className="absolute inset-0 bg-ink-950/25" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/50 to-transparent" />
         </div>
       )}
 

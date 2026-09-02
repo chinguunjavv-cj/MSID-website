@@ -53,13 +53,15 @@ export const SETTING_DEFAULTS: SiteSettings = {
   bank_account_name: "",
   qpay_enabled: "0",
   /*
-    The Society's chosen ground (31 Aug 2026): red steppe escarpment, Pexels photo
-    16357527 by Nicephotorussia (Pexels licence — free use, no attribution required),
-    resized into the repo at public/brand/hero-bg.jpg. A default rather than a
-    hardcode so an administrator can clear the field and get the plain ruled hero
-    back, or replace the file with the Society's own photograph later.
+    The Society's chosen ground (2 Sept 2026): the Altai steppe under snow-topped
+    mountains, by Bolatbek Gabiden on Unsplash (Unsplash licence — free commercial
+    use, no permission or attribution required), resized into the repo at
+    public/brand/steppe-altai.jpg. It replaced the red escarpment of 31 August
+    (public/brand/hero-bg.jpg, Pexels 16357527 by Nicephotorussia, still in the repo
+    and still selectable from the admin). A default rather than a hardcode so an
+    administrator can clear the field and get the plain ruled hero back.
   */
-  hero_background: "/brand/hero-bg.jpg",
+  hero_background: "/brand/steppe-altai.jpg",
   /*
     The same ground behind every section title. One setting rather than one per
     page: the band is short and reads as the Society's masthead texture, not as a
@@ -67,7 +69,7 @@ export const SETTING_DEFAULTS: SiteSettings = {
     section to end up looking like a different site. Clear it and the interior
     headers go back to type on paper.
   */
-  section_banner: "/brand/hero-bg.jpg",
+  section_banner: "/brand/steppe-altai.jpg",
   hero_image: "",
   hero_image_alt_mn: "",
   hero_image_alt_en: "",
