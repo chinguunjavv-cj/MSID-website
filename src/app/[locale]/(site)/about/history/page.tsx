@@ -33,6 +33,7 @@ export default async function HistoryPage({
   return (
     <>
       <SectionHeader
+        banner={page?.banner}
         title={tr(page, "title", locale) || t.aboutNav.history}
         lead={tr(page, "body", locale) || undefined}
       />

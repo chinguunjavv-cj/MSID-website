@@ -365,6 +365,16 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "title", label: { mn: "Гарчиг", en: "Title" }, kind: "text", bilingual: true, required: true, section: SECTION_CONTENT },
       { name: "body", label: { mn: "Агуулга", en: "Body" }, kind: "textarea", bilingual: true, section: SECTION_CONTENT },
       {
+        name: "banner",
+        label: { mn: "Гарчгийн дэвсгэр зураг", en: "Header banner" },
+        kind: "image",
+        section: SECTION_MEDIA,
+        hint: {
+          mn: "Энэ хуудасны гарчгийн ард гарна. Хоосон бол Тохиргоо дахь нийтлэг дэвсгэр зураг харагдана.",
+          en: "Sits behind this page's title. Leave empty and the shared banner from Settings is used instead.",
+        },
+      },
+      {
         name: "image",
         label: { mn: "Зураг", en: "Photograph" },
         kind: "image",

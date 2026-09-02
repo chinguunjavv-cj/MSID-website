@@ -324,6 +324,41 @@ The programme and the registration details are published here as they are settle
        WHERE slug = 'ibd-endoscopy-2026';
     `,
   },
+  {
+    /*
+      A banner per section, so the Society can put its own photograph behind each page
+      title rather than one image behind all of them. The column is on `pages` because
+      that is where an administrator already edits a section's words, and an empty value
+      falls back to the shared `section_banner` setting.
+
+      Three section landings never had a `pages` row - the events index, past events and
+      news are lists, not prose - which left them with nothing to hang a banner on. They
+      get one here, seeded with the wording the dictionary already showed, so nothing
+      changes on the page until someone edits it. Their titles and intros become editable
+      as a consequence, which is the point of the pages table.
+    */
+    id: "2026-09-02-page-banners",
+    sql: `
+      ALTER TABLE pages ADD COLUMN banner TEXT NOT NULL DEFAULT '';
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en)
+      VALUES (
+        'events.index',
+        'Арга хэмжээ, хөтөлбөр',
+        'Events & Programmes',
+        'Их хурал, эрдэм шинжилгээний хурал, сургалт, кейс хэлэлцүүлэг.',
+        'Congress, scientific meetings, training courses and case conferences.'
+      ) ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en)
+      VALUES ('events.past', 'Өнгөрсөн арга хэмжээ', 'Past events', '', '')
+      ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en)
+      VALUES ('news.index', 'Мэдээ, мэдээлэл', 'News', '', '')
+      ON CONFLICT(key) DO NOTHING;
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

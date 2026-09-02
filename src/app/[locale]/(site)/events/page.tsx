@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { tr } from "@/lib/db/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { listPastEvents, listPublishedNews, listUpcomingEvents } from "@/lib/queries";
+import { getPage, listPastEvents, listPublishedNews, listUpcomingEvents } from "@/lib/queries";
 import { EmptyState, SectionHead } from "@/components/ui/Primitives";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { EventRow_, NewsRow } from "@/components/site/records";
@@ -29,17 +30,19 @@ export default async function EventsPage({
   const t = getDictionary(locale);
   const p = (path: string) => localePath(locale, path);
 
-  const [upcoming, recentPast, news] = await Promise.all([
+  const [upcoming, recentPast, news, page] = await Promise.all([
     listUpcomingEvents(),
     listPastEvents(5),
     listPublishedNews(5),
+    getPage("events.index"),
   ]);
 
   return (
     <>
       <SectionHeader
-        title={t.events.title}
-        lead={t.events.lead}
+        banner={page?.banner}
+        title={tr(page, "title", locale) || t.events.title}
+        lead={tr(page, "body", locale) || t.events.lead}
         meta={
           /* Stays `btn-secondary` on both grounds. With a banner set the header is a
              dark surface again, and `.on-dark .btn-secondary` in globals.css lifts the

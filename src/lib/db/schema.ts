@@ -320,6 +320,7 @@ CREATE TABLE IF NOT EXISTS pages (
   image        TEXT NOT NULL DEFAULT '',
   image_alt_mn TEXT NOT NULL DEFAULT '',
   image_alt_en TEXT NOT NULL DEFAULT '',
+  banner       TEXT NOT NULL DEFAULT '',
   updated_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

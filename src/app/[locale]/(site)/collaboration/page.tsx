@@ -34,6 +34,7 @@ export default async function CollaborationPage({
   return (
     <>
       <SectionHeader
+        banner={page?.banner}
         title={tr(page, "title", locale) || t.collaboration.title}
         lead={tr(page, "body", locale) || t.collaboration.lead}
       />

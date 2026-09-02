@@ -11,15 +11,27 @@ import { PageHeader } from "@/components/ui/Primitives";
  * the site is built to avoid — while the pages the navigation points at are the ones
  * that carry the Society's face.
  *
- * The image is one setting, read here rather than in twelve pages: `getSettings()` is
- * cached per request and again in the data cache, so this costs nothing per page.
+ * Two sources, in order: the section's own `banner`, edited on its page in Хуудсууд,
+ * and the shared `section_banner` setting behind everything that has not been given
+ * one. A society with photographs of its own board, its own congress and its own
+ * training can put each behind the page it documents; one that has none yet still gets
+ * a coherent site from a single upload.
+ *
+ * `getSettings()` is cached per request and again in the data cache, so reading it here
+ * rather than in thirteen pages costs nothing.
  */
-export async function SectionHeader(props: {
+export async function SectionHeader({
+  banner,
+  ...props
+}: {
   title: string;
   lead?: string;
   meta?: React.ReactNode;
   breadcrumb?: { label: string; href: string }[];
+  /** This section's own banner, when it has one. */
+  banner?: string | null;
 }) {
   const settings = await getSettings();
-  return <PageHeader {...props} image={safeFileHref(settings.section_banner)} />;
+  const image = safeFileHref(banner) ?? safeFileHref(settings.section_banner);
+  return <PageHeader {...props} image={image} />;
 }

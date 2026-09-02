@@ -238,6 +238,7 @@ export interface Page {
   image: string;
   image_alt_mn: string;
   image_alt_en: string;
+  banner: string;
   updated_at: string;
 }
 

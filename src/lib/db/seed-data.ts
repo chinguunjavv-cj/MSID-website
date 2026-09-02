@@ -229,6 +229,27 @@ const PAGES: {
     body_en: HOME_ABOUT_EN,
   },
   {
+    key: "events.index",
+    title_mn: "Арга хэмжээ, хөтөлбөр",
+    title_en: "Events & Programmes",
+    body_mn: "Их хурал, эрдэм шинжилгээний хурал, сургалт, кейс хэлэлцүүлэг.",
+    body_en: "Congress, scientific meetings, training courses and case conferences.",
+  },
+  {
+    key: "events.past",
+    title_mn: "Өнгөрсөн арга хэмжээ",
+    title_en: "Past events",
+    body_mn: "",
+    body_en: "",
+  },
+  {
+    key: "news.index",
+    title_mn: "Мэдээ, мэдээлэл",
+    title_en: "News",
+    body_mn: "",
+    body_en: "",
+  },
+  {
     key: "events.abstracts",
     title_mn: "Илтгэлийн хураангуй хүлээн авах",
     title_en: "Abstract submission",

@@ -41,6 +41,7 @@ export default async function MembershipPage({
   return (
     <>
       <SectionHeader
+        banner={intro?.banner}
         title={tr(intro, "title", locale) || t.membership.title}
         lead={tr(intro, "body", locale) || t.membership.lead}
       />

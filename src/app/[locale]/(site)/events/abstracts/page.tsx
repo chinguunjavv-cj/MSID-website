@@ -43,6 +43,7 @@ export default async function AbstractsPage({
   return (
     <>
       <SectionHeader
+        banner={page?.banner}
         title={tr(page, "title", locale) || t.events.abstracts.title}
         lead={t.events.abstracts.lead}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}

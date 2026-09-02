@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { tr } from "@/lib/db/types";
 import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { listPublishedNews } from "@/lib/queries";
+import { getPage, listPublishedNews } from "@/lib/queries";
 import { EmptyState } from "@/components/ui/Primitives";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { NewsRow } from "@/components/site/records";
@@ -26,12 +27,14 @@ export default async function NewsIndexPage({
   if (!isLocale(locale)) notFound();
 
   const t = getDictionary(locale);
+  const page = await getPage("news.index");
   const posts = await listPublishedNews(50);
 
   return (
     <>
       <SectionHeader
-        title={t.events.news}
+        banner={page?.banner}
+        title={tr(page, "title", locale) || t.events.news}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
       />
 

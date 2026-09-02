@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { tr } from "@/lib/db/types";
 import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { countPastEvents, listPastEvents } from "@/lib/queries";
+import { countPastEvents, getPage, listPastEvents } from "@/lib/queries";
 import { EmptyState, Pagination } from "@/components/ui/Primitives";
 import { SectionHeader } from "@/components/site/SectionHeader";
 import { EventRow_ } from "@/components/site/records";
@@ -35,12 +36,15 @@ export default async function PastEventsPage({
   const page = Math.min(Math.max(1, Number(pageParam) || 1), totalPages);
 
   const t = getDictionary(locale);
+  /* `page` is already the pagination number here, so the row keeps its own name. */
+  const pageRow = await getPage("events.past");
   const events = await listPastEvents(PER_PAGE, (page - 1) * PER_PAGE);
 
   return (
     <>
       <SectionHeader
-        title={t.events.past}
+        banner={pageRow?.banner}
+        title={tr(pageRow, "title", locale) || t.events.past}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
       />
 

@@ -36,6 +36,7 @@ export default async function GuidelinesPage({
   return (
     <>
       <SectionHeader
+        banner={page?.banner}
         title={tr(page, "title", locale) || t.guidelines.title}
         lead={tr(page, "body", locale) || t.guidelines.lead}
       />

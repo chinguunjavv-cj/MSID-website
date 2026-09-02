@@ -58,6 +58,7 @@ export default async function WelcomePage({
   return (
     <>
       <SectionHeader
+        banner={page?.banner}
         title={tr(page, "title", locale) || t.aboutNav.welcome}
         meta={
           <p className="text-small text-ink-600">

@@ -72,6 +72,11 @@ export const PAGE_KEYS = [
   "membership.benefits",
   "home.about",
   "events.abstracts",
+  /* The three section landings that carried no row: added 2 Sept 2026 so every
+     page the navigation points at can hold its own banner and intro. */
+  "events.index",
+  "events.past",
+  "news.index",
 ] as const;
 
 export type PageKey = (typeof PAGE_KEYS)[number];
