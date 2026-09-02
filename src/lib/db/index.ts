@@ -191,6 +191,113 @@ const MIGRATIONS: { id: string; sql: string }[] = [
       UPDATE partners SET logo = '/brand/partner-ncmch.png'    WHERE acronym = 'NCMCH'    AND logo = '';
     `,
   },
+  {
+    /*
+      The Society's first call for abstracts, supplied 2 September 2026 by
+      Dr Ariunzul Dashdondog: the training course of 18-19 September, and the rules for
+      submitting to it. Two changes in one migration because they are one announcement.
+
+      The page update is guarded on the placeholder text still being in place, so an
+      administrator who has already written their own version is not overwritten. The
+      event is guarded on its slug, so a second run, or an event an administrator
+      created first, inserts nothing.
+
+      The event carries `abstract_deadline`, which is what puts it in the "currently
+      accepting" list on /events/abstracts and in the deadline block on its own page.
+      It closes itself on 8 September with no further edit.
+    */
+    id: "2026-09-02-abstracts-call-2026",
+    sql: `
+      UPDATE pages SET
+        body_mn = 'Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг, Монголын Гастроэнтерологийн Холбоо, Улсын Нэгдүгээр Төв Эмнэлэг, АШУҮИС-ийн ХБЭСТ хамтран 2026 оны 9 дүгээр сарын 18, 19-ний өдрүүдэд «Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент, дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026» сэдэвт сургалт зохион байгуулна. Сургалтын үеэр гэдэсний эмгэг судлалын чиглэлээр хийсэн судалгааны илтгэлүүдийг хэлэлцүүлэхээр төлөвлөж байгаа тул эрдэм шинжилгээний илтгэл, тохиолдлын танилцуулгын хураангуйг хүлээн авч байна.
+
+Эмч, судлаач та бүхнийг судалгааны ажлын үр дүн, сонин бөгөөд төвөгтэй тохиолдлынхоо талаар танилцуулж, мэргэжил нэгтнүүдтэйгээ мэдлэг, туршлагаа хуваалцахыг урьж байна.
+
+Хураангуй хүлээн авах хугацаа: 2026 оны 8 дугаар сарын 27-ноос 9 дүгээр сарын 7-ны 23:59 цаг хүртэл.
+Сонгон шалгаруулалтын хариу мэдэгдэх хугацаа: 2026 оны 9 дүгээр сарын 11.
+Хүлээн авах хаяг: ibdmsid@gmail.com
+Холбоо барих утас: 9907 5158
+
+Илтгэлийн хураангуйд тавигдах шаардлага
+
+1. Хэл – монгол.
+2. Үгийн тоо – 250-аас хэтрэхгүй. Гарчиг, зохиогчдын нэр, байгууллагын мэдээлэл, түлхүүр үг үгийн тоонд орохгүй.
+3. Бүтэц – үндэслэл, зорилго, материал арга зүй, үр дүн, дүгнэлт.
+4. Гарчиг – судалгааны агуулгыг тодорхой илэрхийлсэн, товч байна.
+5. Зохиогчид – зохиогчдын харьяалах байгууллагыг тодорхой бичнэ.
+6. Үр дүн – хураангуй судалгааны бодит үр дүнг агуулсан байх бөгөөд үндсэн үр дүнг тоон болон статистикийн үзүүлэлтээр илэрхийлнэ.
+7. Товчлол – стандарт бус товчлолыг анх хэрэглэхдээ бүтэн нэрийг бичиж, хаалтад товчлолыг тэмдэглэнэ.
+
+Эмнэлзүйн тохиолдлын танилцуулгын загвар
+
+Тохиолдлын танилцуулгыг SOAP (subjective, objective, assessment, plan) загвараар бэлтгэнэ. Бичиглэлд тавигдах шаардлага илтгэлийн хураангуйнхтай ижил.
+
+Subjective – өвчний ба амьдралын түүх, харшил, мэс заслын болон бусад түүх.
+Objective – амин үзүүлэлт, бодит үзлэгээр илэрсэн өөрчлөлт, лаборатори ба багажийн шинжилгээний өөрчлөлт, дүгнэлт.
+Assessment – онош, ялган оношилгоо.
+Plan – шаардлагатай оношилгоо, эмчилгээ, зөвлөгөө, өвчтөн, асран хамгаалагч болон эмнэлгийн мэргэжилтнүүдийн хамтын ажиллагааны төлөвлөгөө.',
+        body_en = 'The Mongolian Society of Intestinal Disease, the Mongolian Gastroenterology Association, the First Central Hospital of Mongolia and the Mongolian National University of Medical Sciences are holding a training course on 18 and 19 September 2026: «Inflammatory bowel disease: diagnosis, treatment management, endoscopy safety and disinfection 2026». Research presentations in intestinal disease will be discussed during the course, and abstracts for scientific presentations and case reports are now being accepted.
+
+Physicians and researchers are invited to present the results of their work, and their unusual or difficult cases, and to share what they know with colleagues.
+
+Abstracts are accepted from 27 August to 7 September 2026, 23:59.
+Selection results are announced on 11 September 2026.
+Send abstracts to: ibdmsid@gmail.com
+Enquiries: 9907 5158
+
+Requirements for a scientific abstract
+
+1. Language – Mongolian.
+2. Length – no more than 250 words. The title, the names of the authors, their institutional details and the keywords are not counted.
+3. Structure – background, objective, materials and methods, results, conclusion.
+4. Title – brief, and a clear statement of what the study is about.
+5. Authors – state the institution each author belongs to.
+6. Results – the abstract must carry the actual results of the study, with the principal findings given as figures and statistics.
+7. Abbreviations – write a non-standard abbreviation out in full where it first appears, with the abbreviation in parentheses.
+
+Case report format
+
+Case reports follow the SOAP structure (subjective, objective, assessment, plan). The writing requirements are the same as for a scientific abstract.
+
+Subjective – the history of the illness and of the patient, allergies, previous surgery and other history.
+Objective – vital signs, the findings on examination, laboratory and imaging findings, and their interpretation.
+Assessment – diagnosis and differential diagnosis.
+Plan – the investigation, treatment and advice required, and the plan agreed between the patient, the carer and the clinical team.',
+        updated_at = datetime('now')
+      WHERE key = 'events.abstracts'
+        AND body_mn LIKE 'Нийгэмлэг жил бүр эрдэм шинжилгээний хурал%';
+
+      INSERT INTO events (
+        id, slug, kind, status, title_mn, title_en, summary_mn, summary_en,
+        body_mn, body_en, city_mn, city_en, starts_on, ends_on, abstract_deadline
+      )
+      SELECT
+        '0198f3c4-6a21-4e77-9b0d-5c81e2a7d413',
+        'ibd-endoscopy-2026',
+        'training',
+        'published',
+        'Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент, дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026',
+        'Inflammatory bowel disease: diagnosis, treatment management, endoscopy safety and disinfection 2026',
+        'Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг, Монголын Гастроэнтерологийн Холбоо, Улсын Нэгдүгээр Төв Эмнэлэг, АШУҮИС-ийн ХБЭСТ хамтран зохион байгуулах хоёр өдрийн сургалт.',
+        'A two-day training course held jointly by the Mongolian Society of Intestinal Disease, the Mongolian Gastroenterology Association, the First Central Hospital of Mongolia and the Mongolian National University of Medical Sciences.',
+        'Сургалтын үеэр гэдэсний эмгэг судлалын чиглэлээр хийсэн судалгааны илтгэлүүдийг хэлэлцүүлнэ. Эмч, судлаачдыг судалгааны ажлын үр дүн, сонин бөгөөд төвөгтэй тохиолдлынхоо талаар танилцуулж, мэргэжил нэгтнүүдтэйгээ мэдлэг, туршлагаа хуваалцахыг урьж байна.
+
+Илтгэлийн хураангуй ирүүлэх журам, бичиглэлд тавигдах шаардлагыг «Илтгэл хүлээн авах» хуудсанд байрлуулав. Хураангуйг ibdmsid@gmail.com хаягаар хүлээн авна.
+
+Хөтөлбөр, бүртгэлийн дэлгэрэнгүй мэдээллийг тодрох тусам энэ хуудсанд нийтэлнэ.',
+        'Research presentations in intestinal disease are discussed during the course. Physicians and researchers are invited to present the results of their work, and their unusual or difficult cases, and to share what they know with colleagues.
+
+The rules for submitting an abstract, and the format required, are on the Abstract submission page. Abstracts go to ibdmsid@gmail.com.
+
+The programme and the registration details are published here as they are settled.',
+        'Улаанбаатар',
+        'Ulaanbaatar',
+        '2026-09-18',
+        '2026-09-19',
+        '2026-09-07'
+      WHERE NOT EXISTS (SELECT 1 FROM events WHERE slug = 'ibd-endoscopy-2026');
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

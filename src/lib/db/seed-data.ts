@@ -79,17 +79,67 @@ Participation in case conferences and joint international activities
 Eligibility to join the Society's working groups and research projects`;
 
 /*
-  Placeholder until the Society sends the call for abstracts for its annual scientific
-  meeting. Deliberately says nothing that has to be true — no dates, no fees, no
-  submission address — so it can stand until it is replaced from the admin.
+  The Society's call for abstracts, as supplied on 2 September 2026 for the training
+  course of 18-19 September. The dates in it are the ones that change each year, which
+  is why this is a `pages` row an administrator edits rather than page code; migration
+  `2026-09-02-abstracts-call-2026` carries the same text to databases that were seeded
+  with the placeholder this replaced.
 */
-const ABSTRACTS_MN = `Нийгэмлэг жил бүр эрдэм шинжилгээний хурал зохион байгуулж, гишүүд болон гэдэсний эмгэг судлалын чиглэлээр ажиллаж буй эмч, судлаачдаас илтгэлийн хураангуй хүлээн авдаг.
+const ABSTRACTS_MN = `Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг, Монголын Гастроэнтерологийн Холбоо, Улсын Нэгдүгээр Төв Эмнэлэг, АШУҮИС-ийн ХБЭСТ хамтран 2026 оны 9 дүгээр сарын 18, 19-ний өдрүүдэд «Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент, дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026» сэдэвт сургалт зохион байгуулна. Сургалтын үеэр гэдэсний эмгэг судлалын чиглэлээр хийсэн судалгааны илтгэлүүдийг хэлэлцүүлэхээр төлөвлөж байгаа тул эрдэм шинжилгээний илтгэл, тохиолдлын танилцуулгын хураангуйг хүлээн авч байна.
 
-Илтгэл ирүүлэх журам, хураангуйн бүтэц, хүлээн авах хугацааг тухайн хурлын зарын хамт энэ хуудсанд нийтэлнэ. Илтгэлийн хураангуй хүлээн авч буй арга хэмжээ доор жагсаана.`;
+Эмч, судлаач та бүхнийг судалгааны ажлын үр дүн, сонин бөгөөд төвөгтэй тохиолдлынхоо талаар танилцуулж, мэргэжил нэгтнүүдтэйгээ мэдлэг, туршлагаа хуваалцахыг урьж байна.
 
-const ABSTRACTS_EN = `Each year the Society holds a scientific meeting and invites abstracts from members and from physicians and researchers working in intestinal disease.
+Хураангуй хүлээн авах хугацаа: 2026 оны 8 дугаар сарын 27-ноос 9 дүгээр сарын 7-ны 23:59 цаг хүртэл.
+Сонгон шалгаруулалтын хариу мэдэгдэх хугацаа: 2026 оны 9 дүгээр сарын 11.
+Хүлээн авах хаяг: ibdmsid@gmail.com
+Холбоо барих утас: 9907 5158
 
-Submission rules, the abstract format and the deadline are published on this page together with the call for each meeting. Meetings currently accepting abstracts are listed below.`;
+Илтгэлийн хураангуйд тавигдах шаардлага
+
+1. Хэл – монгол.
+2. Үгийн тоо – 250-аас хэтрэхгүй. Гарчиг, зохиогчдын нэр, байгууллагын мэдээлэл, түлхүүр үг үгийн тоонд орохгүй.
+3. Бүтэц – үндэслэл, зорилго, материал арга зүй, үр дүн, дүгнэлт.
+4. Гарчиг – судалгааны агуулгыг тодорхой илэрхийлсэн, товч байна.
+5. Зохиогчид – зохиогчдын харьяалах байгууллагыг тодорхой бичнэ.
+6. Үр дүн – хураангуй судалгааны бодит үр дүнг агуулсан байх бөгөөд үндсэн үр дүнг тоон болон статистикийн үзүүлэлтээр илэрхийлнэ.
+7. Товчлол – стандарт бус товчлолыг анх хэрэглэхдээ бүтэн нэрийг бичиж, хаалтад товчлолыг тэмдэглэнэ.
+
+Эмнэлзүйн тохиолдлын танилцуулгын загвар
+
+Тохиолдлын танилцуулгыг SOAP (subjective, objective, assessment, plan) загвараар бэлтгэнэ. Бичиглэлд тавигдах шаардлага илтгэлийн хураангуйнхтай ижил.
+
+Subjective – өвчний ба амьдралын түүх, харшил, мэс заслын болон бусад түүх.
+Objective – амин үзүүлэлт, бодит үзлэгээр илэрсэн өөрчлөлт, лаборатори ба багажийн шинжилгээний өөрчлөлт, дүгнэлт.
+Assessment – онош, ялган оношилгоо.
+Plan – шаардлагатай оношилгоо, эмчилгээ, зөвлөгөө, өвчтөн, асран хамгаалагч болон эмнэлгийн мэргэжилтнүүдийн хамтын ажиллагааны төлөвлөгөө.`;
+
+const ABSTRACTS_EN = `The Mongolian Society of Intestinal Disease, the Mongolian Gastroenterology Association, the First Central Hospital of Mongolia and the Mongolian National University of Medical Sciences are holding a training course on 18 and 19 September 2026: «Inflammatory bowel disease: diagnosis, treatment management, endoscopy safety and disinfection 2026». Research presentations in intestinal disease will be discussed during the course, and abstracts for scientific presentations and case reports are now being accepted.
+
+Physicians and researchers are invited to present the results of their work, and their unusual or difficult cases, and to share what they know with colleagues.
+
+Abstracts are accepted from 27 August to 7 September 2026, 23:59.
+Selection results are announced on 11 September 2026.
+Send abstracts to: ibdmsid@gmail.com
+Enquiries: 9907 5158
+
+Requirements for a scientific abstract
+
+1. Language – Mongolian.
+2. Length – no more than 250 words. The title, the names of the authors, their institutional details and the keywords are not counted.
+3. Structure – background, objective, materials and methods, results, conclusion.
+4. Title – brief, and a clear statement of what the study is about.
+5. Authors – state the institution each author belongs to.
+6. Results – the abstract must carry the actual results of the study, with the principal findings given as figures and statistics.
+7. Abbreviations – write a non-standard abbreviation out in full where it first appears, with the abbreviation in parentheses.
+
+Case report format
+
+Case reports follow the SOAP structure (subjective, objective, assessment, plan). The writing requirements are the same as for a scientific abstract.
+
+Subjective – the history of the illness and of the patient, allergies, previous surgery and other history.
+Objective – vital signs, the findings on examination, laboratory and imaging findings, and their interpretation.
+Assessment – diagnosis and differential diagnosis.
+Plan – the investigation, treatment and advice required, and the plan agreed between the patient, the carer and the clinical team.`;
 
 const HOME_ABOUT_MN = `Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг нь 2024 оны 3 дугаар сарын 5-ны өдөр байгуулагдсан төрийн бус байгууллага юм. Нийгэмлэг гэдэсний эмгэгийн оношилгоо, эмчилгээний чанарыг сайжруулах, эмнэлзүйн зааврыг боловсруулах, мэргэжлийн боловсон хүчнийг бэлтгэх чиглэлээр ажилладаг.`;
 const HOME_ABOUT_EN = `The Mongolian Society of Intestinal Disease is a non-governmental organisation founded on 5 March 2024. It works to improve the diagnosis and treatment of intestinal disease, to develop clinical guidelines, and to train specialists in the field.`;

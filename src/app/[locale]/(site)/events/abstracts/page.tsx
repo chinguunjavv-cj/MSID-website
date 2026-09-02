@@ -56,7 +56,7 @@ export default async function AbstractsPage({
             {calls.length > 0 ? (
               <ul className="register mt-6">
                 {calls.map((event) => (
-                  <li key={event.id} className="register-row">
+                  <li key={event.id} className="register-row md:grid-cols-1">
                     <div className="min-w-0">
                       <p className="text-[0.8125rem] uppercase tracking-wide text-ink-600">
                         {t.events.kind[event.kind]}

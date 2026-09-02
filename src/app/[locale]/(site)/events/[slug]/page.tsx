@@ -77,11 +77,22 @@ export default async function EventPage({
   const remaining = event.capacity ? Math.max(0, event.capacity - taken) : null;
   const countdown = daysUntil(event.starts_on);
 
+  /*
+    `disabled` means online registration is switched off, which reads two different ways
+    depending on when the event is. The Society announces a course weeks before it settles
+    a fee and opens a form — the September training was published with its call for
+    abstracts and nothing else — and telling a reader registration has *closed* turns them
+    away from something they can still attend. Ahead of the event it is "not open yet";
+    once it is over, "closed" is the truth.
+  */
+  const eventEnd = event.ends_on ?? event.starts_on;
+  const finished = eventEnd !== null && eventEnd < todayIso();
+
   const stateLabel = {
     open: t.events.registrationOpen,
     not_yet: t.events.registrationNotOpen,
     closed: t.events.registrationClosed,
-    disabled: t.events.registrationClosed,
+    disabled: finished ? t.events.registrationClosed : t.events.registrationNotOpen,
   }[state];
 
   const deadlines = [
