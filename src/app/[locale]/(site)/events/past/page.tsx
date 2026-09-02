@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { countPastEvents, listPastEvents } from "@/lib/queries";
-import { EmptyState, PageHeader, Pagination } from "@/components/ui/Primitives";
+import { EmptyState, Pagination } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { EventRow_ } from "@/components/site/records";
 
 const PER_PAGE = 20;
@@ -38,7 +39,7 @@ export default async function PastEventsPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={t.events.past}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
       />

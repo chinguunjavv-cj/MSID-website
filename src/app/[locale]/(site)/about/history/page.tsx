@@ -5,7 +5,8 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listHistoryEntries } from "@/lib/queries";
 import { formatDate, formatDayMonth, parseDate } from "@/lib/format";
-import { EmptyState, PageHeader, Prose } from "@/components/ui/Primitives";
+import { EmptyState, Prose } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -31,7 +32,7 @@ export default async function HistoryPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(page, "title", locale) || t.aboutNav.history}
         lead={tr(page, "body", locale) || undefined}
       />

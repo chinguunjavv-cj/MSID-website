@@ -95,6 +95,13 @@ export default async function AdminSettingsPage({
                     : "Sits behind the headline. Currently /brand/hero-bg.jpg, the red steppe photograph. With an image set the hero turns dark and the text runs in white, with a shadow laid automatically so it stays legible. Replace it (e.g. /uploads/xxx.jpg) or clear it to return to the plain light ground.",
                 },
                 {
+                  name: "section_banner",
+                  label: mn ? "Дотоод хуудасны дэвсгэр" : "Section banner image",
+                  hint: mn
+                    ? "Дотоод хуудсуудын гарчгийн ард гарах зураг (одоогоор /brand/hero-bg.jpg). Бүх хэсэгт нэг зураг харагдана. Хоосон болговол гарчиг цагаан дэвсгэр дээр гарна."
+                    : "Sits behind the title on interior pages (currently /brand/hero-bg.jpg). One image across every section. Clear it and the titles return to type on paper.",
+                },
+                {
                   name: "hero_image",
                   label: mn ? "Нүүр зургийн зам" : "Hero image path",
                   hint: mn

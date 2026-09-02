@@ -6,7 +6,8 @@ import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listOpenAbstractCalls } from "@/lib/queries";
 import { formatDate, formatDateRange } from "@/lib/format";
-import { EmptyState, PageHeader, Prose } from "@/components/ui/Primitives";
+import { EmptyState, Prose } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -41,7 +42,7 @@ export default async function AbstractsPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(page, "title", locale) || t.events.abstracts.title}
         lead={t.events.abstracts.lead}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}

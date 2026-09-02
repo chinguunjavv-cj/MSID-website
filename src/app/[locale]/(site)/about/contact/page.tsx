@@ -6,7 +6,8 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
-import { PageHeader, Prose } from "@/components/ui/Primitives";
+import { Prose } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { safeExternalLink } from "@/lib/video";
 
 /*
@@ -67,7 +68,7 @@ export default async function ContactPage({
 
   return (
     <>
-      <PageHeader title={tr(page, "title", locale) || t.about.contactTitle} />
+      <SectionHeader title={tr(page, "title", locale) || t.about.contactTitle} />
 
       <div className="shell py-12 md:py-16">
         {tr(page, "body", locale) && (

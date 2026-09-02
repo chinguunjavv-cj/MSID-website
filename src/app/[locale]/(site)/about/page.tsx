@@ -7,7 +7,8 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listBoardMembers } from "@/lib/queries";
 import { getSettings } from "@/lib/settings";
 import { formatDate, toParagraphs } from "@/lib/format";
-import { PageHeader, Prose } from "@/components/ui/Primitives";
+import { Prose } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -56,7 +57,7 @@ export default async function WelcomePage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(page, "title", locale) || t.aboutNav.welcome}
         meta={
           <p className="text-small text-ink-600">

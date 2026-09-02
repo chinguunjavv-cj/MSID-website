@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { Locale } from "@/lib/db/types";
 import { toParagraphs } from "@/lib/format";
@@ -22,29 +23,81 @@ export function PageHeader({
   lead,
   meta,
   breadcrumb,
+  image,
 }: {
   title: string;
   lead?: string;
   meta?: React.ReactNode;
   breadcrumb?: { label: string; href: string }[];
+  /**
+   * The optional photographic ground, from the `section_banner` setting by way of
+   * `SectionHeader`. Set, the header joins the home page's dark register: the same
+   * shadowed record treatment, shorter. Empty, this renders type on paper exactly as
+   * it did before the setting existed.
+   *
+   * Decorative by construction — `aria-hidden`, empty alt — because the h1 beneath it
+   * names the page and a band of steppe is not information a screen reader needs read
+   * aloud. The scrim is deliberately heavier than the hero's: an administrator can
+   * point this at any photograph, and a header that fails its contrast the day someone
+   * uploads a bright one is a header that cannot be trusted.
+   */
+  image?: string | null;
 }) {
+  const dark = Boolean(image);
+
   return (
-    <div className="border-b border-ink-200">
-      <div className="shell pt-10 pb-8 md:pt-14 md:pb-10">
+    <div
+      className={
+        dark
+          ? "on-dark relative overflow-hidden border-b border-ink-200"
+          : "border-b border-ink-200"
+      }
+    >
+      {dark && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <Image
+            src={image as string}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover object-[50%_35%]"
+          />
+          {/*
+            Two layers, the hero's strategy at a shorter height: a flat bed that keeps
+            the photograph readable as a photograph, and a left-weighted gradient that
+            deepens it where the title and lead actually sit. Together they hold about
+            71% ink under the text — enough that paper type clears AA even if an
+            administrator points this at a bright photograph — and fall to 55% on the
+            open right, where the picture can still be seen. A single heavy scrim was
+            tried first and turned the band into the wall of black this header was
+            redesigned away from in August.
+          */}
+          <div className="absolute inset-0 bg-ink-950/55" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink-950/35 to-transparent" />
+        </div>
+      )}
+
+      <div className="shell relative pt-10 pb-8 md:pt-14 md:pb-10">
         {breadcrumb && breadcrumb.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-4">
-            <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-ink-600">
+            <ol
+              className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] ${
+                dark ? "text-ink-300" : "text-ink-600"
+              }`}
+            >
               {breadcrumb.map((crumb, index) => (
                 <li key={crumb.href} className="flex items-center gap-2">
                   {/* Separators sit between crumbs, never after the last one. */}
                   {index > 0 && (
-                    <span aria-hidden className="text-ink-400">
+                    <span aria-hidden className={dark ? "text-ink-500" : "text-ink-400"}>
                       /
                     </span>
                   )}
                   <Link
                     href={crumb.href}
-                    className="transition-colors duration-100 hover:text-copper-700"
+                    className={`transition-colors duration-100 ${
+                      dark ? "hover:text-copper-400" : "hover:text-copper-700"
+                    }`}
                   >
                     {crumb.label}
                   </Link>
@@ -54,10 +107,22 @@ export function PageHeader({
           </nav>
         )}
 
-        <h1 className="max-w-[24ch] text-h2 font-semibold text-ink-950">{title}</h1>
+        <h1
+          className={`max-w-[24ch] text-h2 font-semibold ${
+            dark ? "text-paper" : "text-ink-950"
+          }`}
+        >
+          {title}
+        </h1>
 
         {lead && (
-          <p className="mt-4 max-w-[76ch] text-ink-600 text-pretty">{lead}</p>
+          <p
+            className={`mt-4 max-w-[76ch] text-pretty ${
+              dark ? "text-ink-200" : "text-ink-600"
+            }`}
+          >
+            {lead}
+          </p>
         )}
 
         {meta && <div className="mt-5">{meta}</div>}

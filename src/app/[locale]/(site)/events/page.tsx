@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { listPastEvents, listPublishedNews, listUpcomingEvents } from "@/lib/queries";
-import { EmptyState, PageHeader, SectionHead } from "@/components/ui/Primitives";
+import { EmptyState, SectionHead } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { EventRow_, NewsRow } from "@/components/site/records";
 
 export async function generateMetadata({
@@ -36,12 +37,13 @@ export default async function EventsPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={t.events.title}
         lead={t.events.lead}
         meta={
-          /* Secondary, not on-dark: the page header is paper now, and a white-on-ink
-             button on a paper ground is an invisible button. */
+          /* Stays `btn-secondary` on both grounds. With a banner set the header is a
+             dark surface again, and `.on-dark .btn-secondary` in globals.css lifts the
+             outline to paper there, so the one class is right either way. */
           <Link href={p("/membership")} className="btn btn-secondary">
             {t.home.joinCta}
           </Link>

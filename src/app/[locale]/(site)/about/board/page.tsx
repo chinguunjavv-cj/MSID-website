@@ -6,7 +6,8 @@ import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listBoardMembers } from "@/lib/queries";
 import { formatDateNumeric } from "@/lib/format";
-import { EmptyState, PageHeader, Prose } from "@/components/ui/Primitives";
+import { EmptyState, Prose } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -33,7 +34,7 @@ export default async function BoardPage({
 
   return (
     <>
-      <PageHeader title={tr(page, "title", locale) || t.aboutNav.board} />
+      <SectionHeader title={tr(page, "title", locale) || t.aboutNav.board} />
 
       <div className="shell py-14 md:py-20">
         {tr(page, "body", locale) && <Prose body={tr(page, "body", locale)} className="mb-12" />}

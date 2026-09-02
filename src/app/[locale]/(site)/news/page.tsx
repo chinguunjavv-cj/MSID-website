@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { listPublishedNews } from "@/lib/queries";
-import { EmptyState, PageHeader } from "@/components/ui/Primitives";
+import { EmptyState } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { NewsRow } from "@/components/site/records";
 
 export async function generateMetadata({
@@ -29,7 +30,7 @@ export default async function NewsIndexPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={t.events.news}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
       />

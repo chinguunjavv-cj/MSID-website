@@ -667,6 +667,20 @@
     color: var(--color-paper);
   }
 
+  /*
+    A secondary button on a dark ground. The ink outline it carries on paper is a
+    hairline nobody can see over a photograph, and the page header now has both
+    grounds depending on whether a banner is set.
+  */
+  .on-dark .btn-secondary {
+    border-color: color-mix(in oklab, var(--color-paper) 45%, transparent);
+    color: var(--color-paper);
+  }
+  .on-dark .btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-paper);
+    background-color: color-mix(in oklab, var(--color-paper) 12%, transparent);
+  }
+
   .on-copper {
     background-color: var(--color-copper-700);
     color: color-mix(in oklab, var(--color-paper) 88%, var(--color-copper-200));

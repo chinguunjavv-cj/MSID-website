@@ -5,7 +5,8 @@ import { tr } from "@/lib/db/types";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listPartners } from "@/lib/queries";
-import { EmptyState, PageHeader } from "@/components/ui/Primitives";
+import { EmptyState } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { safeExternalLink } from "@/lib/video";
 
 export async function generateMetadata({
@@ -32,7 +33,7 @@ export default async function CollaborationPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(page, "title", locale) || t.collaboration.title}
         lead={tr(page, "body", locale) || t.collaboration.lead}
       />

@@ -4,7 +4,8 @@ import { tr } from "@/lib/db/types";
 import { isLocale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage, listPublishedPublications } from "@/lib/queries";
-import { EmptyState, PageHeader } from "@/components/ui/Primitives";
+import { EmptyState } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 import { PublicationRow } from "@/components/site/records";
 
 export async function generateMetadata({
@@ -31,7 +32,7 @@ export default async function PublicationsPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(page, "title", locale) || t.publications.title}
         lead={tr(page, "body", locale) || t.publications.lead}
       />

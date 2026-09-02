@@ -23,6 +23,7 @@ export interface SiteSettings {
   bank_account_name: string;
   qpay_enabled: string;
   hero_background: string;
+  section_banner: string;
   hero_image: string;
   hero_image_alt_mn: string;
   hero_image_alt_en: string;
@@ -59,6 +60,14 @@ export const SETTING_DEFAULTS: SiteSettings = {
     back, or replace the file with the Society's own photograph later.
   */
   hero_background: "/brand/hero-bg.jpg",
+  /*
+    The same ground behind every section title. One setting rather than one per
+    page: the band is short and reads as the Society's masthead texture, not as a
+    picture of anything, and twelve separate uploads would be twelve chances for a
+    section to end up looking like a different site. Clear it and the interior
+    headers go back to type on paper.
+  */
+  section_banner: "/brand/hero-bg.jpg",
   hero_image: "",
   hero_image_alt_mn: "",
   hero_image_alt_en: "",

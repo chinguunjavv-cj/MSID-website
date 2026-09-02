@@ -5,7 +5,8 @@ import { tr } from "@/lib/db/types";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getPage } from "@/lib/queries";
-import { PageHeader, ProseList } from "@/components/ui/Primitives";
+import { ProseList } from "@/components/ui/Primitives";
+import { SectionHeader } from "@/components/site/SectionHeader";
 
 export async function generateMetadata({
   params,
@@ -39,7 +40,7 @@ export default async function MembershipPage({
 
   return (
     <>
-      <PageHeader
+      <SectionHeader
         title={tr(intro, "title", locale) || t.membership.title}
         lead={tr(intro, "body", locale) || t.membership.lead}
       />
