@@ -124,6 +124,9 @@ const mn = {
       openCalls: "Одоо хүлээн авч буй",
       deadline: "Эцсийн хугацаа",
       viewEvent: "Арга хэмжээг харах",
+      meetingDates: "Арга хэмжээний огноо",
+      enquiries: "Хураангуй хүлээн авах асуудлаар",
+      alsoOpen: "Мөн хүлээн авч байна",
       noOpenCalls:
         "Одоогоор илтгэлийн хураангуй хүлээн авч буй арга хэмжээ байхгүй байна. Зарлагдмагц энд нийтлэгдэнэ.",
     },
@@ -522,6 +525,9 @@ const en: Dictionary = {
       openCalls: "Currently accepting abstracts",
       deadline: "Deadline",
       viewEvent: "View event",
+      meetingDates: "Meeting dates",
+      enquiries: "Submission enquiries",
+      alsoOpen: "Also accepting",
       noOpenCalls:
         "No meeting is accepting abstracts at the moment. Calls are published here as soon as they open.",
     },
