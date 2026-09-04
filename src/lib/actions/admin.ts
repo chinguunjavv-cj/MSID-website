@@ -327,6 +327,16 @@ const feeSchema = z.object({
   sort: sortOrder,
 });
 
+const organiserSchema = z.object({
+  eventId: requiredId,
+  organiserId: optionalId,
+  name_mn: shortText,
+  name_en: shortText,
+  role_mn: shortText,
+  role_en: shortText,
+  sort: sortOrder,
+});
+
 const sessionSchema = z.object({
   eventId: requiredId,
   sessionId: optionalId,
@@ -417,6 +427,43 @@ export async function deleteEventSessionAction(formData: FormData): Promise<void
   const sessionId = String(formData.get("sessionId") ?? "");
   await run("DELETE FROM event_sessions WHERE id = ?", sessionId);
   await audit(user.id, "event.session.delete", "event_session", sessionId);
+  bustContent();
+}
+
+export async function saveEventOrganiserAction(formData: FormData): Promise<void> {
+  const user = await requireStaff();
+  const { eventId, organiserId, ...values } = organiserSchema.parse(
+    formFields(formData, Object.keys(organiserSchema.shape)),
+  );
+
+  if (organiserId) {
+    const { sql, params } = setClause(values);
+    await run(
+      `UPDATE event_organisers SET ${sql} WHERE id = ? AND event_id = ?`,
+      ...params,
+      organiserId,
+      eventId,
+    );
+  } else {
+    const columns = Object.keys(values) as (keyof typeof values)[];
+    await run(
+      `INSERT INTO event_organisers (id, event_id, ${columns.join(", ")})
+       VALUES (?, ?, ${columns.map(() => "?").join(", ")})`,
+      newId(),
+      eventId,
+      ...columns.map((column) => values[column]),
+    );
+  }
+
+  await audit(user.id, "event.organiser.save", "event", eventId);
+  bustContent();
+}
+
+export async function deleteEventOrganiserAction(formData: FormData): Promise<void> {
+  const user = await requireStaff();
+  const organiserId = String(formData.get("organiserId") ?? "");
+  await run("DELETE FROM event_organisers WHERE id = ?", organiserId);
+  await audit(user.id, "event.organiser.delete", "event_organiser", organiserId);
   bustContent();
 }
 

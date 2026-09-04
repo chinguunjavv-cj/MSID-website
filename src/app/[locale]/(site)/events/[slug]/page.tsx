@@ -10,6 +10,7 @@ import {
   getEventBySlug,
   listEventFees,
   listEventPhotos,
+  listEventOrganisers,
   listEventSessions,
   registrationState,
 } from "@/lib/queries";
@@ -31,7 +32,7 @@ import {
   TranslationNotice,
 } from "@/components/ui/Primitives";
 import { VideoEmbed } from "@/components/site/VideoEmbed";
-import { safeExternalLink } from "@/lib/video";
+import { safeExternalLink, safeFileHref } from "@/lib/video";
 import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
@@ -67,11 +68,12 @@ export default async function EventPage({
 
   const t = getDictionary(locale);
   // Independent of each other; one round trip's worth of latency, not three.
-  const [fees, sessions, taken, photos] = await Promise.all([
+  const [fees, sessions, taken, photos, organisers] = await Promise.all([
     listEventFees(event.id),
     listEventSessions(event.id),
     countEventRegistrations(event.id),
     listEventPhotos(event.id),
+    listEventOrganisers(event.id),
   ]);
   const state = registrationState(event);
   const remaining = event.capacity ? Math.max(0, event.capacity - taken) : null;
@@ -127,6 +129,37 @@ export default async function EventPage({
   */
   const isPast = (event.ends_on ?? event.starts_on ?? "") < todayIso();
 
+  /*
+    What the meeting states about itself. These were the difference between this page
+    and the announcement the Society wanted: a congress is described by how it is
+    taught, what it is worth professionally and what language it is held in, and none
+    of that was anywhere but inside a summary paragraph. Each is optional, and the band
+    disappears entirely when an editor has filled in none of them.
+  */
+  const announcement = [
+    { label: t.events.format, value: tr(event, "format", locale) },
+    { label: t.events.accreditation, value: tr(event, "accreditation", locale) },
+    { label: t.events.languages, value: tr(event, "languages", locale) },
+  ].filter((fact) => fact.value);
+
+  /*
+    "Oral presentations: clinical trials, novel therapies" — split once on the first
+    colon so the kind of submission can be set in bold against what it covers. A line
+    without a colon is shown whole rather than dropped.
+  */
+  const abstractCategories = tr(event, "abstract_categories", locale)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const at = line.indexOf(":");
+      return at === -1
+        ? { name: line, detail: "" }
+        : { name: line.slice(0, at).trim(), detail: line.slice(at + 1).trim() };
+    });
+
+  const secretariat = event.secretariat_email.trim();
+
   const registrationPanel = (
     <>
       {state === "open" ? (
@@ -158,6 +191,52 @@ export default async function EventPage({
       {remaining !== null && !isPast && (
         <p className="tabular mt-4 text-center text-small text-ink-600">
           {remaining} {t.events.seatsLeft}
+        </p>
+      )}
+
+      {/*
+        What a submitter needs beside the abstract deadline: which kinds of abstract are
+        taken, the guidelines file, and the committee's own address — which is not the
+        Society's general one. All three are hidden until an editor has set them, so an
+        event that is not calling for abstracts shows none of it.
+      */}
+      {abstractCategories.length > 0 && !isPast && (
+        <div className="mt-8">
+          <h2 className="text-label font-semibold text-ink-600">
+            {t.events.abstractCategories}
+          </h2>
+          <ul className="mt-3 space-y-2.5 border-t-2 border-ink-900 pt-3 text-small">
+            {abstractCategories.map((category) => (
+              <li key={category.name}>
+                <span className="font-semibold text-ink-900">{category.name}</span>
+                {category.detail && (
+                  <span className="text-ink-600"> — {category.detail}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {event.guidelines_url && !isPast && (
+        <a
+          href={safeFileHref(event.guidelines_url) ?? "#"}
+          className="btn btn-secondary mt-4 w-full"
+        >
+          {t.events.submissionGuidelines}
+        </a>
+      )}
+
+      {secretariat && !isPast && (
+        <p className="mt-6 text-small text-ink-600">
+          {t.events.secretariat}
+          <br />
+          <a
+            href={`mailto:${secretariat}`}
+            className="font-medium text-ink-900 transition-colors duration-100 hover:text-copper-700"
+          >
+            {secretariat}
+          </a>
         </p>
       )}
 
@@ -269,6 +348,54 @@ export default async function EventPage({
             className="h-auto w-full max-w-5xl"
             priority
           />
+        </div>
+      )}
+
+      {/*
+        The announcement band: what the meeting is, before what happens at it.
+
+        A congress announcement in this field opens by establishing two things — how it
+        is taught and accredited, and whose authority is behind it. Both were absent:
+        the format lived nowhere, and four co-organising institutions were a clause
+        inside a summary paragraph. Set against hairlines rather than in cards, so the
+        band reads as the record's masthead and not as a row of tiles.
+      */}
+      {(announcement.length > 0 || organisers.length > 0) && (
+        <div className="shell pt-10">
+          {announcement.length > 0 && (
+            <dl className="grid gap-6 border-y border-ink-200 py-6 sm:grid-cols-3">
+              {announcement.map((fact) => (
+                <div key={fact.label}>
+                  <dt className="text-[0.75rem] uppercase tracking-wide text-ink-600">
+                    {fact.label}
+                  </dt>
+                  <dd className="mt-1 font-semibold text-ink-900">{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
+          {organisers.length > 0 && (
+            <div className={announcement.length > 0 ? "mt-8" : "border-t border-ink-200 pt-8"}>
+              <h2 className="text-[0.75rem] uppercase tracking-wide text-ink-600">
+                {t.events.organisers}
+              </h2>
+              <ul className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                {organisers.map((organiser) => (
+                  <li key={organiser.id} className="border-l border-ink-300 pl-4">
+                    <p className="font-semibold text-ink-900">
+                      {tr(organiser, "name", locale)}
+                    </p>
+                    {tr(organiser, "role", locale) && (
+                      <p className="text-small text-ink-600">
+                        {tr(organiser, "role", locale)}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

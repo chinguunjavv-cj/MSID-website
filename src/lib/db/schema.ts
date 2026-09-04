@@ -133,8 +133,41 @@ CREATE TABLE IF NOT EXISTS events (
   external_url          TEXT NOT NULL DEFAULT '',
   video_url             TEXT NOT NULL DEFAULT '',
   is_featured           INTEGER NOT NULL DEFAULT 0,
+  -- What a congress announcement states about itself before anyone reads the
+  -- programme: how it is taught, what it is worth professionally, what language it
+  -- is held in. Free text rather than enumerations, because "Плeнар ба практик
+  -- хичээл" is one course's answer and the next one's will not fit the same list.
+  format_mn             TEXT NOT NULL DEFAULT '',
+  format_en             TEXT NOT NULL DEFAULT '',
+  accreditation_mn      TEXT NOT NULL DEFAULT '',
+  accreditation_en      TEXT NOT NULL DEFAULT '',
+  languages_mn          TEXT NOT NULL DEFAULT '',
+  languages_en          TEXT NOT NULL DEFAULT '',
+  -- One category per line, "Label: what it covers". Kept as text so an editor adds a
+  -- third category without a migration; the page splits it on the colon.
+  abstract_categories_mn TEXT NOT NULL DEFAULT '',
+  abstract_categories_en TEXT NOT NULL DEFAULT '',
+  -- The scientific committee's own address, which is not the Society's general one:
+  -- abstracts for the September course go to a committee mailbox, not to the office.
+  secretariat_email     TEXT NOT NULL DEFAULT '',
+  guidelines_url        TEXT NOT NULL DEFAULT '',
   created_at            TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Who is holding the meeting. A congress in this field is jointly organised as a rule
+-- rather than as an exception -- the September course runs across four institutions --
+-- and naming them in the summary paragraph buries the one fact that establishes whose
+-- authority the meeting carries.
+CREATE TABLE IF NOT EXISTS event_organisers (
+  id       TEXT PRIMARY KEY,
+  event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  name_mn  TEXT NOT NULL DEFAULT '',
+  name_en  TEXT NOT NULL DEFAULT '',
+  -- "Академик түнш", "Эмнэлзүйн нийгэмлэг": what this institution is to this meeting.
+  role_mn  TEXT NOT NULL DEFAULT '',
+  role_en  TEXT NOT NULL DEFAULT '',
+  sort     INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_status_date ON events(status, starts_on);

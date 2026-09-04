@@ -114,6 +114,62 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "body", label: { mn: "Дэлгэрэнгүй", en: "Body" }, kind: "textarea", bilingual: true, section: SECTION_CONTENT },
       { name: "venue", label: { mn: "Байршил", en: "Venue" }, kind: "text", bilingual: true, section: SECTION_CONTENT },
       { name: "city", label: { mn: "Хот", en: "City" }, kind: "text", bilingual: true, section: SECTION_CONTENT },
+      /*
+        What a congress announcement states about itself. Free text, because the next
+        course's answer will not fit this one's list, and an editor should not need a
+        developer to say "Плeнар ба практик хичээл".
+      */
+      {
+        name: "format",
+        label: { mn: "Хэлбэр", en: "Format" },
+        kind: "text",
+        bilingual: true,
+        section: SECTION_CONTENT,
+        hint: {
+          mn: "Жишээ нь: Плeнар хуралдаан ба практик хичээл. Хоосон бол харагдахгүй.",
+          en: "For example: Plenary and hands-on sessions. Hidden when empty.",
+        },
+      },
+      {
+        name: "accreditation",
+        label: { mn: "Итгэмжлэл", en: "Accreditation" },
+        kind: "text",
+        bilingual: true,
+        section: SECTION_CONTENT,
+        hint: {
+          mn: "Жишээ нь: Албан ёсны CME кредит.",
+          en: "For example: Official CME credits.",
+        },
+      },
+      {
+        name: "languages",
+        label: { mn: "Хурлын хэл", en: "Official languages" },
+        kind: "text",
+        bilingual: true,
+        section: SECTION_CONTENT,
+        hint: { mn: "Жишээ нь: Монгол, англи.", en: "For example: Mongolian and English." },
+      },
+      {
+        name: "abstract_categories",
+        label: { mn: "Хураангуйн ангилал", en: "Abstract categories" },
+        kind: "textarea",
+        bilingual: true,
+        section: SECTION_CONTENT,
+        hint: {
+          mn: "Мөр бүрт нэг ангилал, «Нэр: тайлбар» хэлбэрээр. Жишээ нь: Аман илтгэл: эмнэлзүйн судалгаа, шинэ эмчилгээ.",
+          en: "One category per line as \"Name: what it covers\". For example: Oral presentations: clinical trials, novel therapies.",
+        },
+      },
+      {
+        name: "secretariat_email",
+        label: { mn: "Эрдэм шинжилгээний нарийн бичгийн хаяг", en: "Scientific secretariat email" },
+        kind: "text",
+        section: SECTION_CONTENT,
+        hint: {
+          mn: "Хураангуй хүлээн авах хаяг. Хоосон бол нийгэмлэгийн ерөнхий хаяг харагдана.",
+          en: "Where abstracts are sent. Falls back to the Society's general address when empty.",
+        },
+      },
       { name: "starts_on", label: { mn: "Эхлэх огноо", en: "Start date" }, kind: "date", section: SECTION_DATES },
       { name: "ends_on", label: { mn: "Дуусах огноо", en: "End date" }, kind: "date", section: SECTION_DATES },
       { name: "abstract_deadline", label: { mn: "Илтгэлийн хураангуйн эцсийн хугацаа", en: "Abstract deadline" }, kind: "date", section: SECTION_DATES },
@@ -134,6 +190,16 @@ export const RESOURCES: Record<string, ResourceDef> = {
       { name: "cover_image", label: { mn: "Нүүр зураг", en: "Cover image" }, kind: "image", section: SECTION_MEDIA },
       { name: "cover_alt", label: { mn: "Зургийн тайлбар", en: "Image alt text" }, kind: "text", bilingual: true, section: SECTION_MEDIA },
       { name: "external_url", label: { mn: "Гадаад холбоос", en: "External URL" }, kind: "text", section: SECTION_MEDIA },
+      {
+        name: "guidelines_url",
+        label: { mn: "Илтгэлийн загвар (PDF)", en: "Submission guidelines (PDF)" },
+        kind: "text",
+        section: SECTION_MEDIA,
+        hint: {
+          mn: "Хураангуй бичих зааврын файл руу заасан холбоос. Хоосон бол товч харагдахгүй.",
+          en: "Link to the abstract guidelines file. The button is hidden when empty.",
+        },
+      },
       {
         name: "video_url",
         label: { mn: "Бичлэгийн холбоос", en: "Video link" },

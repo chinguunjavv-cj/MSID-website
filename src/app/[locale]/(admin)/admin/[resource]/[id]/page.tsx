@@ -7,9 +7,9 @@ import { isLocale, localePath } from "@/lib/i18n/config";
 import { bi, getResource } from "@/lib/admin/resources";
 import { relationOptions } from "@/lib/admin/options";
 import { deletionBlockedReason } from "@/lib/admin/deletion";
-import { listEventFees, listEventSessions } from "@/lib/queries";
+import { listEventFees, listEventOrganisers, listEventSessions } from "@/lib/queries";
 import { ResourceForm } from "@/components/admin/ResourceForm";
-import { EventFees, EventProgramme } from "@/components/admin/EventExtras";
+import { EventFees, EventOrganisers, EventProgramme } from "@/components/admin/EventExtras";
 import { formLabels } from "@/components/admin/labels";
 
 export default async function EditResourcePage({
@@ -94,6 +94,12 @@ export default async function EditResourcePage({
           <EventFees
             eventId={id}
             fees={await listEventFees(id)}
+            locale={locale}
+            labels={labels}
+          />
+          <EventOrganisers
+            eventId={id}
+            organisers={await listEventOrganisers(id)}
             locale={locale}
             labels={labels}
           />

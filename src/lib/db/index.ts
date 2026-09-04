@@ -504,6 +504,43 @@ Refunds are returned to the account or card the payment came from within fourtee
   },
   {
     /*
+      The fields a conference announcement needs and the record did not have.
+
+      The September course is jointly held by four institutions, carries CME credit, is
+      taught in two languages and accepts two kinds of abstract. All of that lived in a
+      summary paragraph, so the page could only ever restate it as prose. A layout is not
+      thin because of its columns; it is thin because the record behind it holds four
+      facts, and these are the facts a reader of a congress announcement looks for.
+
+      Free text rather than enumerations: the next course's format will not fit this
+      one's list, and an editor should not need a migration to say so.
+    */
+    id: "2026-09-04-event-announcement-fields",
+    sql: `
+      ALTER TABLE events ADD COLUMN format_mn TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN format_en TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN accreditation_mn TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN accreditation_en TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN languages_mn TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN languages_en TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN abstract_categories_mn TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN abstract_categories_en TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN secretariat_email TEXT NOT NULL DEFAULT '';
+      ALTER TABLE events ADD COLUMN guidelines_url TEXT NOT NULL DEFAULT '';
+
+      CREATE TABLE IF NOT EXISTS event_organisers (
+        id       TEXT PRIMARY KEY,
+        event_id TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+        name_mn  TEXT NOT NULL DEFAULT '',
+        name_en  TEXT NOT NULL DEFAULT '',
+        role_mn  TEXT NOT NULL DEFAULT '',
+        role_en  TEXT NOT NULL DEFAULT '',
+        sort     INTEGER NOT NULL DEFAULT 0
+      );
+    `,
+  },
+  {
+    /*
       One pair of em dashes in the English collaboration intro, replaced with the commas
       the Mongolian sentence already used. The dashes were a translation artefact: the
       Mongolian reads "гэдэсний эмгэг, ялангуяа үрэвсэлт гэдэсний өвчний (ҮГӨ) чиглэлээр"

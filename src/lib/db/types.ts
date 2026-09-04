@@ -104,8 +104,32 @@ export interface EventRow {
   external_url: string;
   video_url: string;
   is_featured: number;
+  /* What the announcement states about itself: how it is taught, what it is worth
+     professionally, what language it is held in. Free text; see schema.ts. */
+  format_mn: string;
+  format_en: string;
+  accreditation_mn: string;
+  accreditation_en: string;
+  languages_mn: string;
+  languages_en: string;
+  /* One category per line, "Label: what it covers". */
+  abstract_categories_mn: string;
+  abstract_categories_en: string;
+  secretariat_email: string;
+  guidelines_url: string;
   created_at: string;
   updated_at: string;
+}
+
+/** An institution holding the meeting, with what it is to that meeting. */
+export interface EventOrganiser {
+  id: string;
+  event_id: string;
+  name_mn: string;
+  name_en: string;
+  role_mn: string;
+  role_en: string;
+  sort: number;
 }
 
 export interface EventFee {

@@ -7,6 +7,7 @@ import type {
   EventPhoto,
   EventRow,
   EventSession,
+  EventOrganiser,
   Guideline,
   HistoryEntry,
   MemberRecord,
@@ -209,6 +210,16 @@ export const listEventSessions = cached(
   async (eventId: string): Promise<EventSession[]> => {
     return all<EventSession>(
       "SELECT * FROM event_sessions WHERE event_id = ? ORDER BY day, sort, starts_at",
+      eventId,
+    );
+  },
+);
+
+export const listEventOrganisers = cached(
+  "event-organisers",
+  async (eventId: string): Promise<EventOrganiser[]> => {
+    return all<EventOrganiser>(
+      "SELECT * FROM event_organisers WHERE event_id = ? ORDER BY sort, name_mn",
       eventId,
     );
   },
