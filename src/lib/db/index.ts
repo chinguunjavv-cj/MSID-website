@@ -658,6 +658,37 @@ Case presentations: unusual and challenging clinical cases',
          AND NOT EXISTS (SELECT 1 FROM event_sessions s WHERE s.event_id = e.id);
     `,
   },
+  {
+    /*
+      The course's official title, as approved on the First Central Hospital's course
+      sheet (letter No. 1/1555, 2 September 2026) and confirmed by the Society on
+      4 September: "…ба дурангийн ариутгал, халдваргүйтгэл-2026". The site had carried
+      the working title from the Society's own call for abstracts. Guarded on that
+      working title so an edit made in the admin since is left alone; the abstracts
+      page quotes the title in its prose and is corrected the same way.
+    */
+    id: "2026-09-04-ibd-endoscopy-2026-official-title",
+    sql: `
+      UPDATE events SET
+        title_mn = 'Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент ба дурангийн ариутгал, халдваргүйтгэл-2026',
+        title_en = 'Inflammatory bowel disease: diagnosis, treatment management, endoscope sterilisation and disinfection 2026',
+        updated_at = datetime('now')
+      WHERE slug = 'ibd-endoscopy-2026'
+        AND title_mn = 'Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент, дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026';
+
+      UPDATE pages SET
+        body_mn = REPLACE(body_mn,
+          'эмчилгээний менежмент, дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026',
+          'эмчилгээний менежмент ба дурангийн ариутгал, халдваргүйтгэл-2026'),
+        body_en = REPLACE(body_en,
+          'endoscopy safety and disinfection 2026',
+          'endoscope sterilisation and disinfection 2026'),
+        updated_at = datetime('now')
+      WHERE key = 'events.abstracts'
+        AND (body_mn LIKE '%дурангийн аюулгүй ажиллагаа, халдваргүйтгэл 2026%'
+          OR body_en LIKE '%endoscopy safety and disinfection 2026%');
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
