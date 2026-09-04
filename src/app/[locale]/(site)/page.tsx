@@ -115,6 +115,24 @@ export default async function HomePage({
   const congressEmpty = !featured && otherUpcoming.length === 0;
 
   /*
+    The featured meeting's dates that close, gathered once so the announcement can list
+    whichever of them the editor has set without three copies of the same row.
+  */
+  const featuredDeadlines = featured
+    ? [
+        { label: t.events.abstractDeadline, value: featured.abstract_deadline },
+        { label: t.events.earlyBirdDeadline, value: featured.early_bird_deadline },
+        { label: t.events.registrationCloses, value: featured.registration_closes_on },
+      ].filter((deadline): deadline is { label: string; value: string } =>
+        Boolean(deadline.value),
+      )
+    : [];
+
+  const featuredPlace = featured
+    ? [tr(featured, "venue", locale), tr(featured, "city", locale)].filter(Boolean).join(", ")
+    : "";
+
+  /*
     The hero card reads caps-label → statement, the way an institution's cover does.
     The caps line is always the Society's name; the statement is the tagline — unless
     an administrator has written a custom headline, which then takes the big type and
@@ -524,65 +542,78 @@ export default async function HomePage({
               </p>
             </div>
 
-            <h3 className="mt-3 max-w-[24ch] text-h2 font-semibold">
-              {tr(featured, "title", locale)}
-            </h3>
+            {/*
+              The announcement reads across two columns from `lg`: what the meeting is
+              on the left, what a reader has to act on — the dates that close, and the
+              way in — held together on the right.
 
-            {tr(featured, "summary", locale) && (
-              <p className="mt-4 max-w-[62ch] text-ink-700">
-                {tr(featured, "summary", locale)}
-              </p>
-            )}
+              It was one column before, and the dates sat in a two-cell table between
+              the summary and the buttons: a full-width rule with the label at one end
+              and its date stranded at the other, which is what a table does when it is
+              asked to hold four facts. As a list against a hairline the label and its
+              date stay next to each other, and the announcement stops being interrupted
+              by a table in its middle.
+            */}
+            <div className="mt-5 grid gap-8 lg:grid-cols-12 lg:gap-12">
+              <div className="lg:col-span-7">
+                <h3 className="max-w-[26ch] text-h2 font-semibold">
+                  {tr(featured, "title", locale)}
+                </h3>
 
-            {(featured.abstract_deadline || featured.early_bird_deadline) && (
-              <div className="table-scroll mt-7">
-                <table className="data-table">
-                  <caption>{t.events.deadlines}</caption>
-                  <tbody>
-                    {featured.abstract_deadline && (
-                      <tr>
-                        <th scope="row">{t.events.abstractDeadline}</th>
-                        <td className="tabular">
-                          {formatDateNumeric(featured.abstract_deadline)}
-                        </td>
-                      </tr>
-                    )}
-                    {featured.early_bird_deadline && (
-                      <tr>
-                        <th scope="row">{t.events.earlyBirdDeadline}</th>
-                        <td className="tabular">
-                          {formatDateNumeric(featured.early_bird_deadline)}
-                        </td>
-                      </tr>
-                    )}
-                    {featured.registration_closes_on && (
-                      <tr>
-                        <th scope="row">{t.events.registrationCloses}</th>
-                        <td className="tabular">
-                          {formatDateNumeric(featured.registration_closes_on)}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                {tr(featured, "summary", locale) && (
+                  <p className="mt-4 max-w-[62ch] text-ink-700">
+                    {tr(featured, "summary", locale)}
+                  </p>
+                )}
+
+                {featuredPlace && (
+                  <p className="mt-5 border-t border-ink-200 pt-4 text-small">
+                    <span className="text-ink-600">{t.common.venue}: </span>
+                    <span className="font-medium text-ink-900">{featuredPlace}</span>
+                  </p>
+                )}
               </div>
-            )}
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link
-                href={p(`/events/${featured.slug}`)}
-                className="btn btn-primary"
-              >
-                {t.common.readMore}
-              </Link>
-              {featured.registration_open === 1 && (
-                <Link
-                  href={p(`/events/${featured.slug}/register`)}
-                  className="btn btn-secondary"
+              <div className="lg:col-span-5">
+                {featuredDeadlines.length > 0 && (
+                  <div className="border border-ink-200">
+                    <h4 className="border-b border-ink-200 bg-ink-50 px-4 py-2.5 text-[0.75rem] uppercase tracking-wide text-ink-600">
+                      {t.events.deadlines}
+                    </h4>
+                    <dl className="divide-y divide-ink-200 text-small">
+                      {featuredDeadlines.map((deadline) => (
+                        <div
+                          key={deadline.label}
+                          className="flex items-baseline justify-between gap-4 px-4 py-3"
+                        >
+                          <dt className="text-ink-600">{deadline.label}</dt>
+                          <dd className="tabular shrink-0 font-semibold text-ink-900">
+                            {formatDateNumeric(deadline.value)}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </div>
+                )}
+
+                <div
+                  className={`flex flex-wrap gap-3 ${
+                    featuredDeadlines.length > 0 ? "mt-5" : ""
+                  }`}
                 >
-                  {t.events.register}
-                </Link>
-              )}
+                  <Link href={p(`/events/${featured.slug}`)} className="btn btn-primary">
+                    {t.common.readMore}
+                  </Link>
+                  {featured.registration_open === 1 && (
+                    <Link
+                      href={p(`/events/${featured.slug}/register`)}
+                      className="btn btn-secondary"
+                    >
+                      {t.events.register}
+                    </Link>
+                  )}
+                </div>
+              </div>
             </div>
           </article>
         )}
