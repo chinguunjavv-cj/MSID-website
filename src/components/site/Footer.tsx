@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { Locale } from "@/lib/db/types";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getSettings } from "@/lib/settings";
@@ -87,8 +88,21 @@ export async function Footer({ locale }: { locale: Locale }) {
           <p>
             © {year} {t.org.name}. {t.footer.rights}
           </p>
-          <p className="tabular">
-            {settings.contact_email} · {settings.contact_phone}
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {/*
+              The terms have to be reachable from every page: a card-acquiring bank
+              checks that a buyer can find the delivery and refund conditions without
+              going looking for them.
+            */}
+            <Link
+              href={`/${locale}/terms`}
+              className="text-ink-300 transition-colors duration-100 hover:text-copper-300"
+            >
+              {t.footer.terms}
+            </Link>
+            <span className="tabular">
+              {settings.contact_email} · {settings.contact_phone}
+            </span>
           </p>
         </div>
       </div>

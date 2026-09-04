@@ -77,6 +77,14 @@ export const PAGE_KEYS = [
   "events.index",
   "events.past",
   "news.index",
+  /* The commercial terms a card-acquiring bank requires a merchant to publish.
+     Added 4 Sept 2026 for the Trade and Development Bank application; the headings
+     are fixed in /terms, these rows hold the wording the Society can revise. */
+  "terms.service",
+  "terms.delivery",
+  "terms.payment",
+  "terms.refund",
+  "terms.entity",
 ] as const;
 
 export type PageKey = (typeof PAGE_KEYS)[number];

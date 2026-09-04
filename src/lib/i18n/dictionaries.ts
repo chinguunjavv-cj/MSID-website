@@ -366,6 +366,26 @@ const mn = {
     partners: "Түншүүд",
     rights: "Бүх эрх хуулиар хамгаалагдсан.",
     ngo: "Төрийн бус байгууллага",
+    terms: "Үйлчилгээний нөхцөл",
+  },
+  /*
+    The headings a card-acquiring bank looks for when it reviews a merchant's site.
+    They are fixed in code rather than stored with the text so that editing the wording
+    in the admin cannot remove a condition the bank requires to be present.
+  */
+  terms: {
+    title: "Үйлчилгээний нөхцөл",
+    lead: "Нийгэмлэгийн цахим хуудсаар дамжуулан хийгдэх бүртгэл, төлбөрт хамаарах нөхцөл.",
+    service: "Үйлчилгээний танилцуулга",
+    delivery: "Хүргэлтийн нөхцөл",
+    payment: "Төлбөрийн нөхцөл",
+    refund: "Төлбөр буцаах нөхцөл",
+    entity: "Байгууллагын мэдээлэл",
+    entityName: "Албан ёсны нэр",
+    entityAddress: "Хаяг",
+    entityPhone: "Утас",
+    entityEmail: "Цахим шуудан",
+    updated: "Шинэчилсэн",
   },
   errors: {
     notFoundTitle: "Хуудас олдсонгүй",
@@ -737,6 +757,21 @@ const en: Dictionary = {
     partners: "Partners",
     rights: "All rights reserved.",
     ngo: "Non-governmental organisation",
+    terms: "Terms of service",
+  },
+  terms: {
+    title: "Terms of service",
+    lead: "The conditions that apply to registrations and payments made through the Society's website.",
+    service: "What the Society sells",
+    delivery: "Delivery",
+    payment: "Payment",
+    refund: "Refunds and cancellation",
+    entity: "The organisation",
+    entityName: "Registered name",
+    entityAddress: "Address",
+    entityPhone: "Telephone",
+    entityEmail: "Email",
+    updated: "Updated",
   },
   errors: {
     notFoundTitle: "Page not found",

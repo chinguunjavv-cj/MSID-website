@@ -393,6 +393,115 @@ The programme and the registration details are published here as they are settle
          AND value = '/brand/steppe-altai.jpg';
     `,
   },
+  {
+    /*
+      The terms a card-acquiring bank requires before it will connect a payment gateway:
+      what is sold, how it reaches the buyer, the currency and terms of payment, and when
+      money is returned. The Society is applying to Trade and Development Bank, whose
+      checklist asks for each of these to be published and findable.
+
+      Seeded as ordinary pages so the Society edits the wording in the admin like any
+      other text. The refund windows below are a starting draft, not the board's
+      decision: 14 days for a full refund, 7 to 13 days for half, nothing inside a week.
+      They are the common shape for a medical training course and they are conservative,
+      but they must be confirmed before the bank reviews the site, and the Society is
+      free to change them — the headings on /terms are fixed in code, the terms are not.
+
+      Written with no apostrophes so the SQL needs no escaping.
+    */
+    id: "2026-09-04-terms-of-service",
+    sql: `
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (
+        'terms.service',
+        'Үйлчилгээний танилцуулга',
+        'What the Society sells',
+        'Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг нь цахим хуудсаараа дамжуулан дараах үйлчилгээний төлбөрийг хүлээн авна:
+
+Сургалт, эрдэм шинжилгээний хурал, чуулганы оролцооны бүртгэл. Арга хэмжээ тус бүрийн хөтөлбөр, товч агуулга, огноо, байршил, оролцооны төлбөрийг тухайн арга хэмжээний хуудсанд урьдчилан бүрэн нийтэлнэ.
+Нийгэмлэгийн гишүүнчлэл. Элсэх болзол, гишүүний эрх, жилийн татварын хэмжээг Гишүүнчлэл хуудсанд нийтэлнэ.
+
+Худалдан авалт бүр нэг тодорхой арга хэмжээ, эсхүл тодорхой хугацааны гишүүнчлэлд хамаарна. Оролцогч төлбөр хийхээсээ өмнө үнэ, агуулга, хугацааг бүрэн харах боломжтой байна.',
+        'The Mongolian Society of Intestinal Disease accepts payment through this website for:
+
+Registration for training courses, scientific meetings and congresses. Each event page publishes the programme, dates, venue and participation fee in full before registration.
+Membership of the Society. The conditions of admission, the rights of members and the annual subscription are published on the Membership page.
+
+Every purchase relates to one named event or to membership for a stated period. The price, what it includes and the dates are shown in full before any payment is made.'
+      ) ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (
+        'terms.delivery',
+        'Хүргэлтийн нөхцөл',
+        'Delivery',
+        'Нийгэмлэгийн үйлчилгээ нь биет бараа биш тул шуудан, хүргэлтийн үйлчилгээ хамаарахгүй.
+
+Төлбөр баталгаажсанаас хойш ажлын нэг өдрийн дотор бүртгэл баталгаажсан мэдэгдлийг бүртгүүлэхдээ оруулсан цахим шуудангийн хаягаар илгээнэ. Мэдэгдэлд бүртгэлийн дугаар, арга хэмжээний нэр, огноо, байршил багтана.
+Арга хэмжээнд оролцох эрх нь зарлагдсан огноо, байршилд хүчинтэй. Танхимын арга хэмжээнд бүртгэлийн дугаараар, цахим арга хэмжээнд урьдчилан илгээсэн холбоосоор оролцоно.
+Гэрчилгээ олгохоор зарласан сургалтын хувьд гэрчилгээг арга хэмжээ дууссанаас хойш ажлын 10 өдрийн дотор олгоно.
+Гишүүнчлэлийн эрх төлбөр баталгаажсан өдрөөс нэг жилийн хугацаанд хүчинтэй байна.
+
+Баталгаажуулах мэдэгдэл ирээгүй бол доор заасан хаягаар нийгэмлэгт хандана уу.',
+        'The Society sells services rather than goods, so no postal or courier delivery applies.
+
+Confirmation of registration is sent to the email address given at registration within one working day of payment being confirmed. It carries the registration reference, the name of the event, its dates and its venue.
+Admission to an event is valid for the dates and venue announced. Participants are admitted to in-person events on their registration reference, and to online events through a link sent in advance.
+Where a course is announced as carrying a certificate, the certificate is issued within ten working days of the course ending.
+Membership runs for one year from the date payment is confirmed.
+
+If no confirmation arrives, please contact the Society at the address below.'
+      ) ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (
+        'terms.payment',
+        'Төлбөрийн нөхцөл',
+        'Payment',
+        'Бүх гүйлгээ Монгол Улсын үндэсний мөнгөн тэмдэгт төгрөгөөр (MNT, ₮) хийгдэнэ. Цахим хуудсанд заасан үнэ нь эцсийн үнэ бөгөөд нэмэлт шимтгэл, хураамж тооцохгүй.
+
+Төлбөрийг банкны шилжүүлэг болон банкны картаар хийнэ.
+Бүртгэл нь төлбөр бүрэн хийгдсэний дараа баталгаажна. Төлбөр хийгдээгүй бүртгэлийг арга хэмжээ эхлэхээс өмнө цуцалж болно.
+Эрт бүртгэлийн хөнгөлөлттэй үнэ зарласан бол уг үнэ нь зарлагдсан хугацаанд төлбөр бүрэн хийгдсэн тохиолдолд хүчинтэй.
+Төлбөрийн баримтыг хүсэлтийн дагуу цахим шуудангаар илгээнэ.',
+        'All transactions are in Mongolian tögrög (MNT, ₮). The price shown on the site is the final price; no further fees or charges are added.
+
+Payment is made by bank transfer or by bank card.
+A registration is confirmed once payment has been received in full. Unpaid registrations may be cancelled before the event begins.
+Where an early registration price is announced, it applies only if payment is completed in full within the announced period.
+A receipt is sent by email on request.'
+      ) ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (
+        'terms.refund',
+        'Төлбөр буцаах нөхцөл',
+        'Refunds and cancellation',
+        'Оролцогч бүртгэлээ цуцлах хүсэлтээ доор заасан цахим шуудангийн хаягаар, бүртгэлийн дугаараа заан илгээнэ.
+
+Арга хэмжээ эхлэхээс 14 ба түүнээс дээш хоногийн өмнө хүсэлт гаргасан бол төлбөрийг бүрэн буцаана.
+Арга хэмжээ эхлэхээс 7-13 хоногийн өмнө хүсэлт гаргасан бол төлбөрийн 50 хувийг буцаана.
+Арга хэмжээ эхлэхээс 7 хоногоос доош хугацаанд хүсэлт гаргасан, эсхүл оролцоогүй тохиолдолд төлбөрийг буцаахгүй.
+Нийгэмлэгийн шалтгаанаар арга хэмжээ цуцлагдсан буюу огноо өөрчлөгдсөн тохиолдолд оролцогчийн сонголтоор төлбөрийг бүрэн буцаах, эсхүл шинэ огноонд шилжүүлнэ.
+Гишүүнчлэлийн жилийн татварыг буцаахгүй.
+
+Буцаалтыг хүсэлт хүлээн авснаас хойш ажлын 14 өдрийн дотор төлбөр хийгдсэн данс, эсхүл картанд буцаана.',
+        'To cancel a registration, write to the email address below quoting the registration reference.
+
+Cancelled 14 or more days before the event begins: the fee is refunded in full.
+Cancelled 7 to 13 days before the event begins: half the fee is refunded.
+Cancelled fewer than 7 days before the event begins, or not attended: no refund is made.
+If the Society cancels an event or changes its dates, the participant may choose between a full refund and a transfer to the new dates.
+Annual membership subscriptions are not refundable.
+
+Refunds are returned to the account or card the payment came from within fourteen working days of the request being received.'
+      ) ON CONFLICT(key) DO NOTHING;
+
+      INSERT INTO pages (key, title_mn, title_en, body_mn, body_en) VALUES (
+        'terms.entity',
+        'Байгууллагын мэдээлэл',
+        'The organisation',
+        '',
+        ''
+      ) ON CONFLICT(key) DO NOTHING;
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

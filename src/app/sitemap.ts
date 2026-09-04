@@ -25,6 +25,7 @@ const STATIC_PATHS = [
   "/collaboration",
   "/guidelines",
   "/membership",
+  "/terms",
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
