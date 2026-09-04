@@ -51,7 +51,7 @@ const HISTORY_INTRO_MN = `Монголын Гэдэсний Эмгэг Судл�
 const HISTORY_INTRO_EN = `The history of the Mongolian Society of Intestinal Disease.`;
 
 const COLLAB_INTRO_MN = `Нийгэмлэг гэдэсний эмгэг, ялангуяа үрэвсэлт гэдэсний өвчний (ҮГӨ) чиглэлээр ажилладаг олон улсын мэргэжлийн байгууллагуудтай хамтран ажиллаж, гишүүддээ мэдлэг, туршлага солилцох боломжийг бүрдүүлэхийг зорьдог.`;
-const COLLAB_INTRO_EN = `The Society works with international professional organisations in intestinal disease — particularly inflammatory bowel disease (IBD) — to give its members access to shared knowledge and experience.`;
+const COLLAB_INTRO_EN = `The Society works with international professional organisations in intestinal disease, particularly inflammatory bowel disease (IBD), to give its members access to shared knowledge and experience.`;
 
 const GUIDELINES_INTRO_MN = `Энэ хэсэгт нийгэмлэгийн ажлын хэсгүүдээс боловсруулж, удирдах зөвлөлөөс баталсан эмнэлзүйн заавар, зөвшилцлийн баримт бичгийг байршуулна. Баримт бүрийн код, хувилбар, батлагдсан огноо, хүчин төгөлдөр байдлыг тэмдэглэсэн болно.`;
 const GUIDELINES_INTRO_EN = `This section holds the clinical guidelines and consensus documents developed by the Society's working groups and approved by its executive board. Each document carries its code, version, approval date and current standing.`;

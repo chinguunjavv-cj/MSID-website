@@ -502,6 +502,26 @@ Refunds are returned to the account or card the payment came from within fourtee
       ) ON CONFLICT(key) DO NOTHING;
     `,
   },
+  {
+    /*
+      One pair of em dashes in the English collaboration intro, replaced with the commas
+      the Mongolian sentence already used. The dashes were a translation artefact: the
+      Mongolian reads "гэдэсний эмгэг, ялангуяа үрэвсэлт гэдэсний өвчний (ҮГӨ) чиглэлээр"
+      with commas, and the English should not be louder than the sentence it translates.
+
+      Guarded on the old text so it leaves alone any wording the Society has since
+      revised in the admin. Em dashes elsewhere on the site are punctuation doing a job —
+      the empty-cell dash in a table of dates, chiefly — and stay.
+    */
+    id: "2026-09-04-collaboration-intro-commas",
+    sql: `
+      UPDATE pages
+         SET body_en = 'The Society works with international professional organisations in intestinal disease, particularly inflammatory bowel disease (IBD), to give its members access to shared knowledge and experience.',
+             updated_at = datetime('now')
+       WHERE key = 'collaboration.intro'
+         AND body_en = 'The Society works with international professional organisations in intestinal disease — particularly inflammatory bowel disease (IBD) — to give its members access to shared knowledge and experience.';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
