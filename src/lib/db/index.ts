@@ -559,6 +559,105 @@ Refunds are returned to the account or card the payment came from within fourtee
          AND body_en = 'The Society works with international professional organisations in intestinal disease — particularly inflammatory bowel disease (IBD) — to give its members access to shared knowledge and experience.';
     `,
   },
+  {
+    /*
+      The September course, from the First Central Hospital's letter No. 1/1555 of
+      2 September 2026 and its annex: the approved course sheet, the faculty table and
+      the programme. This is the content the announcement fields were added for.
+
+      Two tracks run on the 19th in different buildings — the IBD lectures at the
+      Mongolia–Japan hospital, the endoscope disinfection course at the First Central
+      Hospital. The programme has no track column, so each track opens with an untimed
+      heading row naming it and its venue, and the second track sorts after the first;
+      moderators are untimed rows in the same way. Cheaper than a schema for one meeting.
+
+      The organiser and programme inserts are guarded: they run only where the event
+      has none yet, so rows an editor has already entered are never replaced. The
+      course-sheet facts (format, credit hours, categories, address) are set outright —
+      the columns are a day old and empty — while venue and capacity fill in only where
+      empty, since those two predate today.
+    */
+    id: "2026-09-04-ibd-endoscopy-2026-programme",
+    sql: `
+      UPDATE events SET
+        format_mn = 'Танхимын сургалт: 13 лекц, гардан сургалт, тохиолдлын хэлэлцүүлэг',
+        format_en = 'In person: 13 lectures, hands-on sessions and case discussions',
+        accreditation_mn = 'Улсын хэмжээний сургалт, 2 багц цаг',
+        accreditation_en = 'National training course, 2 CME credit hours',
+        languages_mn = 'Монгол',
+        languages_en = 'Mongolian',
+        abstract_categories_mn = 'Судалгааны илтгэл: гэдэсний эмгэг судлалын чиглэлээр хийсэн судалгааны ажлын үр дүн
+Тохиолдлын танилцуулга: сонин бөгөөд төвөгтэй эмнэлзүйн тохиолдол',
+        abstract_categories_en = 'Research presentations: results of original research in intestinal disease
+Case presentations: unusual and challenging clinical cases',
+        secretariat_email = 'ibdmsid@gmail.com',
+        venue_mn = CASE WHEN venue_mn = '' THEN 'Улсын Нэгдүгээр Төв Эмнэлэг ба АШУҮИС-ийн Монгол-Япон сургалтын эмнэлэг' ELSE venue_mn END,
+        venue_en = CASE WHEN venue_en = '' THEN 'First Central Hospital and MNUMS Mongolia–Japan Teaching Hospital' ELSE venue_en END,
+        capacity = COALESCE(capacity, 200),
+        updated_at = datetime('now')
+      WHERE slug = 'ibd-endoscopy-2026';
+
+      WITH v(name_mn, name_en, role_mn, role_en, sort) AS (VALUES
+        ('Улсын Нэгдүгээр Төв Эмнэлэг, Гастроэнтерологийн төв', 'First Central Hospital of Mongolia, Gastroenterology Centre', 'Сургалт зохион байгуулагч', 'Course organiser', 0),
+        ('Монголын Гэдэсний Эмгэг Судлалын Нийгэмлэг', 'Mongolian Society of Intestinal Disease', 'Сургалт зохион байгуулагч', 'Course organiser', 1),
+        ('Монголын Гастроэнтерологийн Холбоо', 'Mongolian Gastroenterology Association', 'Хамтран оролцогч', 'Participating society', 2),
+        ('АШУҮИС-ийн Хоол Боловсруулах Эрхтэн Судлалын Төв', 'MNUMS Centre for the Study of Digestive Organs', 'Хамтран оролцогч', 'Participating centre', 3)
+      )
+      INSERT INTO event_organisers (id, event_id, name_mn, name_en, role_mn, role_en, sort)
+      SELECT lower(hex(randomblob(16))), e.id, v.name_mn, v.name_en, v.role_mn, v.role_en, v.sort
+        FROM v, events e
+       WHERE e.slug = 'ibd-endoscopy-2026'
+         AND NOT EXISTS (SELECT 1 FROM event_organisers o WHERE o.event_id = e.id);
+
+      WITH v(day, starts_at, ends_at, title_mn, title_en, speaker_mn, speaker_en, room_mn, room_en, sort) AS (VALUES
+        ('2026-09-18', '', '', 'Гэдэсний хэт авиан шинжилгээний гардан сургалт', 'Intestinal ultrasound hands-on course', '', '', 'УНТЭ, Гастроэнтерологийн төвийн сургалтын өрөө · дүрс оношилгооны 20 эмч', 'FCHM Gastroenterology Centre training room · 20 imaging physicians', 1),
+        ('2026-09-18', '09:00', '09:50', 'Бүртгэл', 'Registration', 'Б.Уянга, УНТЭ', 'B. Uyanga, FCHM', '', '', 2),
+        ('2026-09-18', '09:50', '10:00', 'Нээлт', 'Opening', 'О.Баярмаа, УНТЭ', 'O. Bayarmaa, FCHM', '', '', 3),
+        ('2026-09-18', '10:00', '13:00', 'Гэдэсний хэт авиан шинжилгээ: онол, гардан хосолсон сургалт, 1-р бүлэг', 'Intestinal ultrasound: theory and hands-on session, group 1', 'Б.Эрдэнэцэцэг, MD MSc, УНТЭ', 'B. Erdenetsetseg, MD MSc, FCHM', '', '', 4),
+        ('2026-09-18', '13:00', '13:20', 'Завсарлага', 'Break', '', '', '', '', 5),
+        ('2026-09-18', '13:20', '16:20', 'Гэдэсний хэт авиан шинжилгээ: онол, гардан хосолсон сургалт, 2-р бүлэг', 'Intestinal ultrasound: theory and hands-on session, group 2', 'Б.Эрдэнэцэцэг, MD MSc, УНТЭ', 'B. Erdenetsetseg, MD MSc, FCHM', '', '', 6),
+        ('2026-09-19', '', '', 'Гэдэсний үрэвсэлт эмгэгийн оношилгоо, эмчилгээний менежмент', 'Inflammatory bowel disease: diagnosis and treatment management', '', '', 'АШУҮИС-ийн Монгол-Япон сургалтын эмнэлгийн «Blue Hall» танхим', 'MNUMS Mongolia–Japan Teaching Hospital, Blue Hall', 1),
+        ('2026-09-19', '09:00', '09:50', 'Бүртгэл', 'Registration', 'Б.Уянга, УНТЭ', 'B. Uyanga, FCHM', '', '', 2),
+        ('2026-09-19', '09:50', '10:00', 'Нээлт', 'Opening', 'О.Баярмаа, УНТЭ', 'O. Bayarmaa, FCHM', '', '', 3),
+        ('2026-09-19', '', '', 'Модератор', 'Moderators', 'Ц.Бямбажав, MD PhD, АШУҮИС; Д.Өлзий, MD PhD, АШУҮИС', 'Ts. Byambajav, MD PhD, MNUMS; D. Ulzii, MD PhD, MNUMS', '', '', 4),
+        ('2026-09-19', '10:00', '10:20', 'Гэдэсний үрэвсэлт эмгэгийн эмчилгээ ба хяналт', 'Treatment and monitoring of inflammatory bowel disease', 'Д.Ариунзул, MD MSc, УНТЭ', 'D. Ariunzul, MD MSc, FCHM', '', '', 5),
+        ('2026-09-19', '10:20', '10:40', 'Гэдэсний үрэвсэлт эмгэгийн бай эмчилгээ (инфликсимаб)', 'Targeted therapy in inflammatory bowel disease (infliximab)', 'О.Баярмаа, MD PhD, УНТЭ', 'O. Bayarmaa, MD PhD, FCHM', '', '', 6),
+        ('2026-09-19', '10:40', '10:50', 'Асуулт, хариулт', 'Questions and answers', '', '', '', '', 7),
+        ('2026-09-19', '10:50', '11:00', 'Эмийн танилцуулга', 'Sponsor presentation', '', '', '', '', 8),
+        ('2026-09-19', '11:00', '11:20', 'Цайны завсарлага', 'Coffee break', '', '', '', '', 9),
+        ('2026-09-19', '11:20', '11:40', 'Гэдэсний үрэвсэлт эмгэгийн үеийн хоол, шим тэжээлийн менежмент', 'Nutritional management in inflammatory bowel disease', 'Б.Нурмаа, MD MSc, Интермед эмнэлэг', 'B. Nurmaa, MD MSc, Intermed Hospital', '', '', 10),
+        ('2026-09-19', '11:40', '12:10', 'Бүдүүн гэдэсний шархлаат үрэвслийн эмнэлзүйн зааврын танилцуулга', 'Introducing the clinical guideline on ulcerative colitis', 'Н.Бира, MD PhD, профессор, АШУҮИС', 'N. Bira, MD PhD, Professor, MNUMS', '', '', 11),
+        ('2026-09-19', '12:10', '12:30', 'Асуулт, хариулт', 'Questions and answers', '', '', '', '', 12),
+        ('2026-09-19', '12:30', '12:40', 'Эмийн танилцуулга', 'Sponsor presentation', '', '', '', '', 13),
+        ('2026-09-19', '12:40', '13:20', 'Үдийн хоол', 'Lunch', '', '', '', '', 14),
+        ('2026-09-19', '', '', 'Модератор', 'Moderators', 'О.Баярмаа, MD PhD, УНТЭ; Н.Бира, MD PhD, профессор, АШУҮИС', 'O. Bayarmaa, MD PhD, FCHM; N. Bira, MD PhD, Professor, MNUMS', '', '', 15),
+        ('2026-09-19', '13:20', '13:40', 'Нарийн гэдэсний эмгэгийн дурангийн оношилгоо, эмчилгээний менежмент', 'Endoscopic diagnosis and management of small-bowel disease', 'Х.Цэвэлноров, MD PhD, АШУҮИС', 'Kh. Tsevelnorov, MD PhD, MNUMS', '', '', 16),
+        ('2026-09-19', '13:40', '14:00', 'Архаг суулгалтын ялган оношилгоо, эмчилгээний менежмент', 'Differential diagnosis and management of chronic diarrhoea', 'Г.Сарантуяа, MD PhD, АШУҮИС', 'G. Sarantuya, MD PhD, MNUMS', '', '', 17),
+        ('2026-09-19', '14:00', '14:20', 'Гэдэсний эмгэгтэй хүүхдийг насанд хүрэгчдийн тусламжид шилжүүлэх нь (transition care)', 'Transition of care for children with intestinal disease', 'Д.Өлзий, MD PhD, АШУҮИС', 'D. Ulzii, MD PhD, MNUMS', '', '', 18),
+        ('2026-09-19', '14:20', '14:40', 'Бүдүүн гэдэсний хавдрын эрт илрүүлгийн хөтөлбөр', 'Colorectal cancer screening programme', 'Ц.Бямбажав, MD PhD, АШУҮИС', 'Ts. Byambajav, MD PhD, MNUMS', '', '', 19),
+        ('2026-09-19', '14:40', '14:50', 'Асуулт, хариулт', 'Questions and answers', '', '', '', '', 20),
+        ('2026-09-19', '14:50', '15:00', 'Эмийн танилцуулга', 'Sponsor presentation', '', '', '', '', 21),
+        ('2026-09-19', '15:00', '15:20', 'Цайны завсарлага', 'Coffee break', '', '', '', '', 22),
+        ('2026-09-19', '15:20', '16:20', 'Илтгэл ба тохиолдлын танилцуулга', 'Abstract and case presentations', '', '', '', '', 23),
+        ('2026-09-19', '16:20', '16:40', 'Хэлэлцүүлэг', 'Discussion', '', '', '', '', 24),
+        ('2026-09-19', '16:40', '17:00', 'Шалгаруулалт, шагнал гардуулах, хаалт', 'Awards and closing', 'Д.Ариунзул, MD MSc, УНТЭ', 'D. Ariunzul, MD MSc, FCHM', '', '', 25),
+        ('2026-09-19', '', '', 'Дурангийн аюулгүй ажиллагаа, халдваргүйтгэл (зэрэгцээ хуралдаан)', 'Endoscope safety and disinfection (parallel session)', '', '', 'УНТЭ, хурлын их танхим ба дурангийн оношилгоо, эмчилгээний хэсэг', 'FCHM conference hall and endoscopy unit', 101),
+        ('2026-09-19', '09:00', '09:50', 'Бүртгэл', 'Registration', 'Д.Долгорсүрэн, дурангийн зохицуулагч сувилагч, УНТЭ', 'D. Dolgorsuren, endoscopy nurse coordinator, FCHM', '', '', 102),
+        ('2026-09-19', '09:50', '10:00', 'Нээлт', 'Opening', 'М.Шийлэгдулам, Сувилахуйн албаны дарга, УНТЭ; А.Алтангагнуур, дурангийн ахлах эмч, УНТЭ', 'M. Shiilegdulam, Head of Nursing, FCHM; A. Altangagnuur, Senior Endoscopist, FCHM', '', '', 103),
+        ('2026-09-19', '10:00', '10:20', 'Дурангийн түгээмэл тохиолдох гэмтлүүд, тэдгээрээс урьдчилан сэргийлэх арга замууд', 'Common endoscope damage and how to prevent it', 'С.Бямба-Эрдэнэ, ахлах инженер, Медимпекс Инт ХХК', 'S. Byamba-Erdene, Senior Engineer, Medimpex International', '', '', 104),
+        ('2026-09-19', '10:20', '10:40', 'Дурангийн цэвэрлэгээ, халдваргүйтгэл ба хяналт', 'Endoscope cleaning, disinfection and monitoring', 'Х.Намуун, Халдвар судлал, хяналтын албаны дарга, УНТЭ', 'Kh. Namuun, Head of Infection Control, FCHM', '', '', 105),
+        ('2026-09-19', '10:40', '11:00', 'Дурангийн өндөр түвшний халдваргүйтгэл, сувилагчийн оролцоо', 'High-level disinfection of endoscopes and the role of the nurse', 'М.Шийлэгдулам, MSc, УНТЭ', 'M. Shiilegdulam, MSc, FCHM', '', '', 106),
+        ('2026-09-19', '11:00', '11:10', 'Асуулт, хариулт', 'Questions and answers', '', '', '', '', 107),
+        ('2026-09-19', '11:10', '11:30', 'Цайны завсарлага', 'Coffee break', '', '', '', '', 108),
+        ('2026-09-19', '11:30', '14:00', 'Гардан сургалт', 'Hands-on session', 'М.Шийлэгдулам; Д.Долгорсүрэн, УНТЭ', 'M. Shiilegdulam; D. Dolgorsuren, FCHM', '', '', 109)
+      )
+      INSERT INTO event_sessions (id, event_id, day, starts_at, ends_at, title_mn, title_en, speaker_mn, speaker_en, room_mn, room_en, sort)
+      SELECT lower(hex(randomblob(16))), e.id, v.day, v.starts_at, v.ends_at, v.title_mn, v.title_en, v.speaker_mn, v.speaker_en, v.room_mn, v.room_en, v.sort
+        FROM v, events e
+       WHERE e.slug = 'ibd-endoscopy-2026'
+         AND NOT EXISTS (SELECT 1 FROM event_sessions s WHERE s.event_id = e.id);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
