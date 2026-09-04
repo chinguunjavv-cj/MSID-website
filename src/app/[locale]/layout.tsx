@@ -21,21 +21,24 @@ import { isNoIndex, siteUrl } from "@/lib/site";
   wrong voice for a society that publishes clinical standards. Commissioner's flatter,
   more upright humanist forms hold that register.
 
-  Weight 300 is not loaded — nothing on the site uses it, and each weight is another
-  file per subset across four subsets.
+  Both families are variable fonts, and are loaded as such: no `weight` list, so each
+  subset is one file carrying every weight, rather than one file per weight per subset.
+  Listing weights had the home page fetching twelve font files; this is six.
+
+  Three subsets, not four. `latin-ext` carries accented Latin — Polish, Turkish,
+  Vietnamese — and nothing on a Mongolian-and-English site sets a glyph from it, while
+  each subset is another file for both families. Literata's italic is not loaded
+  either: no page uses an italic, by design (DESIGN.md, "no display serif italics").
 */
 const commissioner = Commissioner({
   variable: "--font-commissioner",
-  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
-  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
   display: "swap",
 });
 
 const literata = Literata({
   variable: "--font-literata",
-  subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  subsets: ["latin", "cyrillic", "cyrillic-ext"],
   display: "swap",
 });
 
