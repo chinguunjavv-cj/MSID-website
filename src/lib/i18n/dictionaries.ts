@@ -132,7 +132,7 @@ const mn = {
     enlarge: "Томруулах",
     close: "Хаах",
     fees: "Оролцооны төлбөр",
-    deadlines: "Чухал хугацаа",
+    deadlines: "Чухал огноо",
     register: "Бүртгүүлэх",
     registrationOpen: "Бүртгэл нээлттэй",
     registrationClosed: "Бүртгэл хаагдсан",
