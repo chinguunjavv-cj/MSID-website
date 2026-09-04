@@ -24,11 +24,21 @@ export function PageHeader({
   meta,
   breadcrumb,
   image,
+  eyebrow,
+  aside,
 }: {
   title: string;
   lead?: string;
   meta?: React.ReactNode;
   breadcrumb?: { label: string; href: string }[];
+  /** A short caps line over the title: the kind of record this page is. */
+  eyebrow?: string;
+  /**
+   * The right-hand end of the breadcrumb row — on an event, its dates and city, so a
+   * reader has them before the title. Given, the row rules itself off from the title
+   * block below the way a masthead does.
+   */
+  aside?: React.ReactNode;
   /**
    * The optional photographic ground, from the `section_banner` setting by way of
    * `SectionHeader`. Set, the header joins the home page's dark register: the same
@@ -83,8 +93,16 @@ export function PageHeader({
       )}
 
       <div className="shell relative pt-10 pb-8 md:pt-14 md:pb-10">
-        {breadcrumb && breadcrumb.length > 0 && (
-          <nav aria-label="Breadcrumb" className="mb-4">
+        {((breadcrumb && breadcrumb.length > 0) || aside) && (
+          <div
+            className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 ${
+              aside
+                ? `mb-6 border-b pb-4 ${dark ? "border-white/15" : "border-ink-200"}`
+                : "mb-4"
+            }`}
+          >
+          {breadcrumb && breadcrumb.length > 0 && (
+          <nav aria-label="Breadcrumb">
             <ol
               className={`flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] ${
                 dark ? "text-ink-300" : "text-ink-600"
@@ -110,6 +128,23 @@ export function PageHeader({
               ))}
             </ol>
           </nav>
+          )}
+          {aside && (
+            <div className={`text-[0.8125rem] ${dark ? "text-ink-300" : "text-ink-600"}`}>
+              {aside}
+            </div>
+          )}
+          </div>
+        )}
+
+        {eyebrow && (
+          <p
+            className={`mb-3 text-[0.75rem] font-semibold uppercase tracking-wider ${
+              dark ? "text-copper-400" : "text-copper-700"
+            }`}
+          >
+            {eyebrow}
+          </p>
         )}
 
         <h1

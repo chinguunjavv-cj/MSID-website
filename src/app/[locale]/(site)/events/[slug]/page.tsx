@@ -159,9 +159,113 @@ export default async function EventPage({
     });
 
   const secretariat = event.secretariat_email.trim();
+  const place = [tr(event, "venue", locale), tr(event, "city", locale)]
+    .filter(Boolean)
+    .join(", ");
+
+  /*
+    The call for abstracts is a card of its own while the meeting is ahead. Once the
+    deadline has passed the card stays, marked closed, so a reader who arrives late
+    learns that from the card rather than from the absence of one; once the meeting
+    itself is over the card goes with the rest of the offer.
+  */
+  const callOpen = Boolean(event.abstract_deadline) && !isPast;
+  const abstractsOpen = callOpen && (event.abstract_deadline as string) >= todayIso();
+  /* The card already carries the abstract deadline; the list beneath keeps the rest. */
+  const otherDeadlines = callOpen
+    ? deadlines.filter((row) => row.label !== t.events.abstractDeadline)
+    : deadlines;
+
+  const abstractsCard = callOpen && (
+    <div className="rounded-lg border border-ink-200 bg-paper p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="flex items-start justify-between gap-4 border-b border-ink-200 pb-4">
+        <div>
+          <h2 className="font-semibold text-ink-950">{t.events.callForAbstracts}</h2>
+          <p className="mt-0.5 text-[0.8125rem] text-ink-600">{t.events.callForAbstractsLead}</p>
+        </div>
+        <StatusPill
+          label={abstractsOpen ? t.events.callOpen : t.events.callClosed}
+          tone={abstractsOpen ? "active" : "expired"}
+        />
+      </div>
+
+      <div className="mt-5 rounded border border-copper-200 bg-copper-50 p-4">
+        <div className="text-[0.75rem] font-semibold uppercase tracking-wide text-copper-800">
+          {t.events.submissionDeadline}
+        </div>
+        <div className="tabular mt-1 text-h3 font-bold text-ink-950">
+          {formatDate(event.abstract_deadline, locale)}
+        </div>
+        <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[0.8125rem] text-ink-600">
+          <span>{t.events.deadlineTime}</span>
+          <span>{t.events.deadlineZone}</span>
+        </div>
+      </div>
+
+      {abstractCategories.length > 0 && (
+        <div className="mt-5">
+          <h3 className="text-[0.75rem] font-semibold uppercase tracking-wide text-ink-900">
+            {t.events.abstractCategories}
+          </h3>
+          <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-[0.8125rem] leading-normal text-ink-600 marker:text-copper-600">
+            {abstractCategories.map((category) => (
+              <li key={category.name}>
+                <span className="font-medium text-ink-900">
+                  {category.name}
+                  {category.detail && ":"}
+                </span>
+                {category.detail && ` ${category.detail}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-6 space-y-2.5">
+        {abstractsOpen && secretariat && (
+          <a
+            href={`mailto:${secretariat}?subject=${encodeURIComponent(tr(event, "title", locale))}`}
+            className="btn btn-primary w-full"
+          >
+            {t.events.submitAbstract} →
+          </a>
+        )}
+        <div className={`grid gap-2 ${event.guidelines_url ? "grid-cols-2" : "grid-cols-1"}`}>
+          {event.guidelines_url && (
+            <a
+              href={safeFileHref(event.guidelines_url) ?? "#"}
+              className="btn btn-secondary text-[0.8125rem]"
+            >
+              {t.events.submissionGuidelines}
+            </a>
+          )}
+          <Link
+            href={localePath(locale, `/events/${event.slug}/register`)}
+            className="btn btn-secondary text-[0.8125rem]"
+          >
+            {t.events.registrationDetails}
+          </Link>
+        </div>
+      </div>
+
+      {secretariat && (
+        <div className="mt-5 border-t border-ink-200 pt-4 text-center text-[0.8125rem] text-ink-600">
+          <span className="block">{t.events.secretariat}</span>
+          <a
+            href={`mailto:${secretariat}`}
+            className="font-medium text-ink-900 transition-colors duration-100 hover:text-copper-700"
+          >
+            {secretariat}
+          </a>
+        </div>
+      )}
+    </div>
+  );
 
   const registrationPanel = (
     <>
+      {abstractsCard}
+      <div className={callOpen ? "mt-8" : undefined}>
       {state === "open" ? (
         <Link
           href={localePath(locale, `/events/${event.slug}/register`)}
@@ -194,59 +298,13 @@ export default async function EventPage({
         </p>
       )}
 
-      {/*
-        What a submitter needs beside the abstract deadline: which kinds of abstract are
-        taken, the guidelines file, and the committee's own address — which is not the
-        Society's general one. All three are hidden until an editor has set them, so an
-        event that is not calling for abstracts shows none of it.
-      */}
-      {abstractCategories.length > 0 && !isPast && (
-        <div className="mt-8">
-          <h2 className="text-label font-semibold text-ink-600">
-            {t.events.abstractCategories}
-          </h2>
-          <ul className="mt-3 space-y-2.5 border-t-2 border-ink-900 pt-3 text-small">
-            {abstractCategories.map((category) => (
-              <li key={category.name}>
-                <span className="font-semibold text-ink-900">{category.name}</span>
-                {category.detail && (
-                  <span className="text-ink-600"> — {category.detail}</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {event.guidelines_url && !isPast && (
-        <a
-          href={safeFileHref(event.guidelines_url) ?? "#"}
-          className="btn btn-secondary mt-4 w-full"
-        >
-          {t.events.submissionGuidelines}
-        </a>
-      )}
-
-      {secretariat && !isPast && (
-        <p className="mt-6 text-small text-ink-600">
-          {t.events.secretariat}
-          <br />
-          <a
-            href={`mailto:${secretariat}`}
-            className="font-medium text-ink-900 transition-colors duration-100 hover:text-copper-700"
-          >
-            {secretariat}
-          </a>
-        </p>
-      )}
-
-      {deadlines.length > 0 && !isPast && (
+      {otherDeadlines.length > 0 && !isPast && (
         <div className="mt-8">
           <h2 className="text-label font-semibold text-ink-600">
             {t.events.deadlines}
           </h2>
           <dl className="mt-3 border-t-2 border-ink-900">
-            {deadlines.map((row) => (
+            {otherDeadlines.map((row) => (
               <div key={row.label} className="border-b border-ink-200 py-3">
                 <dt className="text-[0.8125rem] text-ink-600">{row.label}</dt>
                 <dd className="tabular mt-0.5 font-semibold text-ink-900">
@@ -290,6 +348,7 @@ export default async function EventPage({
           )}
         </div>
       )}
+      </div>
     </>
   );
 
@@ -303,6 +362,37 @@ export default async function EventPage({
         title={tr(event, "title", locale)}
         lead={tr(event, "summary", locale) || undefined}
         breadcrumb={[{ label: t.events.title, href: localePath(locale, "/events") }]}
+        eyebrow={t.events.kind[event.kind]}
+        aside={
+          /* The two facts a reader wants before the title: when, and where. */
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="inline-flex items-center gap-1.5">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-3.5 w-3.5 shrink-0 text-copper-700"
+                aria-hidden
+              >
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <strong className="tabular font-semibold text-ink-900">
+                {formatDateRange(event.starts_on, event.ends_on, locale)}
+              </strong>
+            </span>
+            {place && (
+              <>
+                <span aria-hidden className="text-ink-300">
+                  |
+                </span>
+                <span>{place}</span>
+              </>
+            )}
+          </div>
+        }
         meta={
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             {/* Registration status is news only while registering is possible. On a
@@ -312,16 +402,6 @@ export default async function EventPage({
                 label={stateLabel}
                 tone={state === "open" ? "active" : state === "not_yet" ? "pending" : "neutral"}
               />
-            )}
-            <p className="tabular text-small text-ink-700">
-              {formatDateRange(event.starts_on, event.ends_on, locale)}
-            </p>
-            {tr(event, "venue", locale) && (
-              <p className="text-small text-ink-600">
-                {[tr(event, "venue", locale), tr(event, "city", locale)]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
             )}
             {countdown !== null && countdown > 0 && (
               <p className="tabular text-small text-ink-600">
@@ -505,6 +585,28 @@ export default async function EventPage({
           </aside>
         </div>
       </div>
+
+      {/*
+        The strip a printed announcement closes on: who accredits the meeting, and once
+        more when and where it is. Only when there is an accreditation to state — a
+        strip that repeated the dates alone would be the header again at the bottom.
+      */}
+      {tr(event, "accreditation", locale) && (
+        <div className="shell">
+          <div className="flex flex-col gap-3 border-t border-ink-200 py-6 text-[0.8125rem] text-ink-600 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+            <p className="max-w-[70ch]">{tr(event, "accreditation", locale)}</p>
+            <p className="shrink-0 tabular">
+              {t.events.abstracts.meetingDates}: {formatDateRange(event.starts_on, event.ends_on, locale)}
+              {tr(event, "city", locale) && (
+                <>
+                  <span aria-hidden className="mx-2 text-ink-400">•</span>
+                  {tr(event, "city", locale)}
+                </>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
