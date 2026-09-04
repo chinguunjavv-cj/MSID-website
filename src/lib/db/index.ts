@@ -707,6 +707,23 @@ Case presentations: unusual and challenging clinical cases',
         AND format_mn = 'Танхимын сургалт: 13 лекц, гардан сургалт, тохиолдлын хэлэлцүүлэг';
     `,
   },
+  {
+    /*
+      The parallel track's heading row in the programme said "дурангийн аюулгүй
+      ажиллагаа", the annex table's own wording, after the course title had been
+      corrected to the official "дурангийн ариутгал". The Society asked for the
+      official wording here too. Guarded on the seeded heading so a row an editor has
+      retitled is left alone.
+    */
+    id: "2026-09-04-ibd-endoscopy-2026-track-heading",
+    sql: `
+      UPDATE event_sessions SET
+        title_mn = 'Дурангийн ариутгал, халдваргүйтгэл (зэрэгцээ хуралдаан)',
+        title_en = 'Endoscope sterilisation and disinfection (parallel session)'
+      WHERE event_id = (SELECT id FROM events WHERE slug = 'ibd-endoscopy-2026')
+        AND title_mn = 'Дурангийн аюулгүй ажиллагаа, халдваргүйтгэл (зэрэгцээ хуралдаан)';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

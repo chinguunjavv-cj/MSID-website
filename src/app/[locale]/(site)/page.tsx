@@ -151,6 +151,15 @@ export default async function HomePage({
     ? featuredDeadlines.filter((deadline) => deadline.label !== t.events.abstractDeadline)
     : featuredDeadlines;
 
+  /* "Улсын Нэгдүгээр Төв Эмнэлэг ба хамтран зохион байгуулагчид": who holds it, said
+     once, the way an announcement's top line says it. */
+  const organiserSummary =
+    featuredOrganisers.length > 1
+      ? `${tr(featuredOrganisers[0], "name", locale)} ${t.events.andCoOrganisers}`
+      : featuredOrganisers.length === 1
+        ? tr(featuredOrganisers[0], "name", locale)
+        : t.org.name;
+
   /*
     The hero card reads caps-label → statement, the way an institution's cover does.
     The caps line is always the Society's name; the statement is the tagline — unless
@@ -549,29 +558,50 @@ export default async function HomePage({
           }
         />
 
-        {/* The congress block keeps copper as its voice — a tint, not a drench. */}
+        {/*
+          The featured meeting, laid out the way the Society's reference announcement
+          is: a ruled top bar (who holds it; when and where), the kind as an eyebrow,
+          title and summary, the band of what the meeting is, the organisers, and the
+          call for abstracts as the one card on the right. The block is rules on paper
+          rather than a card, so the card inside it is the only card — the reference's
+          composition and DESIGN.md's "never nested" agree on that.
+        */}
         {featured && (
-          <article className="mt-8 rounded-lg border border-ink-200 bg-paper p-6 md:p-9">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-              <p className="text-label font-semibold text-copper-700">
-                {t.events.kind[featured.kind as keyof typeof t.events.kind]}
-              </p>
-              <p className="tabular inline-flex items-center gap-1.5 text-small font-semibold text-ink-800">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-3.5 w-3.5 shrink-0 text-copper-700"
-                  aria-hidden
-                >
-                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                {formatDateRange(featured.starts_on, featured.ends_on, locale)}
+          <article className="mt-8 border-t border-ink-200 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-ink-200 pb-4 text-[0.8125rem] text-ink-600">
+              <p className="min-w-0">{organiserSummary}</p>
+              <p className="tabular inline-flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-3.5 w-3.5 shrink-0 text-copper-700"
+                    aria-hidden
+                  >
+                    <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <strong className="font-semibold text-ink-900">
+                    {formatDateRange(featured.starts_on, featured.ends_on, locale)}
+                  </strong>
+                </span>
+                {tr(featured, "city", locale) && (
+                  <>
+                    <span aria-hidden className="text-ink-300">
+                      |
+                    </span>
+                    <span>{tr(featured, "city", locale)}</span>
+                  </>
+                )}
               </p>
             </div>
+
+            <p className="mt-6 text-[0.75rem] font-semibold uppercase tracking-wider text-copper-700">
+              {t.events.kind[featured.kind as keyof typeof t.events.kind]}
+            </p>
 
             {/*
               The announcement reads across two columns from `lg`: what the meeting is
@@ -585,7 +615,7 @@ export default async function HomePage({
               date stay next to each other, and the announcement stops being interrupted
               by a table in its middle.
             */}
-            <div className="mt-5 grid gap-8 lg:grid-cols-12 lg:gap-12">
+            <div className="mt-3 grid gap-8 lg:grid-cols-12 lg:gap-12">
               <div className="lg:col-span-7">
                 <h3 className="max-w-[26ch] text-h2 font-semibold">
                   {tr(featured, "title", locale)}
@@ -594,13 +624,6 @@ export default async function HomePage({
                 {tr(featured, "summary", locale) && (
                   <p className="mt-4 max-w-[62ch] text-ink-700">
                     {tr(featured, "summary", locale)}
-                  </p>
-                )}
-
-                {featuredPlace && (
-                  <p className="mt-5 border-t border-ink-200 pt-4 text-small">
-                    <span className="text-ink-600">{t.common.venue}: </span>
-                    <span className="font-medium text-ink-900">{featuredPlace}</span>
                   </p>
                 )}
 
@@ -614,8 +637,7 @@ export default async function HomePage({
               </div>
 
               <div className="lg:col-span-5">
-                {/* Unframed: the block is already a card, and cards never nest. */}
-                <CallForAbstractsCard event={featured} locale={locale} as="h4" framed={false} />
+                <CallForAbstractsCard event={featured} locale={locale} as="h4" />
 
                 {featuredOtherDeadlines.length > 0 && (
                   <div className={`border border-ink-200 ${featuredCallOpen ? "mt-5" : ""}`}>
@@ -660,6 +682,24 @@ export default async function HomePage({
                 </div>
               </div>
             </div>
+
+            {(tr(featured, "accreditation", locale) || featuredPlace) && (
+              <div className="mt-8 flex flex-col gap-2 border-t border-ink-200 pt-5 text-[0.8125rem] text-ink-600 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+                <p className="max-w-[70ch]">{tr(featured, "accreditation", locale)}</p>
+                <p className="tabular shrink-0">
+                  {t.events.abstracts.meetingDates}:{" "}
+                  {formatDateRange(featured.starts_on, featured.ends_on, locale)}
+                  {featuredPlace && (
+                    <>
+                      <span aria-hidden className="mx-2 text-ink-400">
+                        •
+                      </span>
+                      {featuredPlace}
+                    </>
+                  )}
+                </p>
+              </div>
+            )}
           </article>
         )}
 

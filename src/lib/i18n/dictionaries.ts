@@ -111,6 +111,8 @@ const mn = {
     accreditation: "Итгэмжлэл",
     languages: "Хурлын хэл",
     organisers: "Хамтран зохион байгуулагч",
+    /* After the first organiser's name on the home page block's top bar. */
+    andCoOrganisers: "ба хамтран зохион байгуулагчид",
     abstractCategories: "Хүлээн авах ангилал",
     secretariat: "Хураангуй хүлээн авах хаяг",
     submissionGuidelines: "Илтгэлийн заавар (PDF)",
@@ -532,6 +534,7 @@ const en: Dictionary = {
     accreditation: "Accreditation",
     languages: "Official languages",
     organisers: "Jointly organised by",
+    andCoOrganisers: "and co-organisers",
     abstractCategories: "Accepted categories",
     secretariat: "Where abstracts are sent",
     submissionGuidelines: "Submission guidelines (PDF)",
