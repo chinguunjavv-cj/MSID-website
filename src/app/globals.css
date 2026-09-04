@@ -390,6 +390,13 @@
     font-size: 0.9375rem;
     font-weight: 600;
     line-height: 1.2;
+    /*
+      44px, stated rather than hoped for. The padding alone came to 42px on a desktop
+      and 39px on a phone once the mobile trim below took its share, while the comment
+      on that trim claimed the target was kept. A floor keeps it true at every size the
+      label can render at, including the shorter one-line Mongolian labels.
+    */
+    min-height: 2.75rem;
     text-align: center;
     cursor: pointer;
     transition:
@@ -399,7 +406,7 @@
   }
 
   /* Trimmer on a phone. The desktop padding made two Mongolian labels sit heavily on a
-     375px row; this keeps the 44px touch target while taking back the bulk. */
+     375px row; the min-height above is what keeps the 44px touch target. */
   @media (width < 40rem) {
     .btn {
       padding: 0.625rem 0.875rem;

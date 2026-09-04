@@ -141,10 +141,18 @@ export function CallForAbstractsCard({
   event,
   locale,
   as = "h2",
+  framed = true,
 }: {
   event: EventRow;
   locale: Locale;
   as?: HeadingTag;
+  /**
+   * Whether the card draws its own box. On the event page it stands alone in the
+   * sidebar and does. On the home page it sits inside the featured meeting's card, and
+   * a card inside a card is the one container DESIGN.md forbids outright — so there it
+   * keeps its rules, its tinted deadline and its actions and lets the block frame it.
+   */
+  framed?: boolean;
 }) {
   const { callOpen, abstractsOpen } = callForAbstracts(event);
   if (!callOpen) return null;
@@ -156,7 +164,7 @@ export function CallForAbstractsCard({
   const Sub = below[as];
 
   return (
-    <div className="rounded-lg border border-ink-200 bg-paper p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className={framed ? "rounded-lg border border-ink-200 bg-paper p-6" : undefined}>
       <div className="flex items-start justify-between gap-4 border-b border-ink-200 pb-4">
         <div>
           <Heading className="font-semibold text-ink-950">{t.events.callForAbstracts}</Heading>
@@ -218,14 +226,14 @@ export function CallForAbstractsCard({
           {event.guidelines_url && (
             <a
               href={safeFileHref(event.guidelines_url) ?? "#"}
-              className="btn btn-secondary text-[0.8125rem]"
+              className="btn btn-secondary"
             >
               {t.events.submissionGuidelines}
             </a>
           )}
           <Link
             href={localePath(locale, `/events/${event.slug}/register`)}
-            className="btn btn-secondary text-[0.8125rem]"
+            className="btn btn-secondary"
           >
             {t.events.registrationDetails}
           </Link>

@@ -614,7 +614,8 @@ export default async function HomePage({
               </div>
 
               <div className="lg:col-span-5">
-                <CallForAbstractsCard event={featured} locale={locale} as="h4" />
+                {/* Unframed: the block is already a card, and cards never nest. */}
+                <CallForAbstractsCard event={featured} locale={locale} as="h4" framed={false} />
 
                 {featuredOtherDeadlines.length > 0 && (
                   <div className={`border border-ink-200 ${featuredCallOpen ? "mt-5" : ""}`}>

@@ -689,6 +689,24 @@ Case presentations: unusual and challenging clinical cases',
           OR body_en LIKE '%endoscopy safety and disinfection 2026%');
     `,
   },
+  {
+    /*
+      A fact cell holds a fact, not a sentence. The format I seeded on 4 September —
+      "Танхимын сургалт: 13 лекц, гардан сургалт, тохиолдлын хэлэлцүүлэг" — ran to four
+      lines in the announcement band beside neighbours that take one, and the band read
+      as ragged rather than ruled. The same facts, stated the way a course sheet states
+      them. Guarded on the seeded wording so an editor's own is left alone.
+    */
+    id: "2026-09-04-ibd-endoscopy-2026-format-wording",
+    sql: `
+      UPDATE events SET
+        format_mn = 'Танхим · 13 лекц, гардан сургалт',
+        format_en = 'In person · 13 lectures, hands-on',
+        updated_at = datetime('now')
+      WHERE slug = 'ibd-endoscopy-2026'
+        AND format_mn = 'Танхимын сургалт: 13 лекц, гардан сургалт, тохиолдлын хэлэлцүүлэг';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
