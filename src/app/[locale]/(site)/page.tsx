@@ -5,6 +5,7 @@ import { tr } from "@/lib/db/types";
 import { isLocale, localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import {
+  listEventOrganisers,
   featuredEvent,
   getPage,
   listPartners,
@@ -12,6 +13,12 @@ import {
   listUpcomingEvents,
   listSocietyPhotos,
 } from "@/lib/queries";
+import {
+  AnnouncementBand,
+  CallForAbstractsCard,
+  OrganiserList,
+  callForAbstracts,
+} from "@/components/site/EventAnnouncement";
 import { getSettings } from "@/lib/settings";
 import {
   formatDate,
@@ -131,6 +138,18 @@ export default async function HomePage({
   const featuredPlace = featured
     ? [tr(featured, "venue", locale), tr(featured, "city", locale)].filter(Boolean).join(", ")
     : "";
+
+  /*
+    The featured meeting's announcement pieces — who holds it, and whether its call for
+    abstracts is open — shared with the event page so the meeting is stated the same
+    way in both places. The list of dates beside the card drops the abstract deadline
+    the card already states.
+  */
+  const featuredOrganisers = featured ? await listEventOrganisers(featured.id) : [];
+  const featuredCallOpen = featured ? callForAbstracts(featured).callOpen : false;
+  const featuredOtherDeadlines = featuredCallOpen
+    ? featuredDeadlines.filter((deadline) => deadline.label !== t.events.abstractDeadline)
+    : featuredDeadlines;
 
   /*
     The hero card reads caps-label → statement, the way an institution's cover does.
@@ -537,7 +556,19 @@ export default async function HomePage({
               <p className="text-label font-semibold text-copper-700">
                 {t.events.kind[featured.kind as keyof typeof t.events.kind]}
               </p>
-              <p className="tabular text-small font-semibold text-ink-800">
+              <p className="tabular inline-flex items-center gap-1.5 text-small font-semibold text-ink-800">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-3.5 w-3.5 shrink-0 text-copper-700"
+                  aria-hidden
+                >
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 {formatDateRange(featured.starts_on, featured.ends_on, locale)}
               </p>
             </div>
@@ -572,16 +603,26 @@ export default async function HomePage({
                     <span className="font-medium text-ink-900">{featuredPlace}</span>
                   </p>
                 )}
+
+                <AnnouncementBand event={featured} locale={locale} className="mt-6" />
+                <OrganiserList
+                  organisers={featuredOrganisers}
+                  locale={locale}
+                  as="h4"
+                  className="mt-6"
+                />
               </div>
 
               <div className="lg:col-span-5">
-                {featuredDeadlines.length > 0 && (
-                  <div className="border border-ink-200">
+                <CallForAbstractsCard event={featured} locale={locale} as="h4" />
+
+                {featuredOtherDeadlines.length > 0 && (
+                  <div className={`border border-ink-200 ${featuredCallOpen ? "mt-5" : ""}`}>
                     <h4 className="border-b border-ink-200 bg-ink-50 px-4 py-2.5 text-[0.75rem] uppercase tracking-wide text-ink-600">
                       {t.events.deadlines}
                     </h4>
                     <dl className="divide-y divide-ink-200 text-small">
-                      {featuredDeadlines.map((deadline) => (
+                      {featuredOtherDeadlines.map((deadline) => (
                         <div
                           key={deadline.label}
                           className="flex items-baseline justify-between gap-4 px-4 py-3"
@@ -598,10 +639,13 @@ export default async function HomePage({
 
                 <div
                   className={`flex flex-wrap gap-3 ${
-                    featuredDeadlines.length > 0 ? "mt-5" : ""
+                    featuredCallOpen || featuredOtherDeadlines.length > 0 ? "mt-5" : ""
                   }`}
                 >
-                  <Link href={p(`/events/${featured.slug}`)} className="btn btn-primary">
+                  <Link
+                    href={p(`/events/${featured.slug}`)}
+                    className={featuredCallOpen ? "btn btn-secondary" : "btn btn-primary"}
+                  >
                     {t.common.readMore}
                   </Link>
                   {featured.registration_open === 1 && (

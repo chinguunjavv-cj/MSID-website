@@ -32,7 +32,14 @@ import {
   TranslationNotice,
 } from "@/components/ui/Primitives";
 import { VideoEmbed } from "@/components/site/VideoEmbed";
-import { safeExternalLink, safeFileHref } from "@/lib/video";
+import { safeExternalLink } from "@/lib/video";
+import {
+  AnnouncementBand,
+  CallForAbstractsCard,
+  OrganiserList,
+  announcementFacts,
+  callForAbstracts,
+} from "@/components/site/EventAnnouncement";
 import { currentUser, isStaff } from "@/lib/auth/session";
 
 export async function generateMetadata({
@@ -129,142 +136,22 @@ export default async function EventPage({
   */
   const isPast = (event.ends_on ?? event.starts_on ?? "") < todayIso();
 
-  /*
-    What the meeting states about itself. These were the difference between this page
-    and the announcement the Society wanted: a congress is described by how it is
-    taught, what it is worth professionally and what language it is held in, and none
-    of that was anywhere but inside a summary paragraph. Each is optional, and the band
-    disappears entirely when an editor has filled in none of them.
-  */
-  const announcement = [
-    { label: t.events.format, value: tr(event, "format", locale) },
-    { label: t.events.accreditation, value: tr(event, "accreditation", locale) },
-    { label: t.events.languages, value: tr(event, "languages", locale) },
-  ].filter((fact) => fact.value);
-
-  /*
-    "Oral presentations: clinical trials, novel therapies" — split once on the first
-    colon so the kind of submission can be set in bold against what it covers. A line
-    without a colon is shown whole rather than dropped.
-  */
-  const abstractCategories = tr(event, "abstract_categories", locale)
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const at = line.indexOf(":");
-      return at === -1
-        ? { name: line, detail: "" }
-        : { name: line.slice(0, at).trim(), detail: line.slice(at + 1).trim() };
-    });
-
-  const secretariat = event.secretariat_email.trim();
   const place = [tr(event, "venue", locale), tr(event, "city", locale)]
     .filter(Boolean)
     .join(", ");
 
-  /*
-    The call for abstracts is a card of its own while the meeting is ahead. Once the
-    deadline has passed the card stays, marked closed, so a reader who arrives late
-    learns that from the card rather than from the absence of one; once the meeting
-    itself is over the card goes with the rest of the offer.
-  */
-  const callOpen = Boolean(event.abstract_deadline) && !isPast;
-  const abstractsOpen = callOpen && (event.abstract_deadline as string) >= todayIso();
+  /* The band and the organisers share one wrapper below; whether it renders at all. */
+  const hasAnnouncement = announcementFacts(event, locale).length > 0 || organisers.length > 0;
+
+  const { callOpen } = callForAbstracts(event);
   /* The card already carries the abstract deadline; the list beneath keeps the rest. */
   const otherDeadlines = callOpen
     ? deadlines.filter((row) => row.label !== t.events.abstractDeadline)
     : deadlines;
 
-  const abstractsCard = callOpen && (
-    <div className="rounded-lg border border-ink-200 bg-paper p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <div className="flex items-start justify-between gap-4 border-b border-ink-200 pb-4">
-        <div>
-          <h2 className="font-semibold text-ink-950">{t.events.callForAbstracts}</h2>
-          <p className="mt-0.5 text-[0.8125rem] text-ink-600">{t.events.callForAbstractsLead}</p>
-        </div>
-        <StatusPill
-          label={abstractsOpen ? t.events.callOpen : t.events.callClosed}
-          tone={abstractsOpen ? "active" : "expired"}
-        />
-      </div>
-
-      <div className="mt-5 rounded border border-copper-200 bg-copper-50 p-4">
-        <div className="text-[0.75rem] font-semibold uppercase tracking-wide text-copper-800">
-          {t.events.submissionDeadline}
-        </div>
-        <div className="tabular mt-1 text-h3 font-bold text-ink-950">
-          {formatDate(event.abstract_deadline, locale)}
-        </div>
-        <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[0.8125rem] text-ink-600">
-          <span>{t.events.deadlineTime}</span>
-          <span>{t.events.deadlineZone}</span>
-        </div>
-      </div>
-
-      {abstractCategories.length > 0 && (
-        <div className="mt-5">
-          <h3 className="text-[0.75rem] font-semibold uppercase tracking-wide text-ink-900">
-            {t.events.abstractCategories}
-          </h3>
-          <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-[0.8125rem] leading-normal text-ink-600 marker:text-copper-600">
-            {abstractCategories.map((category) => (
-              <li key={category.name}>
-                <span className="font-medium text-ink-900">
-                  {category.name}
-                  {category.detail && ":"}
-                </span>
-                {category.detail && ` ${category.detail}`}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="mt-6 space-y-2.5">
-        {abstractsOpen && secretariat && (
-          <a
-            href={`mailto:${secretariat}?subject=${encodeURIComponent(tr(event, "title", locale))}`}
-            className="btn btn-primary w-full"
-          >
-            {t.events.submitAbstract} →
-          </a>
-        )}
-        <div className={`grid gap-2 ${event.guidelines_url ? "grid-cols-2" : "grid-cols-1"}`}>
-          {event.guidelines_url && (
-            <a
-              href={safeFileHref(event.guidelines_url) ?? "#"}
-              className="btn btn-secondary text-[0.8125rem]"
-            >
-              {t.events.submissionGuidelines}
-            </a>
-          )}
-          <Link
-            href={localePath(locale, `/events/${event.slug}/register`)}
-            className="btn btn-secondary text-[0.8125rem]"
-          >
-            {t.events.registrationDetails}
-          </Link>
-        </div>
-      </div>
-
-      {secretariat && (
-        <div className="mt-5 border-t border-ink-200 pt-4 text-center text-[0.8125rem] text-ink-600">
-          <span className="block">{t.events.secretariat}</span>
-          <a
-            href={`mailto:${secretariat}`}
-            className="font-medium text-ink-900 transition-colors duration-100 hover:text-copper-700"
-          >
-            {secretariat}
-          </a>
-        </div>
-      )}
-    </div>
-  );
-
   const registrationPanel = (
     <>
-      {abstractsCard}
+      <CallForAbstractsCard event={event} locale={locale} />
       <div className={callOpen ? "mt-8" : undefined}>
       {state === "open" ? (
         <Link
@@ -437,45 +324,19 @@ export default async function EventPage({
         A congress announcement in this field opens by establishing two things — how it
         is taught and accredited, and whose authority is behind it. Both were absent:
         the format lived nowhere, and four co-organising institutions were a clause
-        inside a summary paragraph. Set against hairlines rather than in cards, so the
-        band reads as the record's masthead and not as a row of tiles.
+        inside a summary paragraph. The pieces are shared with the home page block so
+        the meeting is stated the same way wherever it is announced.
       */}
-      {(announcement.length > 0 || organisers.length > 0) && (
+      {hasAnnouncement && (
         <div className="shell pt-10">
-          {announcement.length > 0 && (
-            <dl className="grid gap-6 border-y border-ink-200 py-6 sm:grid-cols-3">
-              {announcement.map((fact) => (
-                <div key={fact.label}>
-                  <dt className="text-[0.75rem] uppercase tracking-wide text-ink-600">
-                    {fact.label}
-                  </dt>
-                  <dd className="mt-1 font-semibold text-ink-900">{fact.value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-
-          {organisers.length > 0 && (
-            <div className={announcement.length > 0 ? "mt-8" : "border-t border-ink-200 pt-8"}>
-              <h2 className="text-[0.75rem] uppercase tracking-wide text-ink-600">
-                {t.events.organisers}
-              </h2>
-              <ul className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                {organisers.map((organiser) => (
-                  <li key={organiser.id} className="border-l border-ink-300 pl-4">
-                    <p className="font-semibold text-ink-900">
-                      {tr(organiser, "name", locale)}
-                    </p>
-                    {tr(organiser, "role", locale) && (
-                      <p className="text-small text-ink-600">
-                        {tr(organiser, "role", locale)}
-                      </p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <AnnouncementBand event={event} locale={locale} />
+          <OrganiserList
+            organisers={organisers}
+            locale={locale}
+            className={
+              announcementFacts(event, locale).length > 0 ? "mt-8" : "border-t border-ink-200 pt-8"
+            }
+          />
         </div>
       )}
 
