@@ -132,6 +132,21 @@ export interface EventOrganiser {
   sort: number;
 }
 
+/** One person teaching at the meeting: post, degrees, and what they are to it. */
+export interface EventFacultyMember {
+  id: string;
+  event_id: string;
+  name_mn: string;
+  name_en: string;
+  position_mn: string;
+  position_en: string;
+  credentials_mn: string;
+  credentials_en: string;
+  role_mn: string;
+  role_en: string;
+  sort: number;
+}
+
 export interface EventFee {
   id: string;
   event_id: string;

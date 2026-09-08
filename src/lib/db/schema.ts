@@ -170,6 +170,30 @@ CREATE TABLE IF NOT EXISTS event_organisers (
   sort     INTEGER NOT NULL DEFAULT 0
 );
 
+-- Who teaches at the meeting. A course sheet in this field carries a faculty table --
+-- name, post, degree -- apart from the programme, and it is the reader's assurance of
+-- what the credit hours are worth. The programme's speaker column is free text per row;
+-- this is the roster behind it.
+CREATE TABLE IF NOT EXISTS event_faculty (
+  id             TEXT PRIMARY KEY,
+  event_id       TEXT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+  name_mn        TEXT NOT NULL DEFAULT '',
+  name_en        TEXT NOT NULL DEFAULT '',
+  -- Post and institution: "УНТЭ-ийн Гастроэнтерологийн төвийн дарга".
+  position_mn    TEXT NOT NULL DEFAULT '',
+  position_en    TEXT NOT NULL DEFAULT '',
+  -- Degrees and honours: "Анагаах ухааны доктор, профессор".
+  credentials_mn TEXT NOT NULL DEFAULT '',
+  credentials_en TEXT NOT NULL DEFAULT '',
+  -- What they are to this meeting, where it varies -- "Модератор", "Хөтөч багш" -- and
+  -- blank where the section heading already says it.
+  role_mn        TEXT NOT NULL DEFAULT '',
+  role_en        TEXT NOT NULL DEFAULT '',
+  sort           INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_faculty_event ON event_faculty(event_id, sort);
+
 CREATE INDEX IF NOT EXISTS idx_events_status_date ON events(status, starts_on);
 
 CREATE TABLE IF NOT EXISTS event_fees (

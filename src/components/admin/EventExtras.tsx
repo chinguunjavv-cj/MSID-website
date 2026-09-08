@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { EventFee, EventOrganiser, EventSession, Locale } from "@/lib/db/types";
+import type {
+  EventFacultyMember,
+  EventFee,
+  EventOrganiser,
+  EventSession,
+  Locale,
+} from "@/lib/db/types";
 import {
+  deleteEventFacultyAction,
   deleteEventFeeAction,
   deleteEventOrganiserAction,
   deleteEventSessionAction,
+  saveEventFacultyAction,
   saveEventFeeAction,
   saveEventOrganiserAction,
   saveEventSessionAction,
@@ -447,6 +455,211 @@ function OrganiserRow({
           }}
         >
           <input type="hidden" name="organiserId" value={organiser.id} />
+          <button
+            type="submit"
+            className="cursor-pointer text-small text-ink-600 underline underline-offset-2 hover:text-status-expired"
+          >
+            {labels.delete}
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The people teaching at the meeting.
+ *
+ * A course sheet lists its faculty apart from the programme — name, post, degree — and
+ * that table is what tells a reader the credit hours are backed by someone. Four fields
+ * each: who, what post they hold, what degrees they carry, and (only where it varies)
+ * what they are to this meeting.
+ */
+export function EventFaculty({
+  eventId,
+  faculty,
+  locale,
+  labels,
+}: {
+  eventId: string;
+  faculty: EventFacultyMember[];
+  locale: Locale;
+  labels: Record<string, string>;
+}) {
+  const mn = locale === "mn";
+  const [adding, setAdding] = useState(false);
+
+  return (
+    <section className="mt-16 max-w-4xl border-t border-ink-200 pt-8">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-h3 font-bold">{mn ? "Багшлах бүрэлдэхүүн" : "Faculty"}</h2>
+        <button
+          type="button"
+          onClick={() => setAdding((value) => !value)}
+          className="btn btn-secondary cursor-pointer"
+        >
+          {adding ? labels.cancel : `+ ${labels.add}`}
+        </button>
+      </div>
+
+      <p className="mt-2 max-w-[60ch] text-small text-ink-600">
+        {mn
+          ? "Сургалтад багшлах, илтгэл тавих хүмүүс. Хөтөлбөрийн дараа жагсаалтаар харагдана; нэг ч хүн оруулаагүй бол уг хэсэг харагдахгүй."
+          : "The people teaching or presenting. Listed after the programme; the section is hidden when no one is listed."}
+      </p>
+
+      <div className="mt-5 space-y-3">
+        {adding && (
+          <FacultyRow
+            eventId={eventId}
+            locale={locale}
+            labels={labels}
+            onDone={() => setAdding(false)}
+          />
+        )}
+        {faculty.map((member) => (
+          <FacultyRow
+            key={member.id}
+            eventId={eventId}
+            member={member}
+            locale={locale}
+            labels={labels}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FacultyRow({
+  eventId,
+  member,
+  locale,
+  labels,
+  onDone,
+}: {
+  eventId: string;
+  member?: EventFacultyMember;
+  locale: Locale;
+  labels: Record<string, string>;
+  onDone?: () => void;
+}) {
+  const mn = locale === "mn";
+
+  return (
+    <div className="border border-ink-200 bg-ink-50 p-4">
+      <form
+        action={saveEventFacultyAction}
+        onSubmit={onDone}
+        className="grid gap-3 lg:grid-cols-12"
+      >
+        <input type="hidden" name="eventId" value={eventId} />
+        {member && <input type="hidden" name="facultyId" value={member.id} />}
+
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Нэр (МН)" : "Name (MN)"}</span>
+          <input
+            name="name_mn"
+            defaultValue={member?.name_mn ?? ""}
+            placeholder={mn ? "О.Баярмаа" : ""}
+            className="input"
+            lang="mn"
+          />
+        </label>
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Нэр (EN)" : "Name (EN)"}</span>
+          <input
+            name="name_en"
+            defaultValue={member?.name_en ?? ""}
+            placeholder="O. Bayarmaa"
+            className="input"
+            lang="en"
+          />
+        </label>
+
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Албан тушаал (МН)" : "Position (MN)"}</span>
+          <input
+            name="position_mn"
+            defaultValue={member?.position_mn ?? ""}
+            placeholder={mn ? "УНТЭ-ийн Гастроэнтерологийн төвийн дарга" : ""}
+            className="input"
+            lang="mn"
+          />
+        </label>
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Албан тушаал (EN)" : "Position (EN)"}</span>
+          <input
+            name="position_en"
+            defaultValue={member?.position_en ?? ""}
+            placeholder="Head of the Gastroenterology Centre, First Central Hospital"
+            className="input"
+            lang="en"
+          />
+        </label>
+
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Зэрэг, цол (МН)" : "Credentials (MN)"}</span>
+          <input
+            name="credentials_mn"
+            defaultValue={member?.credentials_mn ?? ""}
+            placeholder={mn ? "Анагаах ухааны доктор, профессор" : ""}
+            className="input"
+            lang="mn"
+          />
+        </label>
+        <label className="lg:col-span-6">
+          <span className="field-label">{mn ? "Зэрэг, цол (EN)" : "Credentials (EN)"}</span>
+          <input
+            name="credentials_en"
+            defaultValue={member?.credentials_en ?? ""}
+            placeholder="MD PhD, Professor"
+            className="input"
+            lang="en"
+          />
+        </label>
+
+        <label className="lg:col-span-5">
+          <span className="field-label">{mn ? "Үүрэг (МН)" : "Role (MN)"}</span>
+          <input
+            name="role_mn"
+            defaultValue={member?.role_mn ?? ""}
+            placeholder={mn ? "Модератор" : ""}
+            className="input"
+            lang="mn"
+          />
+        </label>
+        <label className="lg:col-span-5">
+          <span className="field-label">{mn ? "Үүрэг (EN)" : "Role (EN)"}</span>
+          <input
+            name="role_en"
+            defaultValue={member?.role_en ?? ""}
+            placeholder="Moderator"
+            className="input"
+            lang="en"
+          />
+        </label>
+        <label className="lg:col-span-2">
+          <span className="field-label">{mn ? "Эрэмбэ" : "Order"}</span>
+          <input name="sort" type="number" defaultValue={member?.sort ?? 0} className="input" />
+        </label>
+
+        <div className="lg:col-span-12">
+          <button type="submit" className="btn btn-primary cursor-pointer">
+            {labels.save}
+          </button>
+        </div>
+      </form>
+
+      {member && (
+        <form
+          action={deleteEventFacultyAction}
+          className="mt-2"
+          onSubmit={(event) => {
+            if (!window.confirm(labels.confirmDelete)) event.preventDefault();
+          }}
+        >
+          <input type="hidden" name="facultyId" value={member.id} />
           <button
             type="submit"
             className="cursor-pointer text-small text-ink-600 underline underline-offset-2 hover:text-status-expired"

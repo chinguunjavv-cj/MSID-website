@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { tr, type EventOrganiser, type EventRow, type Locale } from "@/lib/db/types";
+import {
+  tr,
+  type EventFacultyMember,
+  type EventOrganiser,
+  type EventRow,
+  type Locale,
+} from "@/lib/db/types";
 import { localePath } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatDate, todayIso } from "@/lib/format";
@@ -98,6 +104,57 @@ export function OrganiserList({
         ))}
       </ul>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------------- */
+/* Who teaches                                                                */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * The faculty roster, set the way the organisers are — a name against a hairline, the
+ * post and the degrees beneath it in the muted register — but as a section of the
+ * record rather than a line of the masthead: it follows the programme, as it does on
+ * the course sheet it comes from. The role line appears only where an editor has set
+ * one, since a heading that already says "faculty" makes twelve "faculty" lines noise.
+ */
+export function FacultyList({
+  faculty,
+  locale,
+  as = "h2",
+  className = "",
+}: {
+  faculty: EventFacultyMember[];
+  locale: Locale;
+  as?: HeadingTag;
+  className?: string;
+}) {
+  if (faculty.length === 0) return null;
+  const t = getDictionary(locale);
+  const Heading = as;
+
+  return (
+    <section className={className}>
+      <Heading className="text-h3 font-bold">{t.events.faculty}</Heading>
+      <ul className="mt-6 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+        {faculty.map((member) => (
+          <li key={member.id} className="border-l border-ink-300 pl-4">
+            <p className="font-semibold text-ink-900">{tr(member, "name", locale)}</p>
+            {tr(member, "position", locale) && (
+              <p className="text-small text-ink-700">{tr(member, "position", locale)}</p>
+            )}
+            {tr(member, "credentials", locale) && (
+              <p className="text-small text-ink-600">{tr(member, "credentials", locale)}</p>
+            )}
+            {tr(member, "role", locale) && (
+              <p className="mt-1 text-[0.8125rem] font-medium text-copper-700">
+                {tr(member, "role", locale)}
+              </p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

@@ -724,6 +724,45 @@ Case presentations: unusual and challenging clinical cases',
         AND title_mn = 'Дурангийн аюулгүй ажиллагаа, халдваргүйтгэл (зэрэгцээ хуралдаан)';
     `,
   },
+  {
+    /*
+      The September course's faculty, from the Society's speaker sheet ("Илтгэгч нарын
+      мэдээлэл", 8 September 2026): twelve instructors with post and degree. The sheet
+      abbreviates the institutions the way the hospital does internally — УНТЭ-ийн
+      ГЭТ, АШУҮИС-ийн ХБЭСТ, МЯСЭ, ДОТ, СА, ХСХА — and the site spells them out, since a
+      reader outside the hospital cannot be expected to know them. Two expansions are
+      read from context rather than stated on the sheet: ДОТ as the Diagnostic Imaging
+      Centre (its physician teaches the ultrasound day for imaging physicians) and
+      ХСХА as the infection-control department the programme already names in full.
+
+      The sheet's last column gives every one of the twelve the same role, "Сургалтын
+      хөтөч багш", which is what the section heading says of all of them; the role
+      column stays empty rather than repeating it twelve times. Guarded like the
+      organisers: rows an editor has already entered are never replaced.
+    */
+    id: "2026-09-08-ibd-endoscopy-2026-faculty",
+    sql: `
+      WITH v(name_mn, name_en, position_mn, position_en, credentials_mn, credentials_en, sort) AS (VALUES
+        ('О.Баярмаа', 'O. Bayarmaa', 'УНТЭ-ийн Гастроэнтерологийн төвийн дарга', 'Head of the Gastroenterology Centre, First Central Hospital', 'Анагаах ухааны доктор, Монгол Улсын Төрийн соёрхолт, Хүний гавьяат эмч, зөвлөх зэргийн эмч', 'MD PhD; State Prize laureate and Honoured Physician of Mongolia; consultant physician', 1),
+        ('Н.Бира', 'N. Bira', 'АШУҮИС-ийн Хоол боловсруулах эрхтэн судлалын төвийн багш', 'Lecturer, MNUMS Centre for the Study of Digestive Organs', 'Анагаах ухааны доктор, профессор', 'MD PhD, Professor', 2),
+        ('Ц.Бямбажав', 'Ts. Byambajav', 'АШУҮИС-ийн Хоол боловсруулах эрхтэн судлалын төвийн эрхлэгч', 'Head, MNUMS Centre for the Study of Digestive Organs', 'Анагаах ухааны доктор', 'MD PhD', 3),
+        ('Г.Сарантуяа', 'G. Sarantuya', 'Монгол-Япон сургалтын эмнэлгийн Хоол боловсруулах эрхтэн судлалын төвийн эрхлэгч', 'Head of the Digestive Organs Centre, Mongolia–Japan Teaching Hospital', 'Анагаах ухааны доктор', 'MD PhD', 4),
+        ('Х.Цэвэлноров', 'Kh. Tsevelnorov', 'АШУҮИС-ийн Хоол боловсруулах эрхтэн судлалын төвийн багш', 'Lecturer, MNUMS Centre for the Study of Digestive Organs', 'Анагаах ухааны доктор', 'MD PhD', 5),
+        ('Д.Өлзий', 'D. Ulzii', 'АШУҮИС-ийн багш', 'Lecturer, MNUMS', 'Анагаах ухааны доктор', 'MD PhD', 6),
+        ('Д.Ариунзул', 'D. Ariunzul', 'УНТЭ-ийн Гастроэнтерологийн төвийн их эмч', 'Physician, Gastroenterology Centre, First Central Hospital', 'Анагаах ухааны магистр', 'MD MSc', 7),
+        ('Б.Эрдэнэцэцэг', 'B. Erdenetsetseg', 'УНТЭ-ийн Дүрс оношилгооны төвийн их эмч', 'Physician, Diagnostic Imaging Centre, First Central Hospital', 'Анагаах ухааны магистр', 'MD MSc', 8),
+        ('Б.Нурмаа', 'B. Nurmaa', 'Интермед эмнэлгийн их эмч', 'Physician, Intermed Hospital', 'Анагаах ухааны магистр', 'MD MSc', 9),
+        ('Х.Намуун', 'Kh. Namuun', 'УНТЭ-ийн Халдвар судлал, хяналтын албаны дарга', 'Head of Infection Control, First Central Hospital', 'Анагаах ухааны магистр', 'MD MSc', 10),
+        ('М.Шийлэгдулам', 'M. Shiilegdulam', 'УНТЭ-ийн Сувилахуйн албаны дарга', 'Head of Nursing, First Central Hospital', 'Сувилахуйн ухааны магистр', 'MSc in Nursing', 11),
+        ('С.Бямба-Эрдэнэ', 'S. Byamba-Erdene', 'Медимпекс Инт ХХК-ийн инженер', 'Engineer, Medimpex International', 'Ахлах зэрэг', 'Senior grade', 12)
+      )
+      INSERT INTO event_faculty (id, event_id, name_mn, name_en, position_mn, position_en, credentials_mn, credentials_en, sort)
+      SELECT lower(hex(randomblob(16))), e.id, v.name_mn, v.name_en, v.position_mn, v.position_en, v.credentials_mn, v.credentials_en, v.sort
+        FROM v, events e
+       WHERE e.slug = 'ibd-endoscopy-2026'
+         AND NOT EXISTS (SELECT 1 FROM event_faculty f WHERE f.event_id = e.id);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

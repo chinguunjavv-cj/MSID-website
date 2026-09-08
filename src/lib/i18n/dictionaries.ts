@@ -113,6 +113,8 @@ const mn = {
     organisers: "Хамтран зохион байгуулагч",
     /* After the first organiser's name on the home page block's top bar. */
     andCoOrganisers: "ба хамтран зохион байгуулагчид",
+    /* The course sheet's faculty table, listed after the programme. */
+    faculty: "Багшлах бүрэлдэхүүн",
     abstractCategories: "Хүлээн авах ангилал",
     secretariat: "Хураангуй хүлээн авах хаяг",
     submissionGuidelines: "Илтгэлийн заавар (PDF)",
@@ -535,6 +537,7 @@ const en: Dictionary = {
     languages: "Official languages",
     organisers: "Jointly organised by",
     andCoOrganisers: "and co-organisers",
+    faculty: "Faculty",
     abstractCategories: "Accepted categories",
     secretariat: "Where abstracts are sent",
     submissionGuidelines: "Submission guidelines (PDF)",

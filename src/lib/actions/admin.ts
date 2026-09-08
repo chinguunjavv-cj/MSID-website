@@ -337,6 +337,20 @@ const organiserSchema = z.object({
   sort: sortOrder,
 });
 
+const facultySchema = z.object({
+  eventId: requiredId,
+  facultyId: optionalId,
+  name_mn: shortText,
+  name_en: shortText,
+  position_mn: shortText,
+  position_en: shortText,
+  credentials_mn: shortText,
+  credentials_en: shortText,
+  role_mn: shortText,
+  role_en: shortText,
+  sort: sortOrder,
+});
+
 const sessionSchema = z.object({
   eventId: requiredId,
   sessionId: optionalId,
@@ -464,6 +478,43 @@ export async function deleteEventOrganiserAction(formData: FormData): Promise<vo
   const organiserId = String(formData.get("organiserId") ?? "");
   await run("DELETE FROM event_organisers WHERE id = ?", organiserId);
   await audit(user.id, "event.organiser.delete", "event_organiser", organiserId);
+  bustContent();
+}
+
+export async function saveEventFacultyAction(formData: FormData): Promise<void> {
+  const user = await requireStaff();
+  const { eventId, facultyId, ...values } = facultySchema.parse(
+    formFields(formData, Object.keys(facultySchema.shape)),
+  );
+
+  if (facultyId) {
+    const { sql, params } = setClause(values);
+    await run(
+      `UPDATE event_faculty SET ${sql} WHERE id = ? AND event_id = ?`,
+      ...params,
+      facultyId,
+      eventId,
+    );
+  } else {
+    const columns = Object.keys(values) as (keyof typeof values)[];
+    await run(
+      `INSERT INTO event_faculty (id, event_id, ${columns.join(", ")})
+       VALUES (?, ?, ${columns.map(() => "?").join(", ")})`,
+      newId(),
+      eventId,
+      ...columns.map((column) => values[column]),
+    );
+  }
+
+  await audit(user.id, "event.faculty.save", "event", eventId);
+  bustContent();
+}
+
+export async function deleteEventFacultyAction(formData: FormData): Promise<void> {
+  const user = await requireStaff();
+  const facultyId = String(formData.get("facultyId") ?? "");
+  await run("DELETE FROM event_faculty WHERE id = ?", facultyId);
+  await audit(user.id, "event.faculty.delete", "event_faculty", facultyId);
   bustContent();
 }
 

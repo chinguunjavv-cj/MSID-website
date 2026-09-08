@@ -8,6 +8,7 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import {
   countEventRegistrations,
   getEventBySlug,
+  listEventFaculty,
   listEventFees,
   listEventPhotos,
   listEventOrganisers,
@@ -36,6 +37,7 @@ import { safeExternalLink } from "@/lib/video";
 import {
   AnnouncementBand,
   CallForAbstractsCard,
+  FacultyList,
   OrganiserList,
   announcementFacts,
   callForAbstracts,
@@ -74,13 +76,14 @@ export default async function EventPage({
   if (!event) notFound();
 
   const t = getDictionary(locale);
-  // Independent of each other; one round trip's worth of latency, not three.
-  const [fees, sessions, taken, photos, organisers] = await Promise.all([
+  // Independent of each other; one round trip's worth of latency, not six.
+  const [fees, sessions, taken, photos, organisers, faculty] = await Promise.all([
     listEventFees(event.id),
     listEventSessions(event.id),
     countEventRegistrations(event.id),
     listEventPhotos(event.id),
     listEventOrganisers(event.id),
+    listEventFaculty(event.id),
   ]);
   const state = registrationState(event);
   const remaining = event.capacity ? Math.max(0, event.capacity - taken) : null;
@@ -121,7 +124,11 @@ export default async function EventPage({
     should be and marooned the registration button in a sidebar beside nothing.
   */
   const hasMain = Boolean(
-    tr(event, "body", locale) || photos.length > 0 || event.video_url || sessions.length > 0,
+    tr(event, "body", locale) ||
+      photos.length > 0 ||
+      event.video_url ||
+      sessions.length > 0 ||
+      faculty.length > 0,
   );
 
   /*
@@ -438,6 +445,9 @@ export default async function EventPage({
                 })}
               </section>
             )}
+
+            {/* Who teaches, after what is taught: the order of the course sheet. */}
+            <FacultyList faculty={faculty} locale={locale} className="mt-14" />
           </div>
           )}
 
