@@ -60,3 +60,9 @@ backups/
 
 # Per-machine Claude Code permissions
 .claude/settings.local.json
+
+# Working documents from the Society (programmes, speaker lists) are inputs, not site
+# files, and they carry people's names. The repo is public; they stay on the laptop.
+*.docx
+*.xlsx
+*.pptx
