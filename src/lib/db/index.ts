@@ -763,6 +763,44 @@ Case presentations: unusual and challenging clinical cases',
          AND NOT EXISTS (SELECT 1 FROM event_faculty f WHERE f.event_id = e.id);
     `,
   },
+  {
+    /*
+      What the September course costs, and where the money goes (the Society,
+      9 September 2026).
+
+      One tier at ₮50,000 for everyone: no member rate, no trainee rate, and no
+      early-bird price. The fee table is built for a congress that charges five
+      different people five different amounts, and the honest way to express "everyone
+      pays the same" in it is a single row that says so, rather than five rows carrying
+      the same number. `audience` is 'non_member' because that is the widest tier —
+      the registration form hides a 'member' row from everyone who is not one, and this
+      row must be offered to all.
+
+      No early-bird deadline is set on the event, so the absence needs no statement;
+      the deadline list and the fee panel both already omit what is empty.
+
+      The account number is the one the Society gave for this course. It is filled in
+      only where the setting is still blank, because these are site-wide payment
+      details rather than the event's, and an administrator's own entry outranks a
+      migration's. Transfer instructions stay hidden until the account *holder* is
+      entered too (see `hasBankDetails`), which is deliberate: an account number with
+      no name against it is not something to ask anyone to pay into.
+    */
+    id: "2026-09-09-ibd-endoscopy-2026-fee-and-account",
+    sql: `
+      INSERT INTO event_fees (id, event_id, label_mn, label_en, audience, amount_mnt, early_amount_mnt, sort)
+      SELECT lower(hex(randomblob(16))), e.id, 'Бүх оролцогч', 'All participants', 'non_member', 50000, NULL, 0
+        FROM events e
+       WHERE e.slug = 'ibd-endoscopy-2026'
+         AND NOT EXISTS (SELECT 1 FROM event_fees f WHERE f.event_id = e.id);
+
+      INSERT INTO site_settings (key, value)
+      VALUES ('bank_account_number', 'MN730004000499547093')
+          ON CONFLICT(key) DO UPDATE
+             SET value = excluded.value, updated_at = datetime('now')
+           WHERE site_settings.value = '';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
