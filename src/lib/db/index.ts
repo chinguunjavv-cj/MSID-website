@@ -801,6 +801,22 @@ Case presentations: unusual and challenging clinical cases',
            WHERE site_settings.value = '';
     `,
   },
+  {
+    /*
+      "2 кредит цаг", not "2 багц цаг" (the Society, 14 September 2026). The course sheet's
+      credit is stated in кредит цаг, the unit continuing medical education is counted
+      in, and the site had carried the older term. Guarded on the seeded wording so an
+      edit made in the admin since is left alone; the English already says credit hours.
+    */
+    id: "2026-09-14-ibd-endoscopy-2026-credit-wording",
+    sql: `
+      UPDATE events SET
+        accreditation_mn = 'Улсын хэмжээний сургалт, 2 кредит цаг',
+        updated_at = datetime('now')
+      WHERE slug = 'ibd-endoscopy-2026'
+        AND accreditation_mn = 'Улсын хэмжээний сургалт, 2 багц цаг';
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {
