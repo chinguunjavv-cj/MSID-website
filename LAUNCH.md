@@ -17,7 +17,7 @@ Chase these first. They are the long poles, and nothing below finishes without t
 | --- | --- | --- |
 | ☑ | ~~**Gmail app password** for `ibdmsid@gmail.com`~~ — **done via Brevo, 18 Aug 2026.** Google refused to generate an app password for the account ("There was an error generating your app password", every browser). Outgoing mail now goes through Brevo's SMTP relay with `ibdmsid@gmail.com` as the verified sender; see section 1. | Every email the site sends. |
 | ☐ | **Real content** — board members, guidelines, congress dates, publications | The site currently shows sample content with invented guideline codes and a placeholder congress. This is the single reason it must stay hidden from search engines. |
-| ☐ | **A domain** | Everything in step 5. |
+| ☑ | ~~**A domain**~~ — **msid.org.mn, registered with Datacom, live 15 Sep 2026.** | Everything in step 5. |
 | ☐ | **Bank details** — bank, account number, account holder | Until these are in Тохиргоо → Төлбөр, a participant registering for a paid event is told the Society will send payment details separately, rather than being shown where to transfer. |
 
 ---
@@ -111,14 +111,23 @@ site is not administered from one login.
 
 Do these together, in this order.
 
-☐ Add the domain in Vercel and point the DNS at it.
+☑ **Done (15 Sep 2026).** `msid.org.mn` is on the Vercel project as the production
+domain, with `www.msid.org.mn` a 308 redirect to it. DNS stays with Datacom
+(`ns5.dns.mn`, `ns6.dns.mn`); the zone holds an `A` record on the apex pointing at
+`216.198.79.1` and a `CNAME` on `www` pointing at Vercel's per-project host. Two things
+about Datacom's panel, so nobody loses an afternoon to them again: the DNS record
+editor only opens from a session that clicked through the panel itself (a direct link
+bounces to the domain list), and the Name field is relative to the zone — entering
+`msid.org.mn` without a trailing dot saved the record as `msid.org.mn.msid.org.mn`.
+Use `msid.org.mn.` with the dot, or `@`. Edits take a minute or two to reach their
+name servers.
 
-☐ Set `MSID_SITE_URL` to the real origin — e.g. `https://msid.mn`. This is what canonical
+☑ Set `MSID_SITE_URL` to the real origin (`https://msid.org.mn`, set 15 Sep 2026) — e.g. `https://msid.mn`. This is what canonical
 URLs, the sitemap, Open Graph tags and the links inside emails are built from. It is
 **not** prefixed `NEXT_PUBLIC_`, on purpose: that kind is frozen into the bundle at build
 time and would ignore a value set at runtime.
 
-☐ Set `MSID_NOINDEX=0`.
+☑ Set `MSID_NOINDEX=0` (15 Sep 2026).
 
 Until this is set, every page serves `noindex` and `robots.txt` says `Disallow: /`. That
 is automatic for any `*.vercel.app` origin, because a client-review instance carries
@@ -126,7 +135,7 @@ invented guideline codes and a placeholder congress — content that would be ac
 harmful indexed under a medical society's name. The admin dashboard warns on every visit
 while the site is hidden, so this cannot be forgotten silently.
 
-☐ Redeploy, then confirm: `curl -s https://<domain>/robots.txt` should no longer say
+☑ Redeploy, then confirm (checked 15 Sep 2026: robots allows, canonical and sitemap on `msid.org.mn`, no `noindex`): `curl -s https://<domain>/robots.txt` should no longer say
 `Disallow: /`, and a page's source should no longer contain `noindex`.
 
 ☐ Submit the domain to Google Search Console.
