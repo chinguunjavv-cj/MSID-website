@@ -76,6 +76,14 @@ export async function generateMetadata({
       `favicon.ico` used to win over both.
     */
     robots: isNoIndex() ? { index: false, follow: false } : undefined,
+    /*
+      Google Search Console's ownership token for msid.org.mn (15 September 2026). A
+      public value, not a secret: it only proves to Google that whoever controls this
+      HTML also controls the Search Console property. Kept in code rather than an
+      environment variable so a redeploy from a clean environment does not silently
+      un-verify the site.
+    */
+    verification: { google: "rRvXOnChUOFJZopMLEyXMwLWGhpwycia-abWx-Iegn0" },
     alternates: {
       canonical: `/${locale}`,
       languages: { "mn-MN": "/mn", en: "/en" },
