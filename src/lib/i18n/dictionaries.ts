@@ -84,7 +84,8 @@ const mn = {
     guidelinesTitle: "Эмнэлзүйн заавар",
     guidelinesLead:
       "Нийгэмлэгийн баталсан заавар, зөвлөмжийн бүртгэл. Хувилбар, батлагдсан огноо, хүчин төгөлдөр байдлыг заасан.",
-    congressTitle: "Их хурал, сургалт",
+    /* "Хурал", not "Их хурал": the Society's wording, 15 September 2026. */
+    congressTitle: "Хурал, сургалт",
     congressLead: "Удахгүй болох арга хэмжээ, бүртгэлийн хугацаа.",
     newsTitle: "Мэдээ",
     membershipTitle: "Гишүүнээр элсэх",
@@ -510,7 +511,7 @@ const en: Dictionary = {
     guidelinesTitle: "Clinical guidelines",
     guidelinesLead:
       "The register of guidelines and consensus statements approved by the Society, with version, approval date and current standing.",
-    congressTitle: "Congress & training",
+    congressTitle: "Meetings & training",
     congressLead: "Upcoming events and registration deadlines.",
     newsTitle: "News",
     membershipTitle: "Become a member",

@@ -97,14 +97,16 @@ registrations cannot be deleted; archive it instead.
 ## 4. Accounts, before the domain
 
 ☐ Add `ibdmsid@gmail.com` as an owner on the **Vercel** project and the **Turso**
-database.
+database. **Blocked on the plan (checked 15 Sep 2026):** Vercel's Hobby plan cannot
+invite members; that needs Pro. See the note below for the alternatives.
 
 This matters more than it looks. Both accounts are currently personal to you. If you and
 MSID part ways, or you are simply unreachable for a fortnight, the site cannot be
 redeployed, the database cannot be reached, and no backup would help — a backup of a
 database nobody can restore into is a file. It costs nothing and takes five minutes.
 
-☐ Create a second administrator account for MSID's own person, in Хэрэглэгчид, so the
+☑ Create a second administrator account for MSID's own person, in Хэрэглэгчид (done
+15 Sep 2026: mburenchimeg00@gmail.com), so the
 site is not administered from one login.
 
 ## 5. Domain and going public
