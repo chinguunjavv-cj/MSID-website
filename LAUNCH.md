@@ -138,7 +138,8 @@ while the site is hidden, so this cannot be forgotten silently.
 ☑ Redeploy, then confirm (checked 15 Sep 2026: robots allows, canonical and sitemap on `msid.org.mn`, no `noindex`): `curl -s https://<domain>/robots.txt` should no longer say
 `Disallow: /`, and a page's source should no longer contain `noindex`.
 
-☐ Submit the domain to Google Search Console.
+☑ Submit the domain to Google Search Console (ownership verified 15 Sep 2026 by the meta
+tag in `src/app/[locale]/layout.tsx`; the sitemap is at `https://msid.org.mn/sitemap.xml`).
 
 ## 6. Once there is real data
 
