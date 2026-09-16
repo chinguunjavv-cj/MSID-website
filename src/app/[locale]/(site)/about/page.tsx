@@ -61,9 +61,12 @@ export default async function WelcomePage({
         banner={page?.banner}
         title={tr(page, "title", locale) || t.aboutNav.welcome}
         meta={
-          <p className="text-small text-ink-600">
+          /* No colour: the header sets it, because only the header knows its ground.
+             The date stays the stronger of the two on weight rather than on a shade
+             that would have to be chosen twice. */
+          <p className="text-small">
             {t.about.founded}{" "}
-            <time dateTime={settings.founded_on} className="tabular text-ink-700">
+            <time dateTime={settings.founded_on} className="tabular font-medium">
               {formatDate(settings.founded_on, locale)}
             </time>
           </p>

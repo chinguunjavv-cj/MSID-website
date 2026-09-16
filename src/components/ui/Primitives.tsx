@@ -165,7 +165,25 @@ export function PageHeader({
           </p>
         )}
 
-        {meta && <div className="mt-5">{meta}</div>}
+        {/*
+          The header owns its ground, so it owns the colour of what sits on it. A page
+          cannot know: `SectionHeader` falls back to the shared `section_banner`
+          setting, so a header a page believes is paper turns dark the day an
+          administrator uploads one — and the muted ink a page would reasonably pick
+          then disappears into the photograph. `.on-dark` cannot rescue it either,
+          since it lives in the components layer and a page's own `text-ink-600`
+          utility beats it on layer order regardless of specificity.
+        */}
+        {/*
+          Paper, not a muted step, and measured rather than judged: sampled across the
+          banner photograph under this line and composited with both scrims, ink-300
+          comes to 3.29:1 and ink-200 to 4.25:1 at 15px — under AA — because the bright
+          steppe sits directly beneath the end of the line. Paper reaches 5.42:1.
+          Re-measure this if the banner photograph changes.
+        */}
+        {meta && (
+          <div className={`mt-5 ${dark ? "text-paper" : "text-ink-600"}`}>{meta}</div>
+        )}
       </div>
     </div>
   );
