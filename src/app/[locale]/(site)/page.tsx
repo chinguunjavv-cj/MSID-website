@@ -508,7 +508,7 @@ export default async function HomePage({
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-16">
           <div>
             <h2 className="text-h2 font-semibold">{t.home.aboutTitle}</h2>
-            <Prose body={tr(aboutPage, "body", locale)} className="mt-6" />
+            <Prose body={tr(aboutPage, "body", locale)} className="reading-sans mt-6" />
             <Link href={p("/about")} className="btn btn-ghost mt-6">
               {t.common.readMore} →
             </Link>
