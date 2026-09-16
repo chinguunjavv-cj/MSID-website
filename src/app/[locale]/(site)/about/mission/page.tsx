@@ -33,7 +33,7 @@ export default async function MissionPage({
     <>
       <SectionHeader banner={page?.banner} title={tr(page, "title", locale) || t.aboutNav.mission} />
       <div className="shell py-14 md:py-20">
-        <Prose body={tr(page, "body", locale)} />
+        <Prose body={tr(page, "body", locale)} className="reading-sans" />
 
         {/*
           The photograph sits under the text and a little wider than it. Prose is capped

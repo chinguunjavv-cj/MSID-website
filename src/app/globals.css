@@ -300,6 +300,18 @@
     color: var(--color-ink-800);
   }
 
+  /*
+    The Society asked (16 September 2026) for the welcome message and the mission page in
+    the same face as the rest of the site rather than the reading serif. This keeps the
+    prose rhythm — paragraph spacing, links, hung lines — and swaps only the voice, so a
+    page can opt out of Literata without leaving `.reading`.
+  */
+  .reading.reading-sans {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+  }
+
   .reading > p + p {
     margin-top: 1.15em;
   }

@@ -71,7 +71,8 @@ export default async function WelcomePage({
       />
 
       <div className="shell py-12 md:py-16">
-        <Prose body={letter} />
+        {/* The Society's ask: the site's own face, and a justified right edge. */}
+        <Prose body={letter} className="reading-sans text-justify" />
 
         {/*
           The width cap belongs on the letter, not on the signature. `measure` (68ch) on
