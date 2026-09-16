@@ -92,7 +92,8 @@ export default async function WelcomePage({
                 className="aspect-4/5 w-24 shrink-0 object-cover sm:w-28"
               />
             )}
-            <p className="reading min-w-0 whitespace-pre-line text-ink-800">{signOff}</p>
+            {/* Same face as the letter above it: the signature is part of the letter. */}
+            <p className="reading reading-sans min-w-0 whitespace-pre-line text-ink-800">{signOff}</p>
           </div>
         )}
       </div>
