@@ -817,6 +817,18 @@ Case presentations: unusual and challenging clinical cases',
         AND accreditation_mn = 'Улсын хэмжээний сургалт, 2 багц цаг';
     `,
   },
+  {
+    /*
+      Every other child table of an event is indexed on (event_id, sort) — fees,
+      sessions, photographs. The organisers table, added 4 September, was not, so each
+      read of an event's organisers scanned the whole table. It is small today; the
+      index is here so it stays cheap as events accumulate.
+    */
+    id: "2026-09-17-organisers-index",
+    sql: `
+      CREATE INDEX IF NOT EXISTS idx_organisers_event ON event_organisers(event_id, sort);
+    `,
+  },
 ];
 
 async function applyMigrations(client: Client): Promise<void> {

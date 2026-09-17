@@ -169,6 +169,7 @@ CREATE TABLE IF NOT EXISTS event_organisers (
   role_en  TEXT NOT NULL DEFAULT '',
   sort     INTEGER NOT NULL DEFAULT 0
 );
+CREATE INDEX IF NOT EXISTS idx_organisers_event ON event_organisers(event_id, sort);
 
 -- Who teaches at the meeting. A course sheet in this field carries a faculty table --
 -- name, post, degree -- apart from the programme, and it is the reader's assurance of
