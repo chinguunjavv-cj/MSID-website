@@ -56,13 +56,15 @@ export function PageHeader({
   const dark = Boolean(image);
 
   return (
-    <div
-      className={
-        dark
-          ? "on-dark relative overflow-hidden border-b border-ink-200"
-          : "border-b border-ink-200"
-      }
-    >
+    /*
+      With a photograph, the banner is held to the page's 75rem column like the home
+      hero, so the ink ground and the photograph stop at the column's edges instead of
+      running into the side margins on a wide screen. `on-dark` moves onto that
+      contained box, which still encloses the title, so every descendant colour rule it
+      carries applies unchanged. On paper the header keeps its full-width rule.
+    */
+    <div className={dark ? undefined : "border-b border-ink-200"}>
+      <div className={dark ? "on-dark relative mx-auto max-w-[75rem] overflow-hidden" : undefined}>
       {dark && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <Image
@@ -72,7 +74,7 @@ export function PageHeader({
             /* Above the fold on every interior page. Lazy, it painted the ink ground
                first and the band flashed black before the photograph arrived. */
             priority
-            sizes="100vw"
+            sizes="(min-width: 75rem) 75rem, 100vw"
             className="object-cover object-[50%_86%]"
           />
           {/*
@@ -184,6 +186,7 @@ export function PageHeader({
         {meta && (
           <div className={`mt-5 ${dark ? "text-paper" : "text-ink-600"}`}>{meta}</div>
         )}
+      </div>
       </div>
     </div>
   );
