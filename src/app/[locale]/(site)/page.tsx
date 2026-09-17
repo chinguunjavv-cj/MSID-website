@@ -226,21 +226,13 @@ export default async function HomePage({
         crop three quarters down for its own photograph, where this one wants 30% and
         the ridge.
       */}
-      {/*
-        The photograph is held to the page's 75rem column, not run edge to edge. Full
-        bleed, it spilled past the header and the content into both side margins on a
-        wide screen — the Society marked those margins as the part that made the site
-        read too wide (17 September 2026). Contained, the photograph's edges fall where
-        the column's do, the side margins stay paper, and on anything narrower than the
-        column it is full width exactly as before. The typographic hero, with no
-        photograph, keeps its full-width ruled ground.
-      */}
-      <section className={heroBackground ? undefined : "relative border-b border-ink-200 bg-ink-50"}>
-        <div
-          className={
-            heroBackground ? "relative mx-auto max-w-[75rem] overflow-hidden bg-ink-950" : undefined
-          }
-        >
+      {/* overflow-hidden only with a photograph to clip: without one the markup is
+          byte-for-byte what it was before this setting existed. */}
+      <section
+        className={`relative border-b border-ink-200 ${
+          heroBackground ? "overflow-hidden bg-ink-950" : "bg-ink-50"
+        }`}
+      >
         {heroBackground && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <Image
@@ -248,7 +240,7 @@ export default async function HomePage({
               alt=""
               fill
               priority
-              sizes="(min-width: 75rem) 75rem, 100vw"
+              sizes="100vw"
               className="-scale-x-100 object-cover object-[50%_30%]"
             />
             {/* The record tone: a flat bed of shadow, heavier on a phone where the
@@ -497,7 +489,6 @@ export default async function HomePage({
             )}
           </Link>
         )}
-        </div>
         </div>
       </section>
 

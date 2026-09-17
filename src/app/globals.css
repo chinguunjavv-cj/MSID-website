@@ -280,9 +280,17 @@
 @layer components {
   /* --- Layout ------------------------------------------------------------ */
 
+  /*
+    The page column. It was capped at 75rem (1200px), which on the Society's ~1890px
+    screen left about 350px of empty page on each side and read as the site squeezed
+    into the middle (17 September 2026). At 110rem it fills a wide desktop screen with
+    only the edge padding showing, and still stops on an ultrawide monitor so a row
+    of records does not stretch past what the eye can track. Prose is not affected:
+    `.measure` caps reading at 76ch independently of the column.
+  */
   .shell {
     width: 100%;
-    max-width: 75rem;
+    max-width: 110rem;
     margin-inline: auto;
     padding-inline: clamp(1.25rem, 4vw, 2.5rem);
   }

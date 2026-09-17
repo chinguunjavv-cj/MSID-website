@@ -143,7 +143,7 @@ columns. Dates align in a column or they are not a register.
 
 ## Layout
 
-- **Grid.** 12 columns, `clamp(1.25rem, 4vw, 2.5rem)` gutters, `max-width: 1200px` for
+- **Grid.** 12 columns, `clamp(1.25rem, 4vw, 2.5rem)` gutters, `max-width: 1760px` (110rem; widened from 1200px on 17 Sept 2026 — the site read as squeezed on a wide screen) for
   structure and `68ch` for prose. Full-bleed sections escape via a `.bleed` utility.
 - **Spacing.** 4px base. Rhythm is varied deliberately: `space-24`/`space-32` between
   major sections, `space-2`/`space-3` inside a record row. Uniform spacing reads as a
