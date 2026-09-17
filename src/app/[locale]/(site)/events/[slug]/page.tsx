@@ -320,7 +320,8 @@ export default async function EventPage({
             width={1600}
             height={1200}
             className="h-auto w-full max-w-5xl"
-            priority
+            loading="eager"
+            fetchPriority="high"
           />
         </div>
       )}

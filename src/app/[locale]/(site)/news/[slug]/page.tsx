@@ -74,7 +74,8 @@ export default async function NewsPostPage({
             width={1600}
             height={900}
             className="aspect-video w-full object-cover"
-            priority
+            loading="eager"
+            fetchPriority="high"
           />
         </div>
       )}

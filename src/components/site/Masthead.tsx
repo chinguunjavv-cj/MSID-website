@@ -185,15 +185,25 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
                 {isStaff ? adminLabel : signedIn ? labels.memberArea : labels.login}
               </Link>
               <span aria-hidden className="mx-1 h-3.5 w-px bg-white/20" />
+              {/*
+                The accessible name has to start with what is written on the link. It was
+                an aria-label, "Англи хэл рүү шилжих", on a link that reads "EN", so a
+                voice-control user saying "click EN" could not reach it (WCAG 2.5.3, Label
+                in Name). And the label sat under lang="en", so a screen reader read the
+                Mongolian with an English voice. Now the name is "EN, Англи хэл рүү
+                шилжих": the code in its own language, the explanation, screen-reader only,
+                in Mongolian — both dictionary strings for this are Mongolian.
+              */}
               <Link
                 href={switchHref}
                 hrefLang={next}
-                lang={next}
-                aria-label={labels.switchTo}
                 onClick={() => rememberLocale(next)}
                 className="rounded-xs px-2 py-1 font-semibold text-ink-200 transition-colors duration-100 hover:bg-white/10 hover:text-white"
               >
-                {LOCALE_LABELS[next]}
+                <span lang={next}>{LOCALE_LABELS[next]}</span>
+                <span lang="mn" className="sr-only">
+                  , {labels.switchTo}
+                </span>
               </Link>
             </div>
           </div>
@@ -206,7 +216,7 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
               href={localePath(locale, "/")}
               className="flex shrink-0 items-center gap-3 rounded-sm"
             >
-              <MsidMark priority className="w-12 shrink-0 nav:w-14" />
+              <MsidMark eager className="w-12 shrink-0 nav:w-14" />
               <span className="flex flex-col leading-none">
                 <span className="text-[1.35rem] font-extrabold tracking-[-0.03em] text-ink-950 nav:text-2xl">
                   MSID
@@ -426,10 +436,13 @@ export function Masthead({ locale, nav, labels, signedIn, isStaff, adminLabel }:
               <Link href={accountHref} className="btn btn-primary w-full">
                 {isStaff ? adminLabel : signedIn ? labels.memberArea : labels.login}
               </Link>
+              {/* Its text is Mongolian in both dictionaries, so it is marked Mongolian
+                  rather than as the target language — on the Mongolian page "Англи хэл
+                  рүү шилжих" under lang="en" was read with an English voice. */}
               <Link
                 href={switchHref}
                 hrefLang={next}
-                lang={next}
+                lang="mn"
                 onClick={() => rememberLocale(next)}
                 className="btn btn-secondary mt-2 w-full"
               >

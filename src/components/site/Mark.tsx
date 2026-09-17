@@ -17,7 +17,7 @@ import Image from "next/image";
 export function MsidMark({
   className = "",
   imageClassName = "",
-  priority = false,
+  eager = false,
   decorative = true,
   alt = "",
 }: {
@@ -29,7 +29,12 @@ export function MsidMark({
    * page behind it and leaves the white ground visible as a pale rectangle.
    */
   imageClassName?: string;
-  priority?: boolean;
+  /**
+   * Above the fold, load it straight away. Not high priority: it must not compete
+   * with the hero photograph, which is the page's largest element. (`priority` is
+   * deprecated on next/image in Next.js 16.)
+   */
+  eager?: boolean;
   decorative?: boolean;
   alt?: string;
 }) {
@@ -44,7 +49,7 @@ export function MsidMark({
         aria-hidden={decorative || undefined}
         width={320}
         height={320}
-        priority={priority}
+        loading={eager ? "eager" : undefined}
         className={`h-auto w-full mix-blend-multiply select-none ${imageClassName}`}
       />
     </span>

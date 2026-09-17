@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { tr } from "@/lib/db/types";
@@ -31,6 +30,7 @@ import { EmptyState, Prose, ProseList, SectionHead } from "@/components/ui/Primi
 import { EventRow_, NewsRow } from "@/components/site/records";
 import { EventGallery } from "@/components/site/EventGallery";
 import { PartnerMarquee } from "@/components/site/PartnerMarquee";
+import { BackdropImage } from "@/components/site/BackdropImage";
 import { safeFileHref } from "@/lib/video";
 
 export default async function HomePage({
@@ -235,12 +235,8 @@ export default async function HomePage({
       >
         {heroBackground && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
-            <Image
+            <BackdropImage
               src={heroBackground}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
               className="-scale-x-100 object-cover object-[50%_30%]"
             />
             {/* The record tone: a flat bed of shadow, heavier on a phone where the

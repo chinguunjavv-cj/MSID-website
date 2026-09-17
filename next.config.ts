@@ -21,8 +21,9 @@ const nextConfig: NextConfig = {
       image leaves only the ground behind it.
 
       Unoptimised, `next/image` emits a plain `<img>` at the source file, which the CDN
-      serves like any static asset and which no allowance governs. The brand images are
-      already sized for the job (the hero is 2400px at 286KB), so the cost is limited to
+      serves like any static asset and which no allowance governs. The two photographic
+      brand backgrounds are served at screen-appropriate sizes by `BackdropImage` from
+      variants `scripts/brand-variants.mjs` pre-generates, so the cost is limited to
       uploads, which arrive at whatever size an administrator's camera produced. Resizing
       those at upload time in `storage.ts` is the fix that makes this permanent rather
       than a stopgap.
@@ -120,6 +121,30 @@ const nextConfig: NextConfig = {
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
         ],
+      },
+      /*
+        Brand files were served `max-age=0, must-revalidate`, so every visit re-checked
+        the hero photograph before it could paint. A day of cache, revalidated in the
+        background for a week after: a replaced logo or photograph still reaches everyone
+        within a day, with no visit ever waiting on the check.
+      */
+      {
+        source: "/brand/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, stale-while-revalidate=604800",
+          },
+        ],
+      },
+      /*
+        The generated variants carry a hash of their source in the filename, so a URL's
+        bytes never change and a year is safe. Listed after /brand/:path*, because when
+        two rules set the same header on a path the later one wins.
+      */
+      {
+        source: "/brand/v/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
     ];
   },

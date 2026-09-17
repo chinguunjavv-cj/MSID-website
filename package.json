@@ -17,7 +17,8 @@
     "import:assets": "node --env-file-if-exists=.env.local scripts/import-assets.mts",
     "import:events": "node --env-file-if-exists=.env.local scripts/import-events.mts",
     "import:photos": "node --env-file-if-exists=.env.local scripts/import-event-photos.mts",
-    "resize:uploads": "node --env-file-if-exists=.env.local scripts/resize-uploads.mts"
+    "resize:uploads": "node --env-file-if-exists=.env.local scripts/resize-uploads.mts",
+    "brand:variants": "node scripts/brand-variants.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",

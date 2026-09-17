@@ -1,5 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
+import { BackdropImage } from "@/components/site/BackdropImage";
 import type { Locale } from "@/lib/db/types";
 import { toParagraphs } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/dictionaries";
@@ -65,16 +65,9 @@ export function PageHeader({
     >
       {dark && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          <Image
-            src={image as string}
-            alt=""
-            fill
-            /* Above the fold on every interior page. Lazy, it painted the ink ground
-               first and the band flashed black before the photograph arrived. */
-            priority
-            sizes="100vw"
-            className="object-cover object-[50%_86%]"
-          />
+          {/* Above the fold on every interior page, so eager and high priority: lazy, it
+              painted the ink ground first and the band flashed black. */}
+          <BackdropImage src={image as string} className="object-cover object-[50%_86%]" />
           {/*
             Two layers: a light flat bed so the photograph reads as a photograph, and a
             left-weighted gradient that deepens it under the title and lead, to about
