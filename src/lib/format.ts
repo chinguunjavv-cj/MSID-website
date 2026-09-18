@@ -10,10 +10,11 @@ import type { Locale } from "@/lib/db/types";
 /**
  * The ordinal particle for Mongolian month numbers. Selected by the final digit
  * following vowel harmony: дугаар after back-vowel numerals, дүгээр after front-vowel
- * ones. 1 (нэг), 4 (дөрөв), 9 (ес) and 10 (арав) take дүгээр.
+ * ones. A final 1 (нэг), 4 (дөрөв) or 9 (ес) takes дүгээр, so 11 (арван нэгдүгээр) does
+ * too; 10 (аравдугаар) and 12 (арван хоёрдугаар) take дугаар.
  */
 function monthParticle(month: number): string {
-  return [1, 4, 9, 10].includes(month) ? "дүгээр" : "дугаар";
+  return [1, 4, 9].includes(month % 10) ? "дүгээр" : "дугаар";
 }
 
 const EN_MONTHS = [
