@@ -15,6 +15,7 @@
     "guide:pdf": "node scripts/guide-pdf.mjs",
     "import:board": "node --env-file-if-exists=.env.local scripts/import-board.mts",
     "import:assets": "node --env-file-if-exists=.env.local scripts/import-assets.mts",
+    "import:crohns": "node --env-file-if-exists=.env.local scripts/import-crohns.mts",
     "import:events": "node --env-file-if-exists=.env.local scripts/import-events.mts",
     "import:photos": "node --env-file-if-exists=.env.local scripts/import-event-photos.mts",
     "resize:uploads": "node --env-file-if-exists=.env.local scripts/resize-uploads.mts",
